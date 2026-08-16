@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             xmlns:domain="clr-namespace:arknights_random_team.Domain"
+             mc:Ignorable="d"
+             d:DesignWidth="600"
+             d:DesignHeight="640"
+             x:Class="arknights_random_team.Views.RandomStrategyView"
+             FontFamily="{StaticResource AppFont}">
+    <DockPanel>
+        <Grid Margin="0,0,0,12" DockPanel.Dock="Top">
+            <TextBlock VerticalAlignment="Center"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Text="随机策略" />
+            <Button HorizontalAlignment="Right"
+                    Content="添加"
+                    Click="AddStrategy_Click" />
+        </Grid>
+        <ScrollViewer>
+            <ItemsControl Name="StrategyItems">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="domain:RandomStrategyDefinition">
+                        <controls:Card Margin="0,0,0,12" Padding="12">
+                            <Grid RowDefinitions="Auto,Auto,Auto">
+                                <Grid>
+                                    <TextBlock FontSize="16"
+                                               FontWeight="Bold"
+                                               Text="{Binding Name}" />
+                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                                        <Button Theme="{StaticResource FlatButton}"
+                                                Content="编辑"
+                                                Tag="{Binding}"
+                                                Click="EditStrategy_Click" />
+                                        <Button Theme="{StaticResource FlatButton}"
+                                                Content="删除"
+                                                Foreground="#c62828"
+                                                Tag="{Binding}"
+                                                Click="DeleteStrategy_Click" />
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Grid.Row="1"
+                                           Margin="0,8,0,4"
+                                           Foreground="{DynamicResource MaterialBodyLightBrush}"
+                                           Text="条目：" />
+                                <ItemsControl Grid.Row="2" ItemsSource="{Binding Rules}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="domain:StrategyRule">
+                                            <TextBlock Margin="0,2,0,0" Text="{Binding SummaryLine}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </controls:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

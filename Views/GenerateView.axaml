@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
+             mc:Ignorable="d"
+             d:DesignWidth="600"
+             d:DesignHeight="640"
+             x:Class="arknights_random_team.Views.GenerateView"
+             x:DataType="views:GenerateView"
+             FontFamily="{StaticResource AppFont}"
+             ClipToBounds="False">
+    <UserControl.Styles>
+        <Style Selector="DockPanel">
+            <Setter Property="Margin" Value="0,20,0,20" />
+        </Style>
+        <Style Selector="StackPanel">
+            <Setter Property="Margin" Value="0,20,0,20" />
+        </Style>
+    </UserControl.Styles>
+    <DockPanel ClipToBounds="False">
+        <DockPanel Margin="0,0,0,12"
+                   DockPanel.Dock="Top"
+                   LastChildFill="True"
+                   ClipToBounds="False">
+            <TextBlock Margin="0,0,12,0"
+                       VerticalAlignment="Center"
+                       DockPanel.Dock="Left"
+                       FontFamily="{StaticResource AppFont}"
+                       FontWeight="Bold"
+                       Text="使用策略：" />
+            <ComboBox Name="StrategyCombo"
+                      Classes="inline"
+                      MinWidth="220"
+                      VerticalAlignment="Center"
+                      FontFamily="{StaticResource AppFont}"
+                      PlaceholderText="选择策略">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="views:StrategyComboItem">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <TextBlock FontWeight="Bold" Text="随机数量：" />
+            <TextBlock Name="RandomNumText" Foreground="Gray" Text="1" />
+        </StackPanel>
+        <Slider Name="CountSlider"
+                Margin="12,0"
+                ZIndex="10"
+                ClipToBounds="False"
+                DockPanel.Dock="Top"
+                Minimum="1"
+                Maximum="12"
+                TickFrequency="1"
+                TickPlacement="None"
+                IsSnapToTickEnabled="True"
+                Theme="{StaticResource MaterialDiscreteSliderV}"
+                Value="1"
+                PropertyChanged="CountSlider_OnPropertyChanged" />
+        <Button Width="75"
+                Margin="0,20"
+                CornerRadius="10"
+                HorizontalAlignment="Center"
+                DockPanel.Dock="Top"
+                FontWeight="Bold"
+                Content="生成"
+                Click="Generate_Click" />
+        <TextBlock DockPanel.Dock="Top"
+                   FontWeight="Bold"
+                   Text="结果：" />
+        <DataGrid Name="ResultGrid"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserReorderColumns="False"
+                  ItemsSource="{Binding ResultList}"
+                  Sorting="ResultGrid_Sorting">
+            <DataGrid.Columns>
+                <DataGridTextColumn Width="*"
+                                    Header="名称"
+                                    SortMemberPath="Name"
+                                    Binding="{Binding Name, x:DataType=models:Staff}" />
+                <DataGridTextColumn Width="*"
+                                    Header="等级"
+                                    SortMemberPath="Level.Description"
+                                    Binding="{Binding Level.Description, x:DataType=models:Staff}" />
+                <DataGridTextColumn Width="*"
+                                    Header="稀有度"
+                                    SortMemberPath="Star"
+                                    Binding="{Binding Star, x:DataType=models:Staff}" />
+                <DataGridTextColumn Width="*"
+                                    Header="职业"
+                                    SortMemberPath="Career"
+                                    Binding="{Binding Career, x:DataType=models:Staff}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

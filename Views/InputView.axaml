@@ -1,0 +1,165 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             mc:Ignorable="d"
+             d:DesignWidth="600"
+             d:DesignHeight="520"
+             x:Class="arknights_random_team.Views.InputView"
+             FontFamily="{StaticResource AppFont}">
+    <UserControl.Styles>
+        <Style Selector="TextBlock.field-label">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox.compact">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="UseFloatingPlaceholder" Value="False" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="AcceptsReturn" Value="False" />
+        </Style>
+        <Style Selector="TextBox.compact.name-field">
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="TextAlignment" Value="Left" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ DockPanel#PART_RootPanel">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ Panel#PART_TextFieldPanel">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ Border#PART_BackgroundTextField">
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ Border#PART_LabelRootBorder">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Height" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ TextBlock#PART_HintsText">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Height" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ DockPanel#PART_InnerPanel">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ DockPanel#PART_InnerPanel > Panel#PART_TextContainer">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ TextBlock#PART_PlaceholderText">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ ScrollViewer#PART_ScrollViewer">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox.compact /template/ controls|MaterialUnderline#PART_Underline">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Height" Value="2" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+        </Style>
+        <Style Selector="TextBlock.star-glyph">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="LineHeight" Value="36" />
+            <Setter Property="Margin" Value="1,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.level-caption">
+            <Setter Property="Foreground" Value="#673AB7" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+    <Grid HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          ColumnDefinitions="Auto,16,200"
+          RowDefinitions="36,36,36,36,Auto"
+          RowSpacing="20">
+        <TextBlock Classes="field-label" Text="干员名称：" />
+        <TextBox Name="NameTextBox"
+                 Grid.Column="2"
+                 Classes="compact name-field"
+                 HorizontalAlignment="Stretch"
+                 VerticalAlignment="Stretch"
+                 PlaceholderText="名称" />
+
+        <TextBlock Grid.Row="1"
+                   Classes="field-label"
+                   Text="稀有度：" />
+        <StackPanel Name="StarPanel"
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Height="36"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch" />
+
+        <TextBlock Grid.Row="2"
+                   Classes="field-label"
+                   Text="等级：" />
+        <StackPanel Grid.Row="2"
+                    Grid.Column="2"
+                    Height="36"
+                    Orientation="Horizontal"
+                    Spacing="4"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch">
+            <TextBlock Classes="level-caption" Text="精英" />
+            <TextBox Name="EliteTextBox"
+                     Classes="compact"
+                     Width="36"
+                     Text="2"
+                     InputMethod.IsInputMethodEnabled="False"
+                     TextChanged="EliteTextBox_TextChanged"
+                     LostFocus="EliteTextBox_LostFocus" />
+            <TextBlock Classes="level-caption" Text="等级" />
+            <TextBox Name="RankTextBox"
+                     Classes="compact"
+                     Width="48"
+                     Text="1"
+                     InputMethod.IsInputMethodEnabled="False"
+                     TextChanged="RankTextBox_TextChanged"
+                     LostFocus="RankTextBox_LostFocus" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="3"
+                   Classes="field-label"
+                   Text="职业：" />
+        <ComboBox Name="CareerCombo"
+                  Grid.Row="3"
+                  Grid.Column="2"
+                  Classes="inline"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  PlaceholderText="选择"
+                  SelectedIndex="-1"
+                  ItemsSource="{x:Static models:AppOptions.Careers}" />
+
+        <Button Grid.Row="4"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Width="100"
+                Margin="0,24,0,0"
+                HorizontalAlignment="Center"
+                CornerRadius="10"
+                FontWeight="Bold"
+                Cursor="Hand"
+                Content="录入"
+                Click="Input_Click" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,187 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:themes="clr-namespace:Material.Styles.Themes;assembly=Material.Styles"
+             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             xmlns:dataGrid="clr-namespace:Material.Avalonia.DataGrid;assembly=Material.Avalonia.DataGrid"
+             x:Class="arknights_random_team.App"
+             RequestedThemeVariant="Light">
+    <Application.Resources>
+        <FontFamily x:Key="AppFont">Microsoft YaHei, PingFang SC, Noto Sans CJK SC, Source Han Sans SC, Inter, sans-serif</FontFamily>
+        <Color x:Key="MaterialSnackbarBackgroundColor">#673AB7</Color>
+        <SolidColorBrush x:Key="MaterialSnackbarBackgroundBrush" Color="#673AB7" />
+        <ControlTheme x:Key="{x:Type DataGridColumnHeader}" TargetType="DataGridColumnHeader">
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid ColumnDefinitions="*,Auto"
+                          Background="{TemplateBinding Background}">
+                        <Panel>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                            <Path Name="SortIcon"
+                                  Width="8"
+                                  Height="8"
+                                  Margin="0,0,6,0"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Center"
+                                  Stretch="Uniform"
+                                  IsVisible="False"
+                                  Fill="{TemplateBinding Foreground}"
+                                  Data="F1 M -5.215,6.099L 5.215,6.099L 0,0L -5.215,6.099 Z " />
+                        </Panel>
+                        <Rectangle Name="VerticalSeparator"
+                                   Grid.Column="1"
+                                   Width="2"
+                                   Height="14"
+                                   VerticalAlignment="Center"
+                                   Fill="{TemplateBinding SeparatorBrush}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:sortascending /template/ Path#SortIcon">
+                <Setter Property="IsVisible" Value="True" />
+                <Setter Property="RenderTransform" Value="scale(0.9,0.9)" />
+            </Style>
+            <Style Selector="^:sortdescending /template/ Path#SortIcon">
+                <Setter Property="IsVisible" Value="True" />
+                <Setter Property="RenderTransform" Value="scale(0.9,-0.9)" />
+            </Style>
+        </ControlTheme>
+    </Application.Resources>
+    <Application.Styles>
+        <themes:MaterialTheme BaseTheme="Light"
+                              PrimaryColor="DeepPurple"
+                              SecondaryColor="Lime" />
+        <dataGrid:MaterialDataGridStyles />
+
+        <Style Selector="ScrollBar">
+            <Setter Property="Theme" Value="{StaticResource MaterialModernScrollBar}" />
+        </Style>
+
+        <Style Selector="Window">
+            <Setter Property="FontWeight" Value="Regular" />
+        </Style>
+        <Style Selector="ComboBoxItem">
+            <Setter Property="FontWeight" Value="Regular" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="MaxDropDownHeight" Value="280" />
+        </Style>
+        <Style Selector="ComboBox.inline">
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="0,0,8,0" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.inline /template/ Panel#PART_RootPanel">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+        <Style Selector="ComboBox.inline /template/ Border#PART_RootBorder">
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+        <Style Selector="ComboBox.inline /template/ Panel#PART_InnerPanel">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.inline /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.inline /template/ TextBlock#PART_PlaceholderText">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.inline /template/ Border#splitBorder">
+            <Setter Property="Margin" Value="8,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.inline /template/ controls|MaterialUnderline#PART_Underline">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Height" Value="2" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="ZIndex" Value="2" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="TextBlock.FontWeight" Value="Regular" />
+        </Style>
+        <Style Selector="Button[FontWeight=Bold]">
+            <Setter Property="TextBlock.FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="DataGrid">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="GridLinesVisibility" Value="All" />
+            <Setter Property="HorizontalGridLinesBrush" Value="#E0E0E0" />
+            <Setter Property="VerticalGridLinesBrush" Value="#E0E0E0" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="CanUserResizeColumns" Value="False" />
+            <Setter Property="Background" Value="{DynamicResource MaterialPaperBrush}" />
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Theme" Value="{StaticResource {x:Type DataGridColumnHeader}}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#673AB7" />
+            <Setter Property="Background" Value="#EEECEC" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="SeparatorBrush" Value="#E0E0E0" />
+        </Style>
+        <Style Selector="DataGridRow /template/ DataGridFrozenGrid#PART_Root">
+            <Setter Property="MinHeight" Value="40" />
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid ColumnDefinitions="*,Auto"
+                          Background="{TemplateBinding Background}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        <Rectangle Name="PART_RightGridLine"
+                                   Grid.Column="1"
+                                   Width="2"
+                                   Height="14"
+                                   VerticalAlignment="Center"
+                                   Fill="#E0E0E0" />
+                        <Rectangle Grid.ColumnSpan="2"
+                                   Height="1"
+                                   VerticalAlignment="Bottom"
+                                   HorizontalAlignment="Stretch"
+                                   Fill="#E0E0E0" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="DataGridCell TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="None" />
+        </Style>
+
+        <Style Selector="controls|SnackbarHost /template/ ItemsControl#PART_SnackbarHostItemsContainer controls|Card">
+            <Setter Property="Background" Value="#673AB7" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Padding" Value="28,16" />
+            <Setter Property="MinWidth" Value="280" />
+        </Style>
+        <Style Selector="TextBlock#PART_SnackbarSupportingText">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+    </Application.Styles>
+</Application>

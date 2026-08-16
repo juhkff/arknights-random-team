@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
+        xmlns:models="clr-namespace:arknights_random_team.Models"
+        mc:Ignorable="d"
+        x:Class="arknights_random_team.Views.StaffPickDialog"
+        Title="选择干员"
+        Width="360"
+        Height="420"
+        MinHeight="320"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFont}"
+        FontSize="14"
+        Background="{DynamicResource MaterialPaperBrush}">
+    <Window.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ListBoxItem:selected">
+            <Setter Property="Background" Value="{DynamicResource MaterialPrimaryLightBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialPrimaryMidBrush}" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ Border#PART_RootBorder">
+            <Setter Property="Background" Value="{DynamicResource MaterialPrimaryLightBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialPrimaryMidBrush}" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ Border#PART_HoverEffect">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="ListBoxItem:selected:pointerover /template/ Border#PART_HoverEffect">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+    </Window.Styles>
+    <Grid Margin="16" RowDefinitions="Auto,*,Auto">
+        <StackPanel Margin="0,0,0,12">
+            <TextBox Name="SearchBox"
+                     Classes="outline"
+                     Theme="{StaticResource OutlineTextBox}"
+                     UseFloatingPlaceholder="True"
+                     assists:TextFieldAssist.Label="输入名称筛选"
+                     TextChanged="SearchBox_TextChanged" />
+            <TextBlock Margin="0,8,0,0"
+                       FontSize="12"
+                       Opacity="0.65"
+                       TextWrapping="Wrap"
+                       Text="提示：点击条目即可多选或取消选中；已选项左侧有紫色条与底色区分。已加入列表的干员不会再出现。" />
+        </StackPanel>
+        <ListBox Name="StaffList"
+                 Grid.Row="1"
+                 Margin="0,0,0,12"
+                 SelectionMode="Multiple,Toggle"
+                 DoubleTapped="StaffList_DoubleTapped"
+                 KeyDown="StaffList_KeyDown">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:Staff">
+                    <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Grid.Row="2"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="8">
+            <Button Content="确定" Click="Ok_Click" />
+            <Button Theme="{StaticResource FlatButton}" Content="取消" Click="Cancel_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

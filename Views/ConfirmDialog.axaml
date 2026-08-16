@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="arknights_random_team.Views.ConfirmDialog"
+        Title="确认"
+        CanResize="False"
+        ShowInTaskbar="False"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+        WindowDecorations="None"
+        TransparencyLevelHint="Transparent"
+        TransparencyBackgroundFallback="Transparent"
+        Background="Transparent"
+        FontFamily="{StaticResource AppFont}"
+        FontSize="14"
+        KeyDown="Window_KeyDown">
+    <Border Margin="16"
+            MinWidth="320"
+            MaxWidth="420"
+            Padding="24,20,24,16"
+            Background="{DynamicResource MaterialPaperBrush}"
+            BorderBrush="#E0E0E0"
+            BorderThickness="1"
+            CornerRadius="12"
+            BoxShadow="0 8 24 0 #40000000">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Bottom"
+                        Margin="0,20,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                <Button Name="CancelButton"
+                        MinWidth="72"
+                        Theme="{StaticResource FlatButton}"
+                        Content="取消"
+                        Click="Cancel_Click" />
+                <Button Name="OkButton"
+                        MinWidth="72"
+                        FontWeight="Bold"
+                        Content="确定"
+                        Click="Ok_Click" />
+            </StackPanel>
+            <TextBlock Name="MessageText"
+                       FontSize="15"
+                       LineHeight="24"
+                       TextWrapping="Wrap" />
+        </DockPanel>
+    </Border>
+</Window>

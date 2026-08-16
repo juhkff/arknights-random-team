@@ -1,0 +1,216 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+        mc:Ignorable="d"
+        d:DesignWidth="640"
+        d:DesignHeight="720"
+        x:Class="arknights_random_team.MainWindow"
+        Title="明日方舟随机阵容"
+        Width="640"
+        Height="720"
+        MinWidth="520"
+        MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="{StaticResource AppFont}"
+        FontSize="14"
+        FontWeight="Regular"
+        Background="{DynamicResource MaterialPaperBrush}"
+        Foreground="{DynamicResource MaterialBodyBrush}">
+    <Window.Styles>
+        <Style Selector="Button.menu-toggle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.menu-toggle /template/ ContentPresenter">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="Button.header-menu:pointerover">
+            <Setter Property="Background" Value="#33FFFFFF" />
+        </Style>
+        <Style Selector="Button.header-menu:pressed">
+            <Setter Property="Background" Value="#4DFFFFFF" />
+        </Style>
+        <Style Selector="Button.drawer-close:pointerover">
+            <Setter Property="Background" Value="#1F673AB7" />
+        </Style>
+        <Style Selector="Button.drawer-close:pressed">
+            <Setter Property="Background" Value="#33673AB7" />
+        </Style>
+        <Style Selector="Border#DrawerScrim">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+        </Style>
+        <Style Selector="Border#DrawerScrim.open">
+            <Setter Property="Opacity" Value="0.32" />
+            <Setter Property="IsHitTestVisible" Value="True" />
+        </Style>
+        <Style Selector="Border#DrawerPanel">
+            <Setter Property="RenderTransform" Value="translateX(-120px)" />
+        </Style>
+        <Style Selector="Border#DrawerPanel.open">
+            <Setter Property="RenderTransform" Value="translateX(0px)" />
+        </Style>
+        <Style Selector="Border#DrawerPanel TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialBodyBrush}" />
+        </Style>
+        <Style Selector="Border#DrawerPanel Button">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Border#DrawerPanel Button:pointerover">
+            <Setter Property="Background" Value="#1F673AB7" />
+        </Style>
+        <Style Selector="Border#DrawerPanel Button:pressed">
+            <Setter Property="Background" Value="#33673AB7" />
+        </Style>
+    </Window.Styles>
+
+    <controls:SnackbarHost HostName="MainSnackbar"
+                           SnackbarHorizontalAlignment="Center"
+                           SnackbarVerticalAlignment="Bottom">
+        <Grid ClipToBounds="True">
+            <DockPanel LastChildFill="True">
+                <controls:ColorZone Padding="16"
+                                    DockPanel.Dock="Top"
+                                    ClipToBounds="False"
+                                    Mode="PrimaryLight">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Name="WindowTitle"
+                                   Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   Margin="16,0,0,0"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   Text="阵容生成"
+                                   TextAlignment="Center" />
+                        <Button Name="MenuButton"
+                                Width="40"
+                                Height="40"
+                                Padding="0"
+                                Classes="menu-toggle header-menu"
+                                Theme="{StaticResource FlatButton}"
+                                Foreground="White"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Click="ToggleDrawer">
+                            <Canvas Width="24" Height="24">
+                                <Path Fill="White"
+                                      Data="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" />
+                            </Canvas>
+                        </Button>
+                    </Grid>
+                </controls:ColorZone>
+                <ContentControl Name="PageHost" Margin="16" ClipToBounds="False" />
+            </DockPanel>
+
+            <Border Name="DrawerScrim"
+                    Background="#FF000000"
+                    ZIndex="1"
+                    PointerPressed="DrawerScrim_PointerPressed">
+                <Border.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+                    </Transitions>
+                </Border.Transitions>
+            </Border>
+
+            <Border Name="DrawerPanel"
+                    Width="120"
+                    HorizontalAlignment="Left"
+                    Background="{DynamicResource MaterialPaperBrush}"
+                    BoxShadow="4 0 12 0 #40000000"
+                    ZIndex="2">
+                <Border.Transitions>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.25" />
+                    </Transitions>
+                </Border.Transitions>
+                <DockPanel MinWidth="120" LastChildFill="False">
+                    <Button Width="40"
+                            Height="40"
+                            Margin="0,16,8,16"
+                            Padding="0"
+                            HorizontalAlignment="Right"
+                            DockPanel.Dock="Top"
+                            Classes="menu-toggle drawer-close"
+                            Theme="{StaticResource FlatButton}"
+                            Foreground="#673AB7"
+                            Click="CloseDrawer">
+                        <Canvas Width="24" Height="24">
+                            <Path Fill="#673AB7"
+                                  Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                        </Canvas>
+                    </Button>
+                    <TextBlock Margin="4,4,4,10"
+                               HorizontalAlignment="Center"
+                               DockPanel.Dock="Top"
+                               FontFamily="{StaticResource AppFont}"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource MaterialBodyBrush}"
+                               Text="功能列表" />
+                    <Button Margin="4"
+                            HorizontalAlignment="Center"
+                            DockPanel.Dock="Top"
+                            Theme="{StaticResource FlatButton}"
+                            FontFamily="{StaticResource AppFont}"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource MaterialPrimaryMidBrush}"
+                            Cursor="Hand"
+                            Content="阵容生成"
+                            Click="ChangeToGenerate" />
+                    <Button Margin="4"
+                            HorizontalAlignment="Center"
+                            DockPanel.Dock="Top"
+                            Theme="{StaticResource FlatButton}"
+                            FontFamily="{StaticResource AppFont}"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource MaterialPrimaryMidBrush}"
+                            Cursor="Hand"
+                            Content="录入干员"
+                            Click="ChangeToInput" />
+                    <Button Margin="4"
+                            HorizontalAlignment="Center"
+                            DockPanel.Dock="Top"
+                            Theme="{StaticResource FlatButton}"
+                            FontFamily="{StaticResource AppFont}"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource MaterialPrimaryMidBrush}"
+                            Cursor="Hand"
+                            Content="干员列表"
+                            Click="ChangeToList" />
+                    <Button Margin="4"
+                            HorizontalAlignment="Center"
+                            DockPanel.Dock="Top"
+                            Theme="{StaticResource FlatButton}"
+                            FontFamily="{StaticResource AppFont}"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource MaterialPrimaryMidBrush}"
+                            Cursor="Hand"
+                            Content="随机策略"
+                            Click="ChangeToRandomStrategy" />
+                </DockPanel>
+            </Border>
+        </Grid>
+    </controls:SnackbarHost>
+</Window>

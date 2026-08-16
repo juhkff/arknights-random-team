@@ -1,0 +1,303 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:domain="clr-namespace:arknights_random_team.Domain"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
+             xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
+             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             mc:Ignorable="d"
+             d:DesignWidth="600"
+             d:DesignHeight="640"
+             x:Class="arknights_random_team.Views.StaffListView"
+             x:Name="Root"
+             x:DataType="domain:ListModel"
+             FontFamily="{StaticResource AppFont}">
+    <UserControl.Styles>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Foreground" Value="Orange" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Background" Value="#EEECEC" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="SeparatorBrush" Value="#E0E0E0" />
+        </Style>
+        <Style Selector="DataGridColumnHeader TextBlock">
+            <Setter Property="Foreground" Value="Orange" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+        <Style Selector="CheckBox.staff-select">
+            <Setter Property="assists:SelectionControlAssist.Size" Value="18" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialBodyBrush}" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice">
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ Panel#PART_RootPanel">
+            <Setter Property="Height" Value="NaN" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ Border#PART_RootBorder">
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ Panel#PART_InnerPanel">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ Border#PART_LabelRootBorder">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Height" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ TextBlock#PART_PlaceholderText">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ Border#splitBorder">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Width" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice /template/ controls|MaterialUnderline#PART_Underline">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice:dropdownopen /template/ controls|MaterialUnderline#PART_Underline">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Height" Value="2" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+        </Style>
+        <Style Selector="ComboBox.staff-choice ComboBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DataGridCell TextBox">
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="AcceptsReturn" Value="False" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ Border#PART_RootBorder">
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ Panel#PART_TextFieldPanel">
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ DockPanel#PART_InnerPanel">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ DockPanel#PART_InnerPanel > Panel#PART_TextContainer">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ TextBlock#PART_PlaceholderText">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ ScrollViewer#PART_ScrollViewer">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ Border#PART_LabelRootBorder">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Height" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ TextBlock#PART_HintsText">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Height" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style Selector="DataGridCell TextBox /template/ controls|MaterialUnderline#PART_Underline">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Height" Value="2" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="ZIndex" Value="2" />
+        </Style>
+        <Style Selector="Border.cell-hit">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="IsVisible" Value="True" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        <Style Selector="Button.delete-staff">
+            <Setter Property="Padding" Value="0,1" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
+        </Style>
+    </UserControl.Styles>
+    <DataGrid Name="StaffGrid"
+              AutoGenerateColumns="False"
+              CanUserReorderColumns="False"
+              CanUserResizeColumns="False"
+              HorizontalAlignment="Stretch"
+              SelectionMode="Single"
+              ItemsSource="{Binding StaffList}"
+              PreparingCellForEdit="StaffGrid_PreparingCellForEdit"
+              CellEditEnded="StaffGrid_CellEditEnded"
+              SelectionChanged="StaffGrid_SelectionChanged"
+              Sorting="StaffGrid_Sorting">
+        <DataGrid.Columns>
+            <DataGridTemplateColumn Width="*" MinWidth="0" CanUserSort="False">
+                <DataGridTemplateColumn.Header>
+                    <Border Classes="cell-hit" PointerPressed="SelectAllHeader_PointerPressed">
+                        <CheckBox Classes="staff-select"
+                                  IsThreeState="True"
+                                  IsChecked="{Binding #Root.((domain:ListModel)DataContext).IsAllStaffSelected, Mode=OneWay}"
+                                  Click="SelectAll_Click" />
+                    </Border>
+                </DataGridTemplateColumn.Header>
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <Border Classes="cell-hit" PointerPressed="SelectCell_PointerPressed">
+                            <CheckBox Classes="staff-select"
+                                      IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                        </Border>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="2*"
+                                    MinWidth="0"
+                                    Header="名称"
+                                    SortMemberPath="Name">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <views:CellFill>
+                            <Border Classes="cell-hit">
+                                <TextBlock TextAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Text="{Binding Name}" />
+                            </Border>
+                        </views:CellFill>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+                <DataGridTemplateColumn.CellEditingTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <views:CellFill>
+                            <TextBox MinWidth="0"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Stretch"
+                                     TextAlignment="Center"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="False"
+                                     Text="{Binding Name, Mode=TwoWay}" />
+                        </views:CellFill>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellEditingTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="2*"
+                                    MinWidth="0"
+                                    Header="等级"
+                                    SortMemberPath="Level.Description">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <views:CellFill>
+                            <Border Classes="cell-hit">
+                                <TextBlock TextAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Text="{Binding Level.Description}" />
+                            </Border>
+                        </views:CellFill>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+                <DataGridTemplateColumn.CellEditingTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <views:CellFill>
+                            <TextBox MinWidth="0"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Stretch"
+                                     TextAlignment="Center"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="False"
+                                     Text="{Binding Level.Description, Mode=TwoWay}" />
+                        </views:CellFill>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellEditingTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="2*"
+                                    MinWidth="0"
+                                    Header="稀有度"
+                                    IsReadOnly="True"
+                                    SortMemberPath="Star">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <views:CellFill>
+                            <ComboBox Classes="staff-choice"
+                                      ItemsSource="{x:Static models:AppOptions.Stars}"
+                                      SelectedItem="{Binding Star, Mode=TwoWay}" />
+                        </views:CellFill>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="2*"
+                                    MinWidth="0"
+                                    Header="职业"
+                                    IsReadOnly="True"
+                                    SortMemberPath="Career">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <views:CellFill>
+                            <ComboBox Classes="staff-choice"
+                                      ItemsSource="{x:Static models:AppOptions.Careers}"
+                                      SelectedItem="{Binding Career, Mode=TwoWay}" />
+                        </views:CellFill>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Width="2*" MinWidth="0" Header="操作" CanUserSort="False">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="models:Staff">
+                        <views:CellFill>
+                            <Button Classes="delete-staff"
+                                    Theme="{StaticResource FlatButton}"
+                                    Content="删除"
+                                    Tag="{Binding}"
+                                    Click="Delete_Click" />
+                        </views:CellFill>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+        </DataGrid.Columns>
+    </DataGrid>
+</UserControl>
