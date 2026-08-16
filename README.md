@@ -1,6 +1,6 @@
 # 明日方舟随机阵容生成器
 
-跨平台版本（Windows / macOS / Linux），基于 [Avalonia](https://avaloniaui.net/) 与 [Material.Avalonia](https://github.com/AvaloniaCommunity/Material.Avalonia)，由早期 WPF 项目 [Arknights-StaffRandomSelect](../Arknights-StaffRandomSelect) 移植而来。
+跨平台版本（Windows / macOS / Linux），基于 [Avalonia](https://avaloniaui.net/) 与 [Material.Avalonia](https://github.com/AvaloniaCommunity/Material.Avalonia)，由早期 WPF 项目 [Arknights-StaffRandomSelect](https://github.com/juhkff/Arknights-StaffRandomSelect) 移植而来。
 
 加入备用干员后，可以按勾选池随机生成通关阵容，也可用「随机策略」限制稀有度、职业或特定干员人数。
 
