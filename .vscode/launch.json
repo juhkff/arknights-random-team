@@ -5,7 +5,7 @@
             // 使用 IntelliSense 找出 C# 调试存在哪些属性
             // 将悬停用于现有属性的说明
             // 有关详细信息，请访问 https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md
-            "name": ".NET Core Launch (console)",
+            "name": "调试",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -18,9 +18,33 @@
             "stopAtEntry": false
         },
         {
-            "name": ".NET Core Attach",
+            "name": "附加到进程",
             "type": "coreclr",
             "request": "attach"
+        },
+        {
+            "name": "发布",
+            "type": "node",
+            "request": "launch",
+            "preLaunchTask": "publish",
+            "noDebug": true,
+            "runtimeExecutable": "dotnet",
+            "runtimeArgs": ["--version"],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "name": "发布 (自包含)",
+            "type": "node",
+            "request": "launch",
+            "preLaunchTask": "publish-self-contained",
+            "noDebug": true,
+            "runtimeExecutable": "dotnet",
+            "runtimeArgs": ["--version"],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "internalConsoleOptions": "neverOpen"
         }
     ]
 }

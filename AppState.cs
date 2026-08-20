@@ -12,9 +12,25 @@ public static class AppState
 
     public static ObservableCollection<RandomStrategyDefinition> Strategies { get; } = [];
 
-    private static string StaffPath => Path.Combine(AppContext.BaseDirectory, "StaffList.xml");
+    private static string DataDirectory
+    {
+        get
+        {
+            var exe = Environment.ProcessPath;
+            if (!string.IsNullOrWhiteSpace(exe))
+            {
+                var dir = Path.GetDirectoryName(exe);
+                if (!string.IsNullOrWhiteSpace(dir))
+                    return dir;
+            }
 
-    private static string StrategyPath => Path.Combine(AppContext.BaseDirectory, "RandomStrategies.json");
+            return AppContext.BaseDirectory;
+        }
+    }
+
+    private static string StaffPath => Path.Combine(DataDirectory, "StaffList.xml");
+
+    private static string StrategyPath => Path.Combine(DataDirectory, "RandomStrategies.json");
 
     public static void Initialize()
     {

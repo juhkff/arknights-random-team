@@ -2,6 +2,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
+        <RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>arknights_random_team</RootNamespace>
@@ -10,18 +11,28 @@
         <!-- 由代码自行实现 InitializeComponent，避免 Rider 无法解析生成方法 -->
         <AvaloniaNameGeneratorBehavior>OnlyProperties</AvaloniaNameGeneratorBehavior>
         <ApplicationIcon />
+        <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+        <PublishSingleFile>true</PublishSingleFile>
+        <!-- 禁止运行时解压到 %TEMP%/.net 或 ~/.net；Skia 等原生库放在 exe 同目录 -->
+        <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
+        <IncludeAllContentForSelfExtract>false</IncludeAllContentForSelfExtract>
+        <EnableCompressionInSingleFile Condition="'$(SelfContained)' == 'true'">true</EnableCompressionInSingleFile>
+        <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.1.1" />
         <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
-        <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
-            <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
-            <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
-        </PackageReference>
         <PackageReference Include="Material.Avalonia" Version="3.18.0" />
         <PackageReference Include="Material.Avalonia.DataGrid" Version="3.18.0" />
         <PackageReference Include="Material.Avalonia.Dialogs" Version="3.18.0" />
     </ItemGroup>
+
+    <Target Name="RemoveSymbolsFromPublish" AfterTargets="Publish" Condition="'$(PublishDir)' != ''">
+        <ItemGroup>
+            <_PublishPdbs Include="$(PublishDir)**\*.pdb" />
+        </ItemGroup>
+        <Delete Files="@(_PublishPdbs)" TreatErrorsAsWarnings="true" />
+    </Target>
 </Project>

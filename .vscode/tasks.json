@@ -1,5 +1,21 @@
 {
     "version": "2.0.0",
+    "inputs": [
+        {
+            "id": "rid",
+            "type": "pickString",
+            "description": "目标平台",
+            "options": [
+                "win-x64",
+                "win-arm64",
+                "osx-x64",
+                "osx-arm64",
+                "linux-x64",
+                "linux-arm64"
+            ],
+            "default": "win-x64"
+        }
+    ],
     "tasks": [
         {
             "label": "build",
@@ -19,7 +35,39 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/arknights-random-team.sln",
+                "${workspaceFolder}/arknights-random-team.csproj",
+                "-c",
+                "Release",
+                "-r",
+                "${input:rid}",
+                "--self-contained",
+                "false",
+                "-p:PublishSingleFile=true",
+                "-p:CopyOutputSymbolsToPublishDirectory=false",
+                "-o",
+                "${workspaceFolder}/publish/${input:rid}",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish-self-contained",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/arknights-random-team.csproj",
+                "-c",
+                "Release",
+                "-r",
+                "${input:rid}",
+                "--self-contained",
+                "true",
+                "-p:PublishSingleFile=true",
+                "-p:CopyOutputSymbolsToPublishDirectory=false",
+                "-o",
+                "${workspaceFolder}/publish/${input:rid}-self-contained",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],

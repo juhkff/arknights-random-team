@@ -422,7 +422,7 @@ public partial class StrategyEditorWindow : Window
             Career = r.Career,
             Count = r.Count,
             CountMax = r.CountMax,
-            StaffNames = [..r.StaffNames]
+            StaffNames = [.. r.StaffNames]
         };
 
     private void RestoreBackup()
