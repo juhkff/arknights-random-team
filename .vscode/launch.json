@@ -27,9 +27,10 @@
             "type": "node",
             "request": "launch",
             "preLaunchTask": "publish",
-            "noDebug": true,
             "runtimeExecutable": "dotnet",
-            "runtimeArgs": ["--version"],
+            "runtimeArgs": [
+                "--version"
+            ],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
             "internalConsoleOptions": "neverOpen"
@@ -39,9 +40,10 @@
             "type": "node",
             "request": "launch",
             "preLaunchTask": "publish-self-contained",
-            "noDebug": true,
             "runtimeExecutable": "dotnet",
-            "runtimeArgs": ["--version"],
+            "runtimeArgs": [
+                "--version"
+            ],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
             "internalConsoleOptions": "neverOpen"

@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
-        xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
         xmlns:domain="clr-namespace:arknights_random_team.Domain"
         xmlns:models="clr-namespace:arknights_random_team.Models"
         mc:Ignorable="d"
@@ -72,6 +71,56 @@
             <Setter Property="VerticalAlignment" Value="Bottom" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
+        <Style Selector="ListBox#RulesList">
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem">
+            <Setter Property="Padding" Value="0,1" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:selected /template/ Border#PART_RootBorder">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:selected /template/ Border#PART_HoverEffect">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:selected:pointerover /template/ Border#PART_HoverEffect">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:selected Border.rule-row">
+            <Setter Property="Background" Value="{DynamicResource MaterialPrimaryLightBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialPrimaryMidBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:selected Border.rule-accent">
+            <Setter Property="Width" Value="5" />
+        </Style>
+        <Style Selector="ListBox#RulesList Button.cancel-edit">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:selected Button.cancel-edit">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.rules-hint.editing">
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
+        </Style>
+        <Style Selector="Border.form-section">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style Selector="Border.form-section.editing">
+            <Setter Property="Background" Value="#F8F5FC" />
+            <Setter Property="BorderBrush" Value="#E4D8F5" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
         <Style Selector="TextBox.outline /template/ TextBlock#PART_PlaceholderText">
             <Setter Property="Foreground" Value="{DynamicResource MaterialBodyLightBrush}" />
         </Style>
@@ -104,20 +153,12 @@
                      UseFloatingPlaceholder="True"
                      assists:TextFieldAssist.Label="请输入策略名称" />
 
-            <Grid Grid.Row="2" Margin="0,0,0,8">
-                <TextBlock VerticalAlignment="Center"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource MaterialPrimaryMidBrush}"
-                           Text="策略条目" />
-                <Button Name="CancelRuleEditButton"
-                        HorizontalAlignment="Right"
-                        Theme="{StaticResource FlatButton}"
-                        Classes="primary"
-                        Foreground="{DynamicResource MaterialPrimaryMidBrush}"
-                        Content="取消编辑"
-                        IsVisible="False"
-                        Click="CancelRuleEdit_Click" />
-            </Grid>
+            <TextBlock Grid.Row="2"
+                       Margin="0,0,0,8"
+                       VerticalAlignment="Center"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource MaterialPrimaryMidBrush}"
+                       Text="策略条目" />
 
             <StackPanel Grid.Row="3" Margin="0,0,0,16">
                 <ListBox Name="RulesList"
@@ -127,10 +168,16 @@
                          SelectionChanged="RulesList_SelectionChanged">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="domain:StrategyRule">
-                            <controls:Card Margin="0,0,0,6" Padding="10,8">
-                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Border Width="3"
-                                            Margin="0,1,12,1"
+                            <Border Classes="rule-row"
+                                    MinHeight="0"
+                                    Margin="0,0,0,2"
+                                    Padding="8,4"
+                                    Background="#F6F3FB"
+                                    CornerRadius="6">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                    <Border Classes="rule-accent"
+                                            Width="3"
+                                            Margin="0,1,8,1"
                                             Background="{DynamicResource MaterialPrimaryMidBrush}"
                                             CornerRadius="1.5" />
                                     <TextBlock Grid.Column="1"
@@ -138,17 +185,34 @@
                                                TextWrapping="Wrap"
                                                Text="{Binding SummaryLine}" />
                                     <Button Grid.Column="2"
-                                            Margin="10,0,0,0"
+                                            Classes="cancel-edit"
+                                            MinHeight="28"
+                                            Height="28"
+                                            Margin="8,0,0,0"
+                                            Padding="8,0"
+                                            VerticalAlignment="Center"
                                             Theme="{StaticResource FlatButton}"
+                                            Foreground="{DynamicResource MaterialPrimaryMidBrush}"
+                                            Content="取消编辑"
+                                            Click="CancelRuleEdit_Click" />
+                                    <Button Grid.Column="3"
+                                            MinHeight="28"
+                                            Height="28"
+                                            Padding="8,0"
+                                            VerticalAlignment="Center"
+                                            Theme="{StaticResource FlatButton}"
+                                            Foreground="#c62828"
                                             Content="移除"
                                             Tag="{Binding}"
                                             Click="RemoveRule_Click" />
                                 </Grid>
-                            </controls:Card>
+                            </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Margin="0,6,0,0"
+                <TextBlock Name="RulesHintText"
+                           Classes="rules-hint"
+                           Margin="0,6,0,0"
                            FontSize="12"
                            Opacity="0.65"
                            TextWrapping="Wrap"
@@ -163,66 +227,76 @@
                            Foreground="{DynamicResource MaterialPrimaryMidBrush}"
                            Text="策略选择" />
 
-                <TextBlock Margin="0,0,0,6" FontWeight="SemiBold" Text="固定特定稀有度总量" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock VerticalAlignment="Center" Text="稀有度：" />
-                    <ComboBox Name="StarCombo"
-                              Classes="inline"
-                              Width="100"
-                              ItemsSource="{x:Static models:AppOptions.Stars}" />
-                    <TextBox Name="RarityCountBox"
-                             Classes="inline"
-                             Width="88"
-                             PlaceholderText="数量" />
-                    <Button Name="RarityRuleSubmitButton"
-                            Classes="inline"
-                            Content="添加"
-                            Click="AddRarityRule_Click" />
-                </StackPanel>
+                <Border Name="RaritySection" Classes="form-section" Margin="0,0,0,4">
+                    <StackPanel>
+                        <TextBlock Margin="0,0,0,6" FontWeight="SemiBold" Text="某星干员总数" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock VerticalAlignment="Center" Text="稀有度：" />
+                            <ComboBox Name="StarCombo"
+                                      Classes="inline"
+                                      Width="100"
+                                      ItemsSource="{x:Static models:AppOptions.Stars}" />
+                            <TextBox Name="RarityCountBox"
+                                     Classes="inline"
+                                     Width="88"
+                                     PlaceholderText="数量" />
+                            <Button Name="RarityRuleSubmitButton"
+                                    Classes="inline"
+                                    Content="添加"
+                                    Click="AddRarityRule_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                <TextBlock Margin="0,14,0,6" FontWeight="SemiBold" Text="固定特定职业数量" />
-                <WrapPanel>
-                    <TextBlock Margin="0,0,8,8" VerticalAlignment="Center" Text="职业：" />
-                    <ComboBox Name="CareerCombo"
-                              Classes="inline"
-                              Width="120"
-                              Margin="0,0,16,8"
-                              ItemsSource="{x:Static models:AppOptions.Careers}" />
-                    <TextBlock Margin="0,0,8,8" VerticalAlignment="Center" Text="方式：" />
-                    <ComboBox Name="CareerConstraintModeCombo"
-                              Classes="inline"
-                              Width="100"
-                              Margin="0,0,8,8"
-                              SelectedIndex="0">
-                        <ComboBoxItem Content="特定值" />
-                        <ComboBoxItem Content="范围" />
-                    </ComboBox>
-                    <TextBox Name="CareerCountBox"
-                             Classes="inline"
-                             Width="88"
-                             Margin="0,0,8,8"
-                             PlaceholderText="数量" />
-                    <TextBox Name="CareerRangeMinBox"
-                             Classes="inline"
-                             Width="88"
-                             Margin="0,0,8,8"
-                             PlaceholderText="最小"
-                             IsVisible="False" />
-                    <TextBox Name="CareerRangeMaxBox"
-                             Classes="inline"
-                             Width="88"
-                             Margin="0,0,8,8"
-                             PlaceholderText="最大"
-                             IsVisible="False" />
-                    <Button Name="CareerRuleSubmitButton"
-                            Classes="inline"
-                            Margin="0,0,0,8"
-                            Content="添加"
-                            Click="AddCareerConstraint_Click" />
-                </WrapPanel>
+                <Border Name="CareerSection" Classes="form-section" Margin="0,4,0,4">
+                    <StackPanel>
+                        <TextBlock Margin="0,0,0,6" FontWeight="SemiBold" Text="某职业总数" />
+                        <WrapPanel>
+                            <TextBlock Margin="0,0,8,8" VerticalAlignment="Center" Text="职业：" />
+                            <ComboBox Name="CareerCombo"
+                                      Classes="inline"
+                                      Width="120"
+                                      Margin="0,0,16,8"
+                                      ItemsSource="{x:Static models:AppOptions.Careers}" />
+                            <TextBlock Margin="0,0,8,8" VerticalAlignment="Center" Text="方式：" />
+                            <ComboBox Name="CareerConstraintModeCombo"
+                                      Classes="inline"
+                                      Width="100"
+                                      Margin="0,0,8,8"
+                                      SelectedIndex="0">
+                                <ComboBoxItem Content="特定值" />
+                                <ComboBoxItem Content="范围" />
+                            </ComboBox>
+                            <TextBox Name="CareerCountBox"
+                                     Classes="inline"
+                                     Width="88"
+                                     Margin="0,0,8,8"
+                                     PlaceholderText="数量" />
+                            <TextBox Name="CareerRangeMinBox"
+                                     Classes="inline"
+                                     Width="88"
+                                     Margin="0,0,8,8"
+                                     PlaceholderText="最小"
+                                     IsVisible="False" />
+                            <TextBox Name="CareerRangeMaxBox"
+                                     Classes="inline"
+                                     Width="88"
+                                     Margin="0,0,8,8"
+                                     PlaceholderText="最大"
+                                     IsVisible="False" />
+                            <Button Name="CareerRuleSubmitButton"
+                                    Classes="inline"
+                                    Margin="0,0,0,8"
+                                    Content="添加"
+                                    Click="AddCareerConstraint_Click" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
 
-                <TextBlock Margin="0,14,0,6" FontWeight="SemiBold" Text="限制特定干员人数" />
-                <WrapPanel Name="StaffSubsetFlowPanel">
+                <Border Name="StaffSection" Classes="form-section" Margin="0,4,0,0">
+                    <StackPanel>
+                        <TextBlock Margin="0,0,0,6" FontWeight="SemiBold" Text="某些干员总数" />
+                        <WrapPanel Name="StaffSubsetFlowPanel">
                     <TextBlock Margin="0,0,2,8" VerticalAlignment="Center" Text="从" />
                     <Button Name="StaffSubsetAddButton"
                             Classes="inline"
@@ -273,6 +347,8 @@
                             Content="添加"
                             Click="AddStaffSubsetRule_Click" />
                 </WrapPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
             <StackPanel Grid.Row="5"

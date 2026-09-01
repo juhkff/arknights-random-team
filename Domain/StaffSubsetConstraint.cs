@@ -1,6 +1,6 @@
 namespace arknights_random_team.Domain;
 
-/// <summary>「限制特定干员人数」合并后用于组队的约束。</summary>
+/// <summary>「某些干员总数」合并后用于组队的约束。</summary>
 public sealed class StaffSubsetConstraint
 {
     public HashSet<string> Names { get; set; } = [];

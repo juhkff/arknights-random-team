@@ -4,14 +4,16 @@ namespace arknights_random_team.Domain;
 
 /// <summary>
 /// 在满足稀有度、职业、指定干员子集人数等约束的前提下，从候选池无放回组队。
-/// 先把互斥的职业范围实例化为可行配额；填空位时若仍有下限未凑齐，则只从当前最紧的那一条配额对应的合法干员里均匀抽取
-/// （不优待「一人占多项」），下限全部满足后再从剩余合法干员里抽。走入死角才回溯，并用节点预算避免卡死。
+/// 流程：保存期已排除同维冲突；生成时先把所有范围约束联合实例化为精确配额；
+/// 每次只抽 1 人，从当前最紧配额（合法集合最小）对应的干员里均匀抽取（不优待「一人占多项」）；
+/// 人选走死才回溯，配额组合穷尽则换一组范围抽样。下限凑齐后从剩余合法干员填满人数。
 /// </summary>
 public static class ConstrainedTeamPicker
 {
     private const int CareerN = 8;
     private const int MaxRestarts = 32;
     private const int MaxNodesPerRestart = 4_000;
+    private static readonly Dictionary<Career, (int lo, int hi)> NoCareerRange = new();
 
     public static bool TryPick(
         IReadOnlyList<Staff> pool,
@@ -65,7 +67,7 @@ public static class ConstrainedTeamPicker
                 if (c.ExactOrLo < 0 || c.ExactOrLo > k)
                     return false;
             }
-            else if (c.ExactOrLo > c.Hi || c.ExactOrLo < 0 || c.Hi > k)
+            else if (c.ExactOrLo > c.Hi || c.ExactOrLo < 0 || c.ExactOrLo > k)
             {
                 return false;
             }
@@ -74,7 +76,7 @@ public static class ConstrainedTeamPicker
         if (rarityReq.Values.Sum() > k || careerExact.Values.Sum() > k)
             return false;
 
-        if (MinCareerSlotsRequired(careerExact, careerRange) > k)
+        if (StrategyRules.MinCareerSlots(careerExact, careerRange) > k)
             return false;
 
         if (!PoolHasCapacity(pool, k, rarityReq, careerExact, careerRange, staffSubsets))
@@ -86,7 +88,13 @@ public static class ConstrainedTeamPicker
             if (!TrySampleCareerTargets(pool, k, careerExact, careerRange, random, out var careerTarget))
                 continue;
 
-            builder.Reset(careerTarget);
+            if (!TrySampleStaffSubsetTargets(pool, k, staffSubsets, random, out var sampledSubsets))
+                continue;
+
+            if (!PoolHasCapacity(pool, k, rarityReq, careerTarget, NoCareerRange, sampledSubsets))
+                continue;
+
+            builder.Reset(careerTarget, sampledSubsets);
             if (builder.Search())
             {
                 team = [.. builder.Picked];
@@ -95,22 +103,6 @@ public static class ConstrainedTeamPicker
         }
 
         return false;
-    }
-
-    private static int MinCareerSlotsRequired(
-        Dictionary<Career, int> careerExact,
-        Dictionary<Career, (int lo, int hi)> careerRange)
-    {
-        var sum = 0;
-        foreach (Career c in Enum.GetValues<Career>())
-        {
-            if (careerExact.TryGetValue(c, out var ex))
-                sum += ex;
-            else if (careerRange.TryGetValue(c, out var rg))
-                sum += rg.lo;
-        }
-
-        return sum;
     }
 
     private static bool PoolHasCapacity(
@@ -140,7 +132,7 @@ public static class ConstrainedTeamPicker
             if (careerExact.ContainsKey(kv.Key))
                 continue;
             var inS = pool.Count(s => s.Career == kv.Key);
-            if (inS < kv.Value.lo || pool.Count - inS < k - kv.Value.hi)
+            if (inS < kv.Value.lo || pool.Count - inS < k - Math.Min(kv.Value.hi, k))
                 return false;
         }
 
@@ -156,9 +148,9 @@ public static class ConstrainedTeamPicker
                     outS++;
             }
 
-            var maxTake = c.IsExact ? c.ExactOrLo : c.Hi;
+            var maxTake = c.IsExact ? c.ExactOrLo : Math.Min(c.Hi, k);
             var minTake = c.ExactOrLo;
-            if (minTake > inS || maxTake > k || outS < k - maxTake)
+            if (minTake > inS || minTake > k || outS < k - maxTake)
                 return false;
         }
 
@@ -234,6 +226,53 @@ public static class ConstrainedTeamPicker
         }
 
         return remain >= 0 && remain <= poolUnconstrained;
+    }
+
+    /// <summary>
+    /// 将指定干员人数范围随机实例化为仍满足池容量与全队人数的精确值。
+    /// </summary>
+    private static bool TrySampleStaffSubsetTargets(
+        IReadOnlyList<Staff> pool,
+        int k,
+        IReadOnlyList<StaffSubsetConstraint> staffSubsets,
+        Random rng,
+        out List<StaffSubsetConstraint> sampled)
+    {
+        sampled = new List<StaffSubsetConstraint>(staffSubsets.Count);
+        foreach (var c in staffSubsets)
+        {
+            if (c.IsExact)
+            {
+                sampled.Add(c);
+                continue;
+            }
+
+            var inS = 0;
+            var outS = 0;
+            foreach (var s in pool)
+            {
+                if (c.Names.Contains(s.Name))
+                    inS++;
+                else
+                    outS++;
+            }
+
+            var nMin = Math.Max(c.ExactOrLo, k - outS);
+            var nMax = Math.Min(Math.Min(c.Hi, inS), k);
+            if (nMin > nMax)
+                return false;
+
+            var n = rng.Next(nMin, nMax + 1);
+            sampled.Add(new StaffSubsetConstraint
+            {
+                Names = c.Names,
+                IsExact = true,
+                ExactOrLo = n,
+                Hi = 0
+            });
+        }
+
+        return true;
     }
 
     private static void Shuffle<T>(IList<T> order, Random rng)
@@ -335,7 +374,7 @@ public static class ConstrainedTeamPicker
             }
         }
 
-        public void Reset(Dictionary<Career, int> careerTarget)
+        public void Reset(Dictionary<Career, int> careerTarget, IReadOnlyList<StaffSubsetConstraint> staffSubsets)
         {
             Picked.Clear();
             Array.Clear(_used);
@@ -345,6 +384,13 @@ public static class ConstrainedTeamPicker
             Array.Clear(_unusedStar);
             Array.Clear(_unusedCareer);
             _nodes = 0;
+
+            for (var u = 0; u < _subLo.Length; u++)
+            {
+                var c = staffSubsets[u];
+                _subLo[u] = c.ExactOrLo;
+                _subHi[u] = c.IsExact ? c.ExactOrLo : c.Hi;
+            }
 
             for (var c = 0; c < CareerN; c++)
             {
@@ -484,9 +530,7 @@ public static class ConstrainedTeamPicker
         }
 
         /// <summary>
-        /// 仍有下限时，只从「当前最紧配额」的桶里抽人：桶内均匀随机，不优待跨配额干员。
-        /// 某条下限在合法集合中已无人可填，则当前状态无解。
-        /// 下限都凑齐后，候选为全部剩余合法干员。
+        /// 步骤 3–4：当前合法干员即各条目的动态子池；仍有下限时只从人数最少的那条子池里抽 1 人。
         /// </summary>
         private bool TryRestrictToTightestOpenQuota()
         {
@@ -756,92 +800,5 @@ public static class ConstrainedTeamPicker
             Picked.RemoveAt(Picked.Count - 1);
             _used[idx] = false;
         }
-    }
-
-    public static void MergeRules(
-        RandomStrategyDefinition def,
-        out Dictionary<int, int> rarityReq,
-        out Dictionary<Career, int> careerExact,
-        out Dictionary<Career, (int lo, int hi)> careerRange,
-        out List<StaffSubsetConstraint> staffSubsets)
-    {
-        rarityReq = new Dictionary<int, int>();
-        careerExact = new Dictionary<Career, int>();
-        careerRange = new Dictionary<Career, (int lo, int hi)>();
-        staffSubsets = [];
-
-        if (def.Rules.Count == 0)
-            return;
-
-        foreach (var r in def.Rules)
-        {
-            if (r.Kind == StrategyRuleKind.Rarity && r.Star is >= 1 and <= 6 && r.Count > 0)
-            {
-                rarityReq.TryGetValue(r.Star, out var prev);
-                rarityReq[r.Star] = prev + r.Count;
-            }
-            else if (r.Kind == StrategyRuleKind.Career && r.Count > 0)
-            {
-                careerExact.TryGetValue(r.Career, out var prev);
-                careerExact[r.Career] = prev + r.Count;
-            }
-            else if (r.Kind == StrategyRuleKind.CareerRange)
-            {
-                var lo = r.Count;
-                var hi = r.CountMax;
-                if (lo > hi || lo < 0)
-                    continue;
-                if (!careerRange.TryGetValue(r.Career, out var prev))
-                    careerRange[r.Career] = (lo, hi);
-                else
-                {
-                    var nl = Math.Max(prev.lo, lo);
-                    var nh = Math.Min(prev.hi, hi);
-                    careerRange[r.Career] = nl > nh ? (1, 0) : (nl, nh);
-                }
-            }
-            else if (r.Kind == StrategyRuleKind.StaffSubsetExact)
-            {
-                var names = NormalizeStaffNames(r.StaffNames);
-                if (names.Count == 0 || r.Count < 0)
-                    continue;
-                staffSubsets.Add(new StaffSubsetConstraint
-                {
-                    Names = names,
-                    IsExact = true,
-                    ExactOrLo = r.Count,
-                    Hi = 0
-                });
-            }
-            else if (r.Kind == StrategyRuleKind.StaffSubsetRange)
-            {
-                var names = NormalizeStaffNames(r.StaffNames);
-                var lo = r.Count;
-                var hi = r.CountMax;
-                if (names.Count == 0 || lo > hi || lo < 0)
-                    continue;
-                staffSubsets.Add(new StaffSubsetConstraint
-                {
-                    Names = names,
-                    IsExact = false,
-                    ExactOrLo = lo,
-                    Hi = hi
-                });
-            }
-        }
-    }
-
-    private static HashSet<string> NormalizeStaffNames(List<string>? raw)
-    {
-        var set = new HashSet<string>();
-        if (raw == null)
-            return set;
-        foreach (var n in raw)
-        {
-            if (!string.IsNullOrWhiteSpace(n))
-                set.Add(n.Trim());
-        }
-
-        return set;
     }
 }

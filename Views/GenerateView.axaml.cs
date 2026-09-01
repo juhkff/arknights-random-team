@@ -25,6 +25,7 @@ public partial class GenerateView : UserControl
         DataContext = this;
         InitializeComponent();
         AppState.Strategies.CollectionChanged += OnStrategiesChanged;
+        CountSlider.Maximum = AppOptions.MaxTeamSize;
         RefreshStrategyCombo();
         RandomNumText.Text = ((int)CountSlider.Value).ToString();
     }
@@ -87,18 +88,22 @@ public partial class GenerateView : UserControl
             return;
         }
 
-        ConstrainedTeamPicker.MergeRules(strategy, out var rarityReq, out var careerExact, out var careerRange, out var staffSubsets);
-        if (rarityReq.Count == 0 && careerExact.Count == 0 && careerRange.Count == 0 && staffSubsets.Count == 0)
+        if (!StrategyRules.TryMerge(strategy.Rules, out var merged, out var mergeError))
+        {
+            await AppDialogs.Alert(owner, mergeError, "无法满足策略");
+            return;
+        }
+
+        if (!merged.HasAny)
         {
             PickUniformNoReplace(pool, resultNum, random);
             return;
         }
 
-        if (careerRange.Values.Any(x => x.lo > x.hi))
-        {
-            await AppDialogs.Alert(owner, "策略中存在互相冲突的职业数量范围条目（交集为空），请修改后重试。", "无法满足策略");
-            return;
-        }
+        var rarityReq = merged.RarityExact;
+        var careerExact = merged.CareerExact;
+        var careerRange = merged.CareerRange;
+        var staffSubsets = merged.StaffSubsets;
 
         if (rarityReq.Values.Sum() > resultNum || careerExact.Values.Sum() > resultNum)
         {
@@ -106,16 +111,7 @@ public partial class GenerateView : UserControl
             return;
         }
 
-        var minCareer = 0;
-        foreach (Career career in Enum.GetValues<Career>())
-        {
-            if (careerExact.TryGetValue(career, out var ex))
-                minCareer += ex;
-            else if (careerRange.TryGetValue(career, out var rg))
-                minCareer += rg.lo;
-        }
-
-        if (minCareer > resultNum)
+        if (StrategyRules.MinCareerSlots(careerExact, careerRange) > resultNum)
         {
             await AppDialogs.Alert(owner, "策略中各职业数量（及范围下限）之和超过了当前「随机数量」，请调整策略或数量。", "无法满足策略");
             return;
@@ -124,31 +120,13 @@ public partial class GenerateView : UserControl
         foreach (var c in staffSubsets)
         {
             var inPool = pool.Count(s => c.Names.Contains(s.Name));
-            var outPool = pool.Count(s => !c.Names.Contains(s.Name));
-            if (c.IsExact)
+            var outPool = pool.Count - inPool;
+            var maxTake = c.IsExact ? c.ExactOrLo : c.Hi;
+            var nMin = Math.Max(c.ExactOrLo, resultNum - outPool);
+            var nMax = Math.Min(Math.Min(maxTake, inPool), resultNum);
+            if (nMin > nMax)
             {
-                var n = c.ExactOrLo;
-                if (n > resultNum)
-                {
-                    await AppDialogs.Alert(owner, "「限制特定干员人数」的固定值超过了当前「随机数量」。", "无法满足策略");
-                    return;
-                }
-
-                if (n > inPool)
-                {
-                    await AppDialogs.Alert(owner, "「限制特定干员人数」：在已选干员池中，指定干员不足以满足固定人数，请调整勾选或策略。", "无法满足策略");
-                    return;
-                }
-
-                if (n == 0 && outPool < resultNum)
-                {
-                    await AppDialogs.Alert(owner, "「限制特定干员人数」为 0 时，需要足够多的「非指定」已选干员填满阵容，请调整勾选或策略。", "无法满足策略");
-                    return;
-                }
-            }
-            else if (c.ExactOrLo > inPool || c.Hi > resultNum || c.ExactOrLo > resultNum)
-            {
-                await AppDialogs.Alert(owner, "「限制特定干员人数」的范围与当前已选干员池或随机数量不兼容，请调整。", "无法满足策略");
+                await AppDialogs.Alert(owner, "「某些干员总数」与当前已选干员池或随机数量不兼容，请调整勾选或策略。", "无法满足策略");
                 return;
             }
         }

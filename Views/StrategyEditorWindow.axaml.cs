@@ -6,6 +6,8 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
@@ -55,14 +57,12 @@ public partial class StrategyEditorWindow : Window
             _editingRule = r;
             LoadRuleIntoForms(r);
             UpdateSubmitButtonLabels();
-            CancelRuleEditButton.IsVisible = true;
         }
         else
         {
             _editingRule = null;
             ClearStrategyEntryForms();
             UpdateSubmitButtonLabels();
-            CancelRuleEditButton.IsVisible = false;
         }
     }
 
@@ -76,7 +76,6 @@ public partial class StrategyEditorWindow : Window
         _rulesListSelectionSuppress = false;
         ClearStrategyEntryForms();
         UpdateSubmitButtonLabels();
-        CancelRuleEditButton.IsVisible = false;
     }
 
     private void ClearStrategyEntryFieldsInner()
@@ -156,7 +155,39 @@ public partial class StrategyEditorWindow : Window
         CareerRuleSubmitButton.Content = careerEdit ? "保存" : "添加";
         var staffEdit = _editingRule?.Kind is StrategyRuleKind.StaffSubsetExact or StrategyRuleKind.StaffSubsetRange;
         StaffSubsetRuleSubmitButton.Content = staffEdit ? "保存" : "添加";
+        UpdateEditingChrome();
     }
+
+    private void UpdateEditingChrome()
+    {
+        var editing = _editingRule != null;
+        RulesHintText.Text = editing
+            ? "正在编辑选中条目。请在下方高亮区域修改后点「保存」，或点「取消编辑」退出。"
+            : "点击条目载入到下方对应区域修改，完成后点「保存」；点「取消编辑」或取消选中可退出编辑。";
+        RulesHintText.Classes.Set("editing", editing);
+        SetSectionEditing(RaritySection, _editingRule?.Kind == StrategyRuleKind.Rarity);
+        SetSectionEditing(CareerSection, _editingRule?.Kind is StrategyRuleKind.Career or StrategyRuleKind.CareerRange);
+        SetSectionEditing(StaffSection,
+            _editingRule?.Kind is StrategyRuleKind.StaffSubsetExact or StrategyRuleKind.StaffSubsetRange);
+        Dispatcher.UIThread.Post(SyncCancelEditButtons, DispatcherPriority.Loaded);
+    }
+
+    private void SyncCancelEditButtons()
+    {
+        var selected = RulesList.SelectedIndex;
+        for (var i = 0; i < RulesList.ItemCount; i++)
+        {
+            if (RulesList.ContainerFromIndex(i) is not Control container)
+                continue;
+            foreach (var button in container.GetVisualDescendants().OfType<Button>())
+            {
+                if (button.Classes.Contains("cancel-edit"))
+                    button.IsVisible = i == selected;
+            }
+        }
+    }
+
+    private static void SetSectionEditing(Border section, bool on) => section.Classes.Set("editing", on);
 
     private void ReplaceRuleAt(StrategyRule oldRule, StrategyRule newRule)
     {
@@ -299,7 +330,7 @@ public partial class StrategyEditorWindow : Window
         if (_editingRule != null &&
             _editingRule.Kind is not StrategyRuleKind.StaffSubsetExact and not StrategyRuleKind.StaffSubsetRange)
         {
-            await AppDialogs.Alert(this, "当前选中条目不是干员池限制类型。请先点「取消编辑」或选择对应条目后再操作。");
+            await AppDialogs.Alert(this, "当前选中条目不是「某些干员总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
             return;
         }
 
@@ -314,6 +345,7 @@ public partial class StrategyEditorWindow : Window
         }
 
         var names = new List<string>(_staffSubsetDraft);
+        StrategyRule newRule;
         if (StaffSubsetModeCombo.SelectedIndex == 0)
         {
             if (!int.TryParse(StaffSubsetExactCountBox.Text?.Trim(), out var cn) || cn < 0)
@@ -328,19 +360,12 @@ public partial class StrategyEditorWindow : Window
                 return;
             }
 
-            var newRule = new StrategyRule
+            newRule = new StrategyRule
             {
                 Kind = StrategyRuleKind.StaffSubsetExact,
                 StaffNames = names,
                 Count = cn
             };
-            if (_editingRule != null)
-            {
-                ReplaceRuleAt(_editingRule, newRule);
-                return;
-            }
-
-            _target.Rules.Add(newRule);
         }
         else
         {
@@ -368,21 +393,17 @@ public partial class StrategyEditorWindow : Window
                 return;
             }
 
-            var newRuleR = new StrategyRule
+            newRule = new StrategyRule
             {
                 Kind = StrategyRuleKind.StaffSubsetRange,
                 StaffNames = names,
                 Count = lo,
                 CountMax = hi
             };
-            if (_editingRule != null)
-            {
-                ReplaceRuleAt(_editingRule, newRuleR);
-                return;
-            }
-
-            _target.Rules.Add(newRuleR);
         }
+
+        if (!await CommitRuleAsync(newRule))
+            return;
 
         _staffSubsetDraft.Clear();
         RefreshStaffSubsetTagPanel();
@@ -446,18 +467,46 @@ public partial class StrategyEditorWindow : Window
             _rulesListSelectionSuppress = false;
             ClearStrategyEntryForms();
             UpdateSubmitButtonLabels();
-            CancelRuleEditButton.IsVisible = false;
             return;
         }
 
         _target.Rules.Remove(rule);
     }
 
+    private async Task<bool> CommitRuleAsync(StrategyRule newRule)
+    {
+        var prospective = _target.Rules.ToList();
+        if (_editingRule != null)
+        {
+            var idx = prospective.IndexOf(_editingRule);
+            if (idx < 0)
+                return false;
+            prospective[idx] = newRule;
+        }
+        else
+        {
+            prospective.Add(newRule);
+        }
+
+        if (!StrategyRules.TryValidate(prospective, out var error))
+        {
+            await AppDialogs.Alert(this, error, "条目冲突");
+            return false;
+        }
+
+        if (_editingRule != null)
+            ReplaceRuleAt(_editingRule, newRule);
+        else
+            _target.Rules.Add(newRule);
+
+        return true;
+    }
+
     private async void AddRarityRule_Click(object? sender, RoutedEventArgs e)
     {
         if (_editingRule != null && _editingRule.Kind != StrategyRuleKind.Rarity)
         {
-            await AppDialogs.Alert(this, "当前选中条目不是「固定特定稀有度总量」类型。请先点「取消编辑」或选择对应条目后再操作。");
+            await AppDialogs.Alert(this, "当前选中条目不是「某星干员总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
             return;
         }
 
@@ -470,10 +519,7 @@ public partial class StrategyEditorWindow : Window
         }
 
         var newRule = new StrategyRule { Kind = StrategyRuleKind.Rarity, Star = star, Count = n };
-        if (_editingRule != null)
-            ReplaceRuleAt(_editingRule, newRule);
-        else
-            _target.Rules.Add(newRule);
+        await CommitRuleAsync(newRule);
     }
 
     private async void AddCareerConstraint_Click(object? sender, RoutedEventArgs e)
@@ -484,7 +530,7 @@ public partial class StrategyEditorWindow : Window
         if (_editingRule != null &&
             _editingRule.Kind is not StrategyRuleKind.Career and not StrategyRuleKind.CareerRange)
         {
-            await AppDialogs.Alert(this, "当前选中条目不是职业限制类型。请先点「取消编辑」或选择对应条目后再操作。");
+            await AppDialogs.Alert(this, "当前选中条目不是「某职业总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
             return;
         }
 
@@ -497,10 +543,7 @@ public partial class StrategyEditorWindow : Window
             }
 
             var newRule = new StrategyRule { Kind = StrategyRuleKind.Career, Career = career, Count = n };
-            if (_editingRule != null)
-                ReplaceRuleAt(_editingRule, newRule);
-            else
-                _target.Rules.Add(newRule);
+            await CommitRuleAsync(newRule);
             return;
         }
 
@@ -529,10 +572,7 @@ public partial class StrategyEditorWindow : Window
             Count = lo,
             CountMax = hi
         };
-        if (_editingRule != null)
-            ReplaceRuleAt(_editingRule, newRangeRule);
-        else
-            _target.Rules.Add(newRangeRule);
+        await CommitRuleAsync(newRangeRule);
     }
 
     private async void Ok_Click(object? sender, RoutedEventArgs e)
@@ -545,6 +585,13 @@ public partial class StrategyEditorWindow : Window
         }
 
         _target.Name = name;
+
+        if (!StrategyRules.TryValidate(_target.Rules, out var error))
+        {
+            await AppDialogs.Alert(this, error, "策略存在冲突");
+            return;
+        }
+
         _committed = true;
         Close(true);
     }

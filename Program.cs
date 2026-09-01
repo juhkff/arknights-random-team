@@ -11,7 +11,7 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        var dir = Path.GetDirectoryName(Environment.ProcessPath);
+        var dir = AppState.DataDirectory;
         if (!string.IsNullOrEmpty(dir))
             Directory.SetCurrentDirectory(dir);
 

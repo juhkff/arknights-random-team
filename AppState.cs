@@ -12,20 +12,26 @@ public static class AppState
 
     public static ObservableCollection<RandomStrategyDefinition> Strategies { get; } = [];
 
-    private static string DataDirectory
+    /// <summary>
+    /// 数据文件目录。调试 / <c>dotnet run</c> 时进程是 dotnet.exe，不能用 <see cref="Environment.ProcessPath"/>。
+    /// </summary>
+    public static string DataDirectory { get; } = ResolveDataDirectory();
+
+    private static string ResolveDataDirectory()
     {
-        get
+        var processPath = Environment.ProcessPath;
+        if (!string.IsNullOrWhiteSpace(processPath))
         {
-            var exe = Environment.ProcessPath;
-            if (!string.IsNullOrWhiteSpace(exe))
+            var hostName = Path.GetFileNameWithoutExtension(processPath);
+            if (!hostName.Equals("dotnet", StringComparison.OrdinalIgnoreCase))
             {
-                var dir = Path.GetDirectoryName(exe);
+                var dir = Path.GetDirectoryName(processPath);
                 if (!string.IsNullOrWhiteSpace(dir))
                     return dir;
             }
-
-            return AppContext.BaseDirectory;
         }
+
+        return Path.GetFullPath(AppContext.BaseDirectory);
     }
 
     private static string StaffPath => Path.Combine(DataDirectory, "StaffList.xml");
@@ -40,6 +46,7 @@ public static class AppState
 
     public static void Save()
     {
+        Directory.CreateDirectory(DataDirectory);
         SaveStaff();
         StrategyPersistence.Save(StrategyPath, Strategies);
     }
@@ -50,15 +57,7 @@ public static class AppState
     {
         StaffList.Clear();
         if (!File.Exists(StaffPath))
-        {
-            var xmldoc = new XmlDocument();
-            xmldoc.AppendChild(xmldoc.CreateXmlDeclaration("1.0", "utf-8", "yes"));
-            var rootElement = xmldoc.CreateElement("staffList");
-            rootElement.InnerText = "";
-            xmldoc.AppendChild(rootElement);
-            xmldoc.Save(StaffPath);
             return;
-        }
 
         var xDocument = XDocument.Load(StaffPath);
         foreach (var career in xDocument.Root?.Elements("career") ?? [])
@@ -127,6 +126,7 @@ public static class AppState
             root.AppendChild(careerElement);
         }
 
+        Directory.CreateDirectory(Path.GetDirectoryName(StaffPath)!);
         xmlDocument.Save(StaffPath);
     }
 

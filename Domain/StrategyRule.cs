@@ -22,11 +22,11 @@ public class StrategyRule
     public string SummaryLine =>
         Kind switch
         {
-            StrategyRuleKind.Rarity => $"固定特定稀有度总量：{Star} 星 × {Count}",
-            StrategyRuleKind.CareerRange => $"固定特定职业数量范围：{Career} {Count}–{CountMax}",
-            StrategyRuleKind.Career => $"固定特定职业数量：{Career} × {Count}",
-            StrategyRuleKind.StaffSubsetExact => $"限制特定干员人数：从 {FormatStaffNames()} 中固定 {Count} 个",
-            StrategyRuleKind.StaffSubsetRange => $"限制特定干员人数：从 {FormatStaffNames()} 中范围 {Count}–{CountMax} 个",
+            StrategyRuleKind.Rarity => $"某星干员总数：{Star} 星 × {Count}",
+            StrategyRuleKind.CareerRange => $"某职业总数：{Career} {Count}–{CountMax}",
+            StrategyRuleKind.Career => $"某职业总数：{Career} × {Count}",
+            StrategyRuleKind.StaffSubsetExact => $"某些干员总数：从 {FormatStaffNames()} 中固定 {Count} 个",
+            StrategyRuleKind.StaffSubsetRange => $"某些干员总数：从 {FormatStaffNames()} 中范围 {Count}–{CountMax} 个",
             _ => ""
         };
 

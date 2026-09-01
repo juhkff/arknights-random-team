@@ -42,13 +42,13 @@
                                     </StackPanel>
                                 </Grid>
                                 <TextBlock Grid.Row="1"
-                                           Margin="0,8,0,4"
+                                           Margin="0,6,0,2"
                                            Foreground="{DynamicResource MaterialBodyLightBrush}"
                                            Text="条目：" />
                                 <ItemsControl Grid.Row="2" ItemsSource="{Binding Rules}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="domain:StrategyRule">
-                                            <TextBlock Margin="0,2,0,0" Text="{Binding SummaryLine}" />
+                                            <TextBlock Margin="0,1,0,0" Text="{Binding SummaryLine}" />
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
