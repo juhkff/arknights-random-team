@@ -9,6 +9,10 @@ public class ListModel : AutomaticNotify
 {
     public ObservableCollection<Staff> StaffList { get; }
 
+    public int StaffCount => StaffList.Count;
+
+    public int SelectedStaffCount => StaffList.Count(staff => staff.IsSelected);
+
     public ListModel()
     {
         StaffList = AppState.StaffList;
@@ -53,11 +57,16 @@ public class ListModel : AutomaticNotify
         }
 
         OnPropertyChanged(nameof(IsAllStaffSelected));
+        OnPropertyChanged(nameof(StaffCount));
+        OnPropertyChanged(nameof(SelectedStaffCount));
     }
 
     private void OnStaffPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
         if (args.PropertyName == nameof(Staff.IsSelected))
+        {
             OnPropertyChanged(nameof(IsAllStaffSelected));
+            OnPropertyChanged(nameof(SelectedStaffCount));
+        }
     }
 }

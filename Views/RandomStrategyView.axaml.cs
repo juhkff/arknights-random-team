@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -11,9 +12,20 @@ public partial class RandomStrategyView : UserControl
     {
         InitializeComponent();
         StrategyItems.ItemsSource = AppState.Strategies;
+        AppState.Strategies.CollectionChanged += Strategies_CollectionChanged;
+        UpdateStrategyState();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    private void Strategies_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+        UpdateStrategyState();
+
+    private void UpdateStrategyState()
+    {
+        StrategyCountText.Text = $"{AppState.Strategies.Count} 个";
+        StrategyEmptyState.IsVisible = AppState.Strategies.Count == 0;
+    }
 
     private async void AddStrategy_Click(object? sender, RoutedEventArgs e)
     {

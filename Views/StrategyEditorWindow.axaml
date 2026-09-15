@@ -2,101 +2,56 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
         xmlns:domain="clr-namespace:arknights_random_team.Domain"
         xmlns:models="clr-namespace:arknights_random_team.Models"
         mc:Ignorable="d"
         x:Class="arknights_random_team.Views.StrategyEditorWindow"
         Title="编辑随机策略"
-        Width="640"
-        SizeToContent="Height"
-        MaxHeight="860"
+        Width="900"
+        Height="720"
+        MinWidth="760"
+        MinHeight="600"
+        CanResize="True"
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFont}"
         FontSize="14"
-        Background="{DynamicResource MaterialPaperBrush}">
+        Background="{StaticResource AppBackgroundBrush}">
     <Window.Styles>
-        <!-- 与旧项目 StrategyInlineRowHeight=32 一致：同行下拉框 / 数字框同高，下划线贴齐 -->
-        <Style Selector="ComboBox.inline">
-            <Setter Property="VerticalAlignment" Value="Bottom" />
-        </Style>
         <Style Selector="TextBox.inline">
-            <Setter Property="MinHeight" Value="32" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="MaxHeight" Value="32" />
-            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="MinWidth" Value="72" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MaxHeight" Value="40" />
+            <Setter Property="Padding" Value="10,3" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="UseFloatingPlaceholder" Value="False" />
-            <Setter Property="RenderTransform" Value="translateY(-1px)" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ DockPanel#PART_RootPanel">
-            <Setter Property="Height" Value="32" />
-            <Setter Property="MinHeight" Value="32" />
-            <Setter Property="MaxHeight" Value="32" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ Panel#PART_TextFieldPanel">
-            <Setter Property="MinHeight" Value="32" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="MaxHeight" Value="32" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ Border#PART_BackgroundTextField">
-            <Setter Property="Margin" Value="0" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ TextBlock#PART_HintsText">
-            <Setter Property="IsVisible" Value="False" />
-            <Setter Property="Height" Value="0" />
-            <Setter Property="Margin" Value="0" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ DockPanel#PART_InnerPanel > Panel#PART_TextContainer">
-            <Setter Property="Margin" Value="0,0,4,0" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="MinHeight" Value="32" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ TextBlock#PART_PlaceholderText">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ ScrollViewer#PART_ScrollViewer">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TextBox.inline /template/ Border#PART_LabelRootBorder">
-            <Setter Property="IsVisible" Value="False" />
-            <Setter Property="Height" Value="0" />
-            <Setter Property="Margin" Value="0" />
         </Style>
         <Style Selector="Button.inline">
-            <Setter Property="MinHeight" Value="32" />
-            <Setter Property="Height" Value="32" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MaxHeight" Value="40" />
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="ListBox#RulesList">
             <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style Selector="ListBox#RulesList ListBoxItem">
-            <Setter Property="Padding" Value="0,1" />
-            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,6" />
             <Setter Property="MinHeight" Value="0" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
-        <Style Selector="ListBox#RulesList ListBoxItem:selected /template/ Border#PART_RootBorder">
+        <Style Selector="ListBox#RulesList ListBoxItem:selected">
             <Setter Property="Background" Value="Transparent" />
         </Style>
-        <Style Selector="ListBox#RulesList ListBoxItem:selected /template/ Border#PART_HoverEffect">
-            <Setter Property="Opacity" Value="0" />
-        </Style>
-        <Style Selector="ListBox#RulesList ListBoxItem:selected:pointerover /template/ Border#PART_HoverEffect">
-            <Setter Property="Opacity" Value="0" />
-        </Style>
         <Style Selector="ListBox#RulesList ListBoxItem:selected Border.rule-row">
-            <Setter Property="Background" Value="{DynamicResource MaterialPrimaryLightBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource MaterialPrimaryMidBrush}" />
-            <Setter Property="BorderThickness" Value="2" />
-        </Style>
-        <Style Selector="ListBox#RulesList ListBoxItem:selected Border.rule-accent">
-            <Setter Property="Width" Value="5" />
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="ListBox#RulesList Button.cancel-edit">
             <Setter Property="IsVisible" Value="False" />
@@ -105,259 +60,281 @@
             <Setter Property="IsVisible" Value="True" />
         </Style>
         <Style Selector="TextBlock.rules-hint.editing">
-            <Setter Property="Opacity" Value="1" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
         </Style>
         <Style Selector="Border.form-section">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="CornerRadius" Value="7" />
         </Style>
         <Style Selector="Border.form-section.editing">
-            <Setter Property="Background" Value="#F8F5FC" />
-            <Setter Property="BorderBrush" Value="#E4D8F5" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-        <Style Selector="TextBox.outline /template/ TextBlock#PART_PlaceholderText">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialBodyLightBrush}" />
-        </Style>
-        <Style Selector="TextBox.outline /template/ TextBlock#PART_LabelText">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialBodyLightBrush}" />
-        </Style>
-        <Style Selector="TextBox.outline /template/ Border#PART_LabelRootBorder TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialBodyLightBrush}" />
-        </Style>
-        <Style Selector="TextBox.outline:focus /template/ TextBlock#PART_PlaceholderText">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
-        </Style>
-        <Style Selector="TextBox.outline:focus /template/ TextBlock#PART_LabelText">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
-        </Style>
-        <Style Selector="TextBox.outline:focus /template/ Border#PART_LabelRootBorder TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
     </Window.Styles>
-    <ScrollViewer>
-        <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
-            <TextBlock FontWeight="SemiBold"
-                       Foreground="{DynamicResource MaterialPrimaryMidBrush}"
-                       Text="策略名称" />
-            <TextBox Name="NameBox"
-                     Grid.Row="1"
-                     Margin="0,8,0,16"
-                     Classes="outline"
-                     Theme="{StaticResource OutlineTextBox}"
-                     UseFloatingPlaceholder="True"
-                     assists:TextFieldAssist.Label="请输入策略名称" />
 
-            <TextBlock Grid.Row="2"
-                       Margin="0,0,0,8"
-                       VerticalAlignment="Center"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource MaterialPrimaryMidBrush}"
-                       Text="策略条目" />
+    <Grid RowDefinitions="72,*,68">
+        <Border Grid.Row="0"
+                Padding="24,0"
+                Background="{StaticResource AppSurfaceBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <StackPanel VerticalAlignment="Center" Spacing="3">
+                <TextBlock FontSize="20" FontWeight="Bold" Text="随机策略编辑器" />
+                <TextBlock Classes="caption" Text="配置阵容生成时需要满足的规则" />
+            </StackPanel>
+        </Border>
 
-            <StackPanel Grid.Row="3" Margin="0,0,0,16">
-                <ListBox Name="RulesList"
-                         MinHeight="120"
-                         MaxHeight="220"
-                         SelectionMode="Single"
-                         SelectionChanged="RulesList_SelectionChanged">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="domain:StrategyRule">
-                            <Border Classes="rule-row"
-                                    MinHeight="0"
-                                    Margin="0,0,0,2"
-                                    Padding="8,4"
-                                    Background="#F6F3FB"
-                                    CornerRadius="6">
-                                <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                    <Border Classes="rule-accent"
-                                            Width="3"
-                                            Margin="0,1,8,1"
-                                            Background="{DynamicResource MaterialPrimaryMidBrush}"
-                                            CornerRadius="1.5" />
-                                    <TextBlock Grid.Column="1"
-                                               VerticalAlignment="Center"
-                                               TextWrapping="Wrap"
-                                               Text="{Binding SummaryLine}" />
-                                    <Button Grid.Column="2"
-                                            Classes="cancel-edit"
-                                            MinHeight="28"
-                                            Height="28"
-                                            Margin="8,0,0,0"
-                                            Padding="8,0"
-                                            VerticalAlignment="Center"
-                                            Theme="{StaticResource FlatButton}"
-                                            Foreground="{DynamicResource MaterialPrimaryMidBrush}"
-                                            Content="取消编辑"
-                                            Click="CancelRuleEdit_Click" />
-                                    <Button Grid.Column="3"
-                                            MinHeight="28"
-                                            Height="28"
-                                            Padding="8,0"
-                                            VerticalAlignment="Center"
-                                            Theme="{StaticResource FlatButton}"
-                                            Foreground="#c62828"
-                                            Content="移除"
-                                            Tag="{Binding}"
-                                            Click="RemoveRule_Click" />
+        <Grid Grid.Row="1"
+              Margin="24,20"
+              ColumnDefinitions="330,20,*">
+            <Grid Grid.Column="0" RowDefinitions="Auto,18,*">
+                <Border Grid.Row="0" Classes="surface" Padding="16">
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="field-label" Text="策略名称" />
+                        <TextBox Name="NameBox"
+                                 Classes="form-control dense"
+                                 HorizontalAlignment="Stretch"
+                                 PlaceholderText="输入策略名称" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="2" Classes="surface" Padding="16">
+                    <Grid RowDefinitions="Auto,10,*,10,Auto">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                            <TextBlock Classes="section-title" Text="已有规则" />
+                            <TextBlock Grid.Column="1"
+                                       VerticalAlignment="Center"
+                                       Classes="caption"
+                                       Text="选择后可编辑" />
+                        </Grid>
+
+                        <Grid Grid.Row="2">
+                            <ListBox Name="RulesList"
+                                     SelectionMode="Single"
+                                     SelectionChanged="RulesList_SelectionChanged">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="domain:StrategyRule">
+                                        <Border Classes="rule-row"
+                                                Padding="10,8"
+                                                Background="{StaticResource AppSurfaceSubtleBrush}"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="1"
+                                                CornerRadius="6">
+                                            <Grid ColumnDefinitions="4,*,Auto">
+                                                <Border Width="3"
+                                                        Margin="0,1,9,1"
+                                                        Background="{StaticResource AppPrimaryBrush}"
+                                                        CornerRadius="2" />
+                                                <TextBlock Grid.Column="1"
+                                                           VerticalAlignment="Center"
+                                                           Text="{Binding SummaryLine}"
+                                                           TextWrapping="Wrap" />
+                                                <StackPanel Grid.Column="2"
+                                                            Margin="8,0,0,0"
+                                                            Orientation="Horizontal"
+                                                            Spacing="2">
+                                                    <Button Classes="secondary compact cancel-edit"
+                                                            Content="取消编辑"
+                                                            Click="CancelRuleEdit_Click" />
+                                                    <Button Classes="danger compact"
+                                                            Content="移除"
+                                                            Tag="{Binding}"
+                                                            Click="RemoveRule_Click" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <TextBlock Name="RulesEmptyState"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"
+                                       Classes="muted"
+                                       FontWeight="SemiBold"
+                                       Text="暂无规则" />
+                        </Grid>
+
+                        <TextBlock Name="RulesHintText"
+                                   Grid.Row="4"
+                                   Classes="caption rules-hint"
+                                   Text="未选择规则" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Column="2" RowDefinitions="Auto,12,*">
+                <StackPanel Grid.Row="0" Spacing="3">
+                    <TextBlock Classes="section-title" Text="规则构建器" />
+                    <TextBlock Classes="caption" Text="稀有度、职业与指定干员" />
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="2"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="10">
+                        <Border Name="RaritySection" Classes="form-section">
+                            <StackPanel Spacing="12">
+                                <TextBlock FontWeight="SemiBold" Text="稀有度人数" />
+                                <Grid ColumnDefinitions="1.1*,10,*,10,Auto"
+                                      RowDefinitions="Auto,6,40">
+                                    <TextBlock Grid.Column="0" Classes="caption" Text="稀有度" />
+                                    <TextBlock Grid.Column="2" Classes="caption" Text="人数" />
+                                    <ComboBox Name="StarCombo"
+                                              Grid.Row="2"
+                                              Grid.Column="0"
+                                              Classes="inline dense"
+                                              HorizontalAlignment="Stretch"
+                                              ItemsSource="{x:Static models:AppOptions.Stars}" />
+                                    <TextBox Name="RarityCountBox"
+                                             Grid.Row="2"
+                                             Grid.Column="2"
+                                             Classes="inline dense"
+                                             HorizontalAlignment="Stretch"
+                                             PlaceholderText="数量" />
+                                    <Button Name="RarityRuleSubmitButton"
+                                            Grid.Row="2"
+                                            Grid.Column="4"
+                                            Classes="primary inline"
+                                            Content="添加"
+                                            Click="AddRarityRule_Click" />
                                 </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-                <TextBlock Name="RulesHintText"
-                           Classes="rules-hint"
-                           Margin="0,6,0,0"
-                           FontSize="12"
-                           Opacity="0.65"
-                           TextWrapping="Wrap"
-                           Text="点击条目载入到下方对应区域修改，完成后点「保存」；点「取消编辑」或取消选中可退出编辑。" />
-            </StackPanel>
+                            </StackPanel>
+                        </Border>
 
-            <StackPanel Grid.Row="4" Margin="0,0,0,16">
-                <Rectangle Height="1" Fill="{DynamicResource MaterialDividerBrush}" />
-                <TextBlock Margin="0,12,0,12"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource MaterialPrimaryMidBrush}"
-                           Text="策略选择" />
+                        <Border Name="CareerSection" Classes="form-section">
+                            <StackPanel Spacing="12">
+                                <TextBlock FontWeight="SemiBold" Text="职业人数" />
+                                <Grid ColumnDefinitions="1.1*,10,*,10,1.45*,10,Auto"
+                                      RowDefinitions="Auto,6,40">
+                                    <TextBlock Grid.Column="0" Classes="caption" Text="职业" />
+                                    <TextBlock Grid.Column="2" Classes="caption" Text="约束" />
+                                    <TextBlock Grid.Column="4" Classes="caption" Text="人数 / 范围" />
+                                    <ComboBox Name="CareerCombo"
+                                              Grid.Row="2"
+                                              Grid.Column="0"
+                                              Classes="inline dense"
+                                              HorizontalAlignment="Stretch"
+                                              ItemsSource="{x:Static models:AppOptions.Careers}" />
+                                    <ComboBox Name="CareerConstraintModeCombo"
+                                              Grid.Row="2"
+                                              Grid.Column="2"
+                                              Classes="inline dense"
+                                              HorizontalAlignment="Stretch"
+                                              SelectedIndex="0">
+                                        <ComboBoxItem Content="固定值" />
+                                        <ComboBoxItem Content="范围" />
+                                    </ComboBox>
+                                    <Grid Grid.Row="2" Grid.Column="4">
+                                        <TextBox Name="CareerCountBox"
+                                                 Classes="inline dense"
+                                                 HorizontalAlignment="Stretch"
+                                                 PlaceholderText="数量" />
+                                        <Grid ColumnDefinitions="*,6,*">
+                                            <TextBox Name="CareerRangeMinBox"
+                                                     Grid.Column="0"
+                                                     Classes="inline dense"
+                                                     HorizontalAlignment="Stretch"
+                                                     PlaceholderText="最小"
+                                                     IsVisible="False" />
+                                            <TextBox Name="CareerRangeMaxBox"
+                                                     Grid.Column="2"
+                                                     Classes="inline dense"
+                                                     HorizontalAlignment="Stretch"
+                                                     PlaceholderText="最大"
+                                                     IsVisible="False" />
+                                        </Grid>
+                                    </Grid>
+                                    <Button Name="CareerRuleSubmitButton"
+                                            Grid.Row="2"
+                                            Grid.Column="6"
+                                            Classes="primary inline"
+                                            Content="添加"
+                                            Click="AddCareerConstraint_Click" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
-                <Border Name="RaritySection" Classes="form-section" Margin="0,0,0,4">
-                    <StackPanel>
-                        <TextBlock Margin="0,0,0,6" FontWeight="SemiBold" Text="某星干员总数" />
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock VerticalAlignment="Center" Text="稀有度：" />
-                            <ComboBox Name="StarCombo"
-                                      Classes="inline"
-                                      Width="100"
-                                      ItemsSource="{x:Static models:AppOptions.Stars}" />
-                            <TextBox Name="RarityCountBox"
-                                     Classes="inline"
-                                     Width="88"
-                                     PlaceholderText="数量" />
-                            <Button Name="RarityRuleSubmitButton"
-                                    Classes="inline"
-                                    Content="添加"
-                                    Click="AddRarityRule_Click" />
-                        </StackPanel>
+                        <Border Name="StaffSection" Classes="form-section">
+                            <StackPanel Spacing="12">
+                                <TextBlock FontWeight="SemiBold" Text="指定干员人数" />
+                                <StackPanel Spacing="6">
+                                    <TextBlock Classes="caption" Text="干员范围" />
+                                    <WrapPanel Name="StaffSubsetFlowPanel" MinHeight="36">
+                                        <Button Name="StaffSubsetAddButton"
+                                                Classes="secondary inline"
+                                                MinWidth="96"
+                                                Margin="0,0,8,6"
+                                                Content="选择干员"
+                                                Click="StaffSubsetAddButton_Click" />
+                                    </WrapPanel>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,10,1.45*,10,Auto"
+                                      RowDefinitions="Auto,6,40">
+                                    <TextBlock Grid.Column="0" Classes="caption" Text="约束" />
+                                    <TextBlock Grid.Column="2" Classes="caption" Text="人数 / 范围" />
+                                    <ComboBox Name="StaffSubsetModeCombo"
+                                              Grid.Row="2"
+                                              Grid.Column="0"
+                                              Classes="inline dense"
+                                              HorizontalAlignment="Stretch"
+                                              SelectedIndex="0">
+                                        <ComboBoxItem Content="固定值" />
+                                        <ComboBoxItem Content="范围" />
+                                    </ComboBox>
+                                    <TextBox Name="StaffSubsetExactCountBox"
+                                             Grid.Row="2"
+                                             Grid.Column="2"
+                                             Classes="inline dense"
+                                             HorizontalAlignment="Stretch"
+                                             PlaceholderText="数量" />
+                                    <Grid Name="StaffSubsetRangeInputPanel"
+                                          Grid.Row="2"
+                                          Grid.Column="2"
+                                          ColumnDefinitions="*,6,*"
+                                          IsVisible="False">
+                                        <TextBox Name="StaffSubsetRangeMinBox"
+                                                 Grid.Column="0"
+                                                 Classes="inline dense"
+                                                 HorizontalAlignment="Stretch"
+                                                 PlaceholderText="最小" />
+                                        <TextBox Name="StaffSubsetRangeMaxBox"
+                                                 Grid.Column="2"
+                                                 Classes="inline dense"
+                                                 HorizontalAlignment="Stretch"
+                                                 PlaceholderText="最大" />
+                                    </Grid>
+                                    <Button Name="StaffSubsetRuleSubmitButton"
+                                            Grid.Row="2"
+                                            Grid.Column="4"
+                                            Classes="primary inline"
+                                            Content="添加"
+                                            Click="AddStaffSubsetRule_Click" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
-                </Border>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
 
-                <Border Name="CareerSection" Classes="form-section" Margin="0,4,0,4">
-                    <StackPanel>
-                        <TextBlock Margin="0,0,0,6" FontWeight="SemiBold" Text="某职业总数" />
-                        <WrapPanel>
-                            <TextBlock Margin="0,0,8,8" VerticalAlignment="Center" Text="职业：" />
-                            <ComboBox Name="CareerCombo"
-                                      Classes="inline"
-                                      Width="120"
-                                      Margin="0,0,16,8"
-                                      ItemsSource="{x:Static models:AppOptions.Careers}" />
-                            <TextBlock Margin="0,0,8,8" VerticalAlignment="Center" Text="方式：" />
-                            <ComboBox Name="CareerConstraintModeCombo"
-                                      Classes="inline"
-                                      Width="100"
-                                      Margin="0,0,8,8"
-                                      SelectedIndex="0">
-                                <ComboBoxItem Content="特定值" />
-                                <ComboBoxItem Content="范围" />
-                            </ComboBox>
-                            <TextBox Name="CareerCountBox"
-                                     Classes="inline"
-                                     Width="88"
-                                     Margin="0,0,8,8"
-                                     PlaceholderText="数量" />
-                            <TextBox Name="CareerRangeMinBox"
-                                     Classes="inline"
-                                     Width="88"
-                                     Margin="0,0,8,8"
-                                     PlaceholderText="最小"
-                                     IsVisible="False" />
-                            <TextBox Name="CareerRangeMaxBox"
-                                     Classes="inline"
-                                     Width="88"
-                                     Margin="0,0,8,8"
-                                     PlaceholderText="最大"
-                                     IsVisible="False" />
-                            <Button Name="CareerRuleSubmitButton"
-                                    Classes="inline"
-                                    Margin="0,0,0,8"
-                                    Content="添加"
-                                    Click="AddCareerConstraint_Click" />
-                        </WrapPanel>
-                    </StackPanel>
-                </Border>
-
-                <Border Name="StaffSection" Classes="form-section" Margin="0,4,0,0">
-                    <StackPanel>
-                        <TextBlock Margin="0,0,0,6" FontWeight="SemiBold" Text="某些干员总数" />
-                        <WrapPanel Name="StaffSubsetFlowPanel">
-                    <TextBlock Margin="0,0,2,8" VerticalAlignment="Center" Text="从" />
-                    <Button Name="StaffSubsetAddButton"
-                            Classes="inline"
-                            MinWidth="36"
-                            Width="36"
-                            Margin="0,0,8,8"
-                            Padding="0"
-                            VerticalAlignment="Center"
-                            FontSize="18"
-                            FontWeight="SemiBold"
-                            Foreground="White"
-                            ToolTip.Tip="添加干员"
-                            Content="+"
-                            Click="StaffSubsetAddButton_Click" />
-                    <TextBlock Margin="0,0,4,8" VerticalAlignment="Center" Text="列表内选择（" />
-                    <ComboBox Name="StaffSubsetModeCombo"
-                              Classes="inline"
-                              Width="88"
-                              Margin="0,0,8,8"
-                              SelectedIndex="0">
-                        <ComboBoxItem Content="固定值" />
-                        <ComboBoxItem Content="范围" />
-                    </ComboBox>
-                    <TextBox Name="StaffSubsetExactCountBox"
-                             Classes="inline"
-                             Width="64"
-                             Margin="0,0,4,8"
-                             PlaceholderText="n" />
-                    <StackPanel Name="StaffSubsetRangeInputPanel"
-                                Margin="0,0,4,8"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Center"
-                                IsVisible="False">
-                        <TextBox Name="StaffSubsetRangeMinBox"
-                                 Classes="inline"
-                                 Width="64"
-                                 PlaceholderText="n" />
-                        <TextBlock Margin="6,0" VerticalAlignment="Center" Text="-" />
-                        <TextBox Name="StaffSubsetRangeMaxBox"
-                                 Classes="inline"
-                                 Width="64"
-                                 PlaceholderText="m" />
-                    </StackPanel>
-                    <TextBlock Margin="0,0,8,8" VerticalAlignment="Center" Text="）个" />
-                    <Button Name="StaffSubsetRuleSubmitButton"
-                            Classes="inline"
-                            Margin="0,0,0,8"
-                            Content="添加"
-                            Click="AddStaffSubsetRule_Click" />
-                </WrapPanel>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-
-            <StackPanel Grid.Row="5"
-                        HorizontalAlignment="Right"
+        <Border Grid.Row="2"
+                Padding="24,0"
+                Background="{StaticResource AppSurfaceBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <StackPanel HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="8">
-                <Button Theme="{StaticResource FlatButton}" Content="取消" Click="Cancel_Click" />
-                <Button Content="确定" Click="Ok_Click" />
+                <Button Classes="secondary" Content="取消" Click="Cancel_Click" />
+                <Button Classes="primary" Content="保存策略" Click="Ok_Click" />
             </StackPanel>
-        </Grid>
-    </ScrollViewer>
+        </Border>
+    </Grid>
 </Window>

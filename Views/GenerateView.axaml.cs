@@ -23,9 +23,11 @@ public partial class GenerateView : UserControl
         DataContext = this;
         InitializeComponent();
         AppState.Strategies.CollectionChanged += OnStrategiesChanged;
+        ResultList.CollectionChanged += (_, _) => UpdateResultState();
         CountSlider.Maximum = AppOptions.MaxTeamSize;
         RefreshStrategyCombo();
         RandomNumText.Text = ((int)CountSlider.Value).ToString();
+        UpdateResultState();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
@@ -50,6 +52,15 @@ public partial class GenerateView : UserControl
         if (e.Property != Slider.ValueProperty || RandomNumText == null)
             return;
         RandomNumText.Text = ((int)CountSlider.Value).ToString();
+    }
+
+    private void UpdateResultState()
+    {
+        if (ResultEmptyState == null || ResultCountText == null)
+            return;
+
+        ResultEmptyState.IsVisible = ResultList.Count == 0;
+        ResultCountText.Text = $"{ResultList.Count} 名干员";
     }
 
     private async void Generate_Click(object? sender, RoutedEventArgs e)

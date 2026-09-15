@@ -2,186 +2,170 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
              xmlns:models="clr-namespace:arknights_random_team.Models"
              mc:Ignorable="d"
-             d:DesignWidth="600"
-             d:DesignHeight="520"
+             d:DesignWidth="760"
+             d:DesignHeight="600"
              x:Class="arknights_random_team.Views.InputView"
              FontFamily="{StaticResource AppFont}">
     <UserControl.Styles>
-        <Style Selector="TextBlock.field-label">
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="HorizontalAlignment" Value="Right" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TextBox.compact">
-            <Setter Property="MinHeight" Value="36" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="MaxHeight" Value="36" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="MinWidth" Value="0" />
-            <Setter Property="UseFloatingPlaceholder" Value="False" />
+        <Style Selector="ToggleButton.star-choice">
+            <Setter Property="MinWidth" Value="38" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Padding" Value="4,0" />
+            <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="TextAlignment" Value="Center" />
-            <Setter Property="AcceptsReturn" Value="False" />
         </Style>
-        <Style Selector="TextBox.compact.name-field">
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="TextAlignment" Value="Left" />
+        <Style Selector="ToggleButton.star-choice:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
         </Style>
-        <Style Selector="TextBox.compact /template/ DockPanel#PART_RootPanel">
-            <Setter Property="Height" Value="36" />
-            <Setter Property="MinHeight" Value="36" />
-            <Setter Property="MaxHeight" Value="36" />
+        <Style Selector="ToggleButton.star-choice:checked">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
-        <Style Selector="TextBox.compact /template/ Panel#PART_TextFieldPanel">
-            <Setter Property="MinHeight" Value="36" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="MaxHeight" Value="36" />
+        <Style Selector="Border.sync-status.success">
+            <Setter Property="Background" Value="{StaticResource AppAccentSoftBrush}" />
+            <Setter Property="BorderBrush" Value="#B8DDD5" />
         </Style>
-        <Style Selector="TextBox.compact /template/ Border#PART_BackgroundTextField">
-            <Setter Property="Margin" Value="0" />
+        <Style Selector="Border.sync-status.error">
+            <Setter Property="Background" Value="{StaticResource AppDangerSoftBrush}" />
+            <Setter Property="BorderBrush" Value="#EDC4C9" />
         </Style>
-        <Style Selector="TextBox.compact /template/ Border#PART_LabelRootBorder">
-            <Setter Property="IsVisible" Value="False" />
-            <Setter Property="Height" Value="0" />
-            <Setter Property="Margin" Value="0" />
+        <Style Selector="Border.sync-status.success TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AppAccentBrush}" />
         </Style>
-        <Style Selector="TextBox.compact /template/ TextBlock#PART_HintsText">
-            <Setter Property="IsVisible" Value="False" />
-            <Setter Property="Height" Value="0" />
-            <Setter Property="Margin" Value="0" />
-        </Style>
-        <Style Selector="TextBox.compact /template/ DockPanel#PART_InnerPanel">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TextBox.compact /template/ DockPanel#PART_InnerPanel > Panel#PART_TextContainer">
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="MinHeight" Value="36" />
-        </Style>
-        <Style Selector="TextBox.compact /template/ TextBlock#PART_PlaceholderText">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TextBox.compact /template/ ScrollViewer#PART_ScrollViewer">
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TextBox.compact /template/ controls|MaterialUnderline#PART_Underline">
-            <Setter Property="IsVisible" Value="True" />
-            <Setter Property="Height" Value="2" />
-            <Setter Property="VerticalAlignment" Value="Bottom" />
-        </Style>
-        <Style Selector="TextBlock.star-glyph">
-            <Setter Property="FontSize" Value="24" />
-            <Setter Property="LineHeight" Value="36" />
-            <Setter Property="Margin" Value="1,0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="TextBlock.level-caption">
-            <Setter Property="Foreground" Value="#673AB7" />
-            <Setter Property="VerticalAlignment" Value="Center" />
+        <Style Selector="Border.sync-status.error TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AppDangerBrush}" />
         </Style>
     </UserControl.Styles>
-    <Grid HorizontalAlignment="Center"
-          VerticalAlignment="Center"
-          ColumnDefinitions="Auto,16,200"
-          RowDefinitions="36,36,36,36,Auto,Auto"
-          RowSpacing="20">
-        <TextBlock Classes="field-label" Text="干员名称：" />
-        <TextBox Name="NameTextBox"
-                 Grid.Column="2"
-                 Classes="compact name-field"
-                 HorizontalAlignment="Stretch"
-                 VerticalAlignment="Stretch"
-                 PlaceholderText="名称" />
 
-        <TextBlock Grid.Row="1"
-                   Classes="field-label"
-                   Text="稀有度：" />
-        <StackPanel Name="StarPanel"
-                    Grid.Row="1"
-                    Grid.Column="2"
-                    Height="36"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Stretch" />
+    <Grid ColumnDefinitions="3*,20,2*">
+        <Border Grid.Column="0" Classes="surface" Padding="22">
+            <Grid RowDefinitions="Auto,20,Auto,16,Auto,16,Auto,16,Auto,22,Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
+                    <Border Width="4"
+                            Background="{StaticResource AppSignalBrush}"
+                            CornerRadius="2" />
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Classes="section-title" Text="手动录入" />
+                        <TextBlock Classes="caption" Text="干员基础信息" />
+                    </StackPanel>
+                </Grid>
 
-        <TextBlock Grid.Row="2"
-                   Classes="field-label"
-                   Text="等级：" />
-        <StackPanel Grid.Row="2"
-                    Grid.Column="2"
-                    Height="36"
-                    Orientation="Horizontal"
-                    Spacing="4"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Stretch">
-            <TextBlock Classes="level-caption" Text="精英" />
-            <TextBox Name="EliteTextBox"
-                     Classes="compact"
-                     Width="36"
-                     Text="2"
-                     InputMethod.IsInputMethodEnabled="False"
-                     TextChanged="EliteTextBox_TextChanged"
-                     LostFocus="EliteTextBox_LostFocus" />
-            <TextBlock Classes="level-caption" Text="等级" />
-            <TextBox Name="RankTextBox"
-                     Classes="compact"
-                     Width="48"
-                     Text="1"
-                     InputMethod.IsInputMethodEnabled="False"
-                     TextChanged="RankTextBox_TextChanged"
-                     LostFocus="RankTextBox_LostFocus" />
-        </StackPanel>
+                <StackPanel Grid.Row="2" Spacing="7">
+                    <TextBlock Classes="field-label" Text="干员名称" />
+                    <TextBox Name="NameTextBox"
+                             Classes="form-control dense"
+                             HorizontalAlignment="Stretch"
+                             PlaceholderText="输入名称" />
+                </StackPanel>
 
-        <TextBlock Grid.Row="3"
-                   Classes="field-label"
-                   Text="职业：" />
-        <ComboBox Name="CareerCombo"
-                  Grid.Row="3"
-                  Grid.Column="2"
-                  Classes="inline"
-                  HorizontalAlignment="Stretch"
-                  VerticalAlignment="Stretch"
-                  PlaceholderText="选择"
-                  SelectedIndex="-1"
-                  ItemsSource="{x:Static models:AppOptions.Careers}" />
+                <Grid Grid.Row="4" ColumnDefinitions="*,16,*">
+                    <StackPanel Grid.Column="0" Spacing="7">
+                        <TextBlock Classes="field-label" Text="职业" />
+                        <ComboBox Name="CareerCombo"
+                                  Classes="form-control dense"
+                                  HorizontalAlignment="Stretch"
+                                  PlaceholderText="选择职业"
+                                  SelectedIndex="-1"
+                                  ItemsSource="{x:Static models:AppOptions.Careers}" />
+                    </StackPanel>
+                    <Grid Grid.Column="2" ColumnDefinitions="*,8,*">
+                        <StackPanel Grid.Column="0" Spacing="7">
+                            <TextBlock Classes="field-label" Text="精英阶段" />
+                            <TextBox Name="EliteTextBox"
+                                     Classes="form-control dense"
+                                     HorizontalAlignment="Stretch"
+                                     Text="2"
+                                     PlaceholderText="0–2"
+                                     InputMethod.IsInputMethodEnabled="False"
+                                     TextChanged="EliteTextBox_TextChanged"
+                                     LostFocus="EliteTextBox_LostFocus" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="7">
+                            <TextBlock Classes="field-label" Text="当前等级" />
+                            <TextBox Name="RankTextBox"
+                                     Classes="form-control dense"
+                                     HorizontalAlignment="Stretch"
+                                     Text="1"
+                                     PlaceholderText="1–90"
+                                     InputMethod.IsInputMethodEnabled="False"
+                                     TextChanged="RankTextBox_TextChanged"
+                                     LostFocus="RankTextBox_LostFocus" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
 
-        <Button Grid.Row="4"
-                Grid.Column="0"
-                Grid.ColumnSpan="3"
-                Width="100"
-                Margin="0,24,0,0"
-                HorizontalAlignment="Center"
-                CornerRadius="10"
-                FontWeight="Bold"
-                Cursor="Hand"
-                Content="录入"
-                Click="Input_Click" />
+                <StackPanel Grid.Row="6" Spacing="7">
+                    <TextBlock Classes="field-label" Text="稀有度" />
+                    <UniformGrid Columns="6" Rows="1">
+                        <ToggleButton Name="Star1Button" Classes="star-choice" Tag="1" Content="1★" Click="StarChoice_Click" />
+                        <ToggleButton Name="Star2Button" Classes="star-choice" Tag="2" Content="2★" Click="StarChoice_Click" />
+                        <ToggleButton Name="Star3Button" Classes="star-choice" Tag="3" Content="3★" Click="StarChoice_Click" />
+                        <ToggleButton Name="Star4Button" Classes="star-choice" Tag="4" Content="4★" Click="StarChoice_Click" />
+                        <ToggleButton Name="Star5Button" Classes="star-choice" Tag="5" Content="5★" Click="StarChoice_Click" />
+                        <ToggleButton Name="Star6Button" Classes="star-choice" Tag="6" Content="6★" Click="StarChoice_Click" />
+                    </UniformGrid>
+                </StackPanel>
 
-        <StackPanel Grid.Row="5"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    Margin="0,8,0,0"
-                    HorizontalAlignment="Center"
-                    Spacing="6">
-            <Button Name="OpenSyncButton"
-                    MinWidth="160"
-                    Theme="{StaticResource FlatButton}"
-                    Foreground="{DynamicResource MaterialPrimaryMidBrush}"
-                    FontWeight="Bold"
-                    Content="从数据库同步干员"
-                    Click="OpenSyncButton_Click" />
-            <TextBlock Name="SyncStatusText"
-                       MaxWidth="300"
-                       HorizontalAlignment="Center"
-                       FontSize="12"
-                       Foreground="{DynamicResource MaterialBodyLightBrush}"
-                       TextAlignment="Center"
-                       TextWrapping="Wrap" />
-        </StackPanel>
+                <Border Grid.Row="8"
+                        Height="1"
+                        Background="{StaticResource AppBorderBrush}" />
+
+                <Button Grid.Row="10"
+                        MinWidth="124"
+                        HorizontalAlignment="Right"
+                        Classes="primary"
+                        Content="添加到列表"
+                        Click="Input_Click" />
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="2" Classes="surface" Padding="22">
+            <Grid RowDefinitions="Auto,20,Auto,16,Auto,*,Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
+                    <Border Width="4"
+                            Background="{StaticResource AppAccentBrush}"
+                            CornerRadius="2" />
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Classes="section-title" Text="数据库同步" />
+                        <TextBlock Classes="caption"
+                                   Text="ArknightsGameData · 国服"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Grid.Row="2" Spacing="7">
+                    <TextBlock Classes="field-label" Text="同步范围" />
+                    <TextBlock Classes="muted"
+                               Text="按稀有度选择正式干员"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Border Name="SyncStatusPanel"
+                        Grid.Row="4"
+                        Classes="surface-subtle sync-status"
+                        MinHeight="58"
+                        Padding="12,10">
+                    <TextBlock Name="SyncStatusText"
+                               VerticalAlignment="Center"
+                               Classes="caption"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <Button Name="OpenSyncButton"
+                        Grid.Row="6"
+                        HorizontalAlignment="Stretch"
+                        Classes="secondary"
+                        Content="选择并同步"
+                        Click="OpenSyncButton_Click" />
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

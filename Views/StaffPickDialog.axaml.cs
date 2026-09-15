@@ -43,11 +43,21 @@ public partial class StaffPickDialog : Window
         if (q.Length > 0)
             src = src.Where(s => s.Name.Contains(q, StringComparison.OrdinalIgnoreCase));
 
-        StaffList.ItemsSource = src.ToList();
+        var filtered = src.ToList();
+        StaffList.ItemsSource = filtered;
         StaffList.SelectedItems?.Clear();
+        ResultCountText.Text = $"{filtered.Count} 名可选";
+        SelectedCountText.Text = "已选 0 名";
+        SearchEmptyState.IsVisible = filtered.Count == 0;
     }
 
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e) => ApplyFilter();
+
+    private void StaffList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        var count = StaffList.SelectedItems?.Count ?? 0;
+        SelectedCountText.Text = $"已选 {count} 名";
+    }
 
     private void StaffList_KeyDown(object? sender, KeyEventArgs e)
     {

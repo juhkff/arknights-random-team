@@ -5,44 +5,82 @@
         mc:Ignorable="d"
         x:Class="arknights_random_team.Views.OperatorSyncDialog"
         Title="同步干员"
+        Width="460"
+        Height="360"
         CanResize="False"
         ShowInTaskbar="False"
-        SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFont}"
         FontSize="14"
+        Background="{StaticResource AppBackgroundBrush}"
         KeyDown="Window_KeyDown">
-    <Border MinWidth="400"
-            Padding="24,20,24,16"
-            Background="{DynamicResource MaterialPaperBrush}">
-        <StackPanel Spacing="16">
-            <StackPanel Spacing="4">
-                <TextBlock FontSize="18" FontWeight="Bold" Text="选择同步稀有度" />
-                <TextBlock Foreground="{DynamicResource MaterialBodyLightBrush}"
-                           Text="只会追加缺少的干员，并校正已有干员的固定信息。"
-                           TextWrapping="Wrap" />
+    <Window.Styles>
+        <Style Selector="CheckBox.sync-star">
+            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:checked">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="72,*,66">
+        <Border Grid.Row="0"
+                Padding="22,0"
+                Background="{StaticResource AppSurfaceBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <StackPanel VerticalAlignment="Center" Spacing="3">
+                <TextBlock FontSize="19" FontWeight="Bold" Text="同步干员" />
+                <TextBlock Classes="caption" Text="ArknightsGameData · 国服" />
             </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1" Margin="22,18" Spacing="10">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock VerticalAlignment="Center"
+                           Classes="field-label"
+                           Text="选择稀有度" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                    <Button Classes="secondary compact" Content="全选" Click="SelectAll_Click" />
+                    <Button Classes="secondary compact" Content="清除" Click="ClearAll_Click" />
+                </StackPanel>
+            </Grid>
 
             <UniformGrid Name="StarGrid" Columns="3" Rows="2" />
 
             <TextBlock Name="ValidationText"
+                       MinHeight="18"
                        IsVisible="False"
-                       Foreground="#C62828"
+                       FontSize="12"
+                       Foreground="{StaticResource AppDangerBrush}"
                        Text="请至少选择一个稀有度。" />
+        </StackPanel>
 
+        <Border Grid.Row="2"
+                Padding="22,0"
+                Background="{StaticResource AppSurfaceBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,1,0,0">
             <StackPanel HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="8">
-                <Button MinWidth="72"
-                        Theme="{StaticResource FlatButton}"
-                        Content="取消"
-                        Click="Cancel_Click" />
+                <Button Classes="secondary" Content="取消" Click="Cancel_Click" />
                 <Button Name="SyncButton"
-                        MinWidth="96"
-                        FontWeight="Bold"
+                        Classes="primary"
+                        MinWidth="104"
                         Content="开始同步"
                         Click="Sync_Click" />
             </StackPanel>
-        </StackPanel>
-    </Border>
+        </Border>
+    </Grid>
 </Window>

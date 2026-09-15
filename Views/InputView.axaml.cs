@@ -1,6 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
@@ -16,15 +15,16 @@ namespace arknights_random_team.Views;
 public partial class InputView : UserControl
 {
     private readonly OperatorSyncService _operatorSyncService = new();
+    private readonly List<ToggleButton> _starChoices = [];
     private int _star = 1;
-    private readonly List<TextBlock> _starGlyphs = [];
     private bool _updatingLevelText;
     private bool _syncInProgress;
 
     public InputView()
     {
         InitializeComponent();
-        BuildStarBar();
+        _starChoices.AddRange([Star1Button, Star2Button, Star3Button, Star4Button, Star5Button, Star6Button]);
+        SetStar(1);
         CareerCombo.SelectedIndex = -1;
         UpdateSyncStatus();
     }
@@ -51,7 +51,7 @@ public partial class InputView : UserControl
 
         _syncInProgress = true;
         OpenSyncButton.IsEnabled = false;
-        SyncStatusText.Text = "正在同步所选稀有度...";
+        SetSyncStatus("正在同步所选稀有度...");
 
         try
         {
@@ -61,11 +61,13 @@ public partial class InputView : UserControl
                 selectedStars);
             AppState.SaveOperatorData();
 
-            SyncStatusText.Text = $"新增 {result.Added} 名，校正 {result.Updated} 名，跳过 {result.Unchanged} 名。";
+            SetSyncStatus(
+                $"新增 {result.Added} 名，校正 {result.Updated} 名，跳过 {result.Unchanged} 名。",
+                isSuccess: true);
         }
         catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException or TaskCanceledException)
         {
-            SyncStatusText.Text = $"同步失败：{ex.Message}";
+            SetSyncStatus($"同步失败：{ex.Message}", isError: true);
         }
         finally
         {
@@ -78,54 +80,41 @@ public partial class InputView : UserControl
     {
         if (AppState.OperatorSyncSettingsError is { } settingsError)
         {
-            SyncStatusText.Text = settingsError;
+            SetSyncStatus(settingsError, isError: true);
             return;
         }
 
         var settings = AppState.OperatorSyncSettings;
         if (settings.LastSuccessfulSync is not { } lastSync)
         {
-            SyncStatusText.Text = settings.SelectedStars is { Count: > 0 }
+            SetSyncStatus(settings.SelectedStars is { Count: > 0 }
                 ? "尚未同步"
-                : "尚未设置同步稀有度";
+                : "尚未设置同步稀有度");
             return;
         }
 
         var stars = string.Join("、", settings.SelectedStars!.Order());
-        SyncStatusText.Text = $"上次同步 {lastSync.ToLocalTime():yyyy-MM-dd HH:mm} · {stars} 星";
+        SetSyncStatus($"上次同步 {lastSync.ToLocalTime():yyyy-MM-dd HH:mm} · {stars} 星", isSuccess: true);
     }
 
-    private void BuildStarBar()
+    private void SetSyncStatus(string message, bool isSuccess = false, bool isError = false)
     {
-        for (var i = 1; i <= 6; i++)
-        {
-            var star = i;
-            var glyph = new TextBlock
-            {
-                Text = "★",
-                Classes = { "star-glyph" }
-            };
-            glyph.PointerPressed += (_, e) =>
-            {
-                SetStar(star);
-                e.Handled = true;
-            };
-            _starGlyphs.Add(glyph);
-            StarPanel.Children.Add(glyph);
-        }
+        SyncStatusText.Text = message;
+        SyncStatusPanel.Classes.Set("success", isSuccess);
+        SyncStatusPanel.Classes.Set("error", isError);
+    }
 
-        SetStar(1);
+    private void StarChoice_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton { Tag: var value } && int.TryParse(value?.ToString(), out var star))
+            SetStar(star);
     }
 
     private void SetStar(int star)
     {
         _star = star;
-        for (var i = 0; i < _starGlyphs.Count; i++)
-        {
-            _starGlyphs[i].Foreground = i < star
-                ? new SolidColorBrush(Color.Parse("#673AB7"))
-                : new SolidColorBrush(Color.Parse("#D1C4E9"));
-        }
+        foreach (var choice in _starChoices)
+            choice.IsChecked = choice.Tag?.ToString() == star.ToString();
     }
 
     private void Input_Click(object? sender, RoutedEventArgs e)

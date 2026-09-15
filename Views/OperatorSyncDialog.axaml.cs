@@ -30,12 +30,25 @@ public partial class OperatorSyncDialog : Window
             {
                 Content = $"{star} 星",
                 IsChecked = selected.Contains(star),
-                Margin = new Avalonia.Thickness(4, 6)
+                Classes = { "sync-star" }
             };
             checkBox.Click += (_, _) => ValidationText.IsVisible = false;
             _starCheckBoxes[star] = checkBox;
             StarGrid.Children.Add(checkBox);
         }
+    }
+
+    private void SelectAll_Click(object? sender, RoutedEventArgs e)
+    {
+        foreach (var checkBox in _starCheckBoxes.Values)
+            checkBox.IsChecked = true;
+        ValidationText.IsVisible = false;
+    }
+
+    private void ClearAll_Click(object? sender, RoutedEventArgs e)
+    {
+        foreach (var checkBox in _starCheckBoxes.Values)
+            checkBox.IsChecked = false;
     }
 
     private void Sync_Click(object? sender, RoutedEventArgs e)

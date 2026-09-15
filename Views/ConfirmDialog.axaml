@@ -4,48 +4,60 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         x:Class="arknights_random_team.Views.ConfirmDialog"
-        Title="确认"
+        Title="确认操作"
+        Width="420"
+        SizeToContent="Height"
         CanResize="False"
         ShowInTaskbar="False"
-        SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
-        WindowDecorations="None"
-        TransparencyLevelHint="Transparent"
-        TransparencyBackgroundFallback="Transparent"
-        Background="Transparent"
+        Background="{StaticResource AppSurfaceBrush}"
         FontFamily="{StaticResource AppFont}"
         FontSize="14"
         KeyDown="Window_KeyDown">
-    <Border Margin="16"
-            MinWidth="320"
-            MaxWidth="420"
-            Padding="24,20,24,16"
-            Background="{DynamicResource MaterialPaperBrush}"
-            BorderBrush="#E0E0E0"
-            BorderThickness="1"
-            CornerRadius="12"
-            BoxShadow="0 8 24 0 #40000000">
-        <DockPanel>
-            <StackPanel DockPanel.Dock="Bottom"
-                        Margin="0,20,0,0"
-                        HorizontalAlignment="Right"
+    <Grid RowDefinitions="Auto,Auto,66">
+        <Grid Margin="22,20,22,0" ColumnDefinitions="4,*">
+            <Border Width="4"
+                    Margin="0,2,14,2"
+                    Background="{StaticResource AppDangerBrush}"
+                    CornerRadius="2" />
+            <TextBlock Grid.Column="1"
+                       VerticalAlignment="Center"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Text="确认操作" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      MaxHeight="260"
+                      Margin="40,16,22,20"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <TextBlock Name="MessageText"
+                       LineHeight="23"
+                       Foreground="{StaticResource AppMutedTextBrush}"
+                       TextWrapping="Wrap" />
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                Padding="22,0"
+                Background="{StaticResource AppSurfaceSubtleBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <StackPanel HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
                         Orientation="Horizontal"
                         Spacing="8">
                 <Button Name="CancelButton"
-                        MinWidth="72"
-                        Theme="{StaticResource FlatButton}"
+                        Classes="secondary"
+                        MinWidth="76"
                         Content="取消"
                         Click="Cancel_Click" />
                 <Button Name="OkButton"
-                        MinWidth="72"
-                        FontWeight="Bold"
+                        Classes="primary"
+                        MinWidth="76"
                         Content="确定"
                         Click="Ok_Click" />
             </StackPanel>
-            <TextBlock Name="MessageText"
-                       FontSize="15"
-                       LineHeight="24"
-                       TextWrapping="Wrap" />
-        </DockPanel>
-    </Border>
+        </Border>
+    </Grid>
 </Window>

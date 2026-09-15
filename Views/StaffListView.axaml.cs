@@ -31,7 +31,12 @@ public partial class StaffListView : UserControl
     private void StaffList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
         UpdateClearButton();
 
-    private void UpdateClearButton() => ClearAllButton.IsEnabled = AppState.StaffList.Count > 0;
+    private void UpdateClearButton()
+    {
+        var hasStaff = AppState.StaffList.Count > 0;
+        ClearAllButton.IsEnabled = hasStaff;
+        StaffEmptyState.IsVisible = !hasStaff;
+    }
 
     private async void ClearAll_Click(object? sender, RoutedEventArgs e)
     {

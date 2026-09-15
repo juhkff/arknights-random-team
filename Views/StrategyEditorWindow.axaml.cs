@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -36,6 +37,9 @@ public partial class StrategyEditorWindow : Window
         InitializeComponent();
         NameBox.Text = _target.Name;
         RulesList.ItemsSource = _target.Rules;
+        _target.Rules.CollectionChanged += Rules_CollectionChanged;
+        Closed += (_, _) => _target.Rules.CollectionChanged -= Rules_CollectionChanged;
+        UpdateRulesState();
         StarCombo.SelectedItem = 6;
         CareerCombo.SelectedItem = Career.先锋;
         CareerConstraintModeCombo.SelectionChanged += CareerConstraintModeCombo_SelectionChanged;
@@ -47,6 +51,10 @@ public partial class StrategyEditorWindow : Window
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    private void Rules_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => UpdateRulesState();
+
+    private void UpdateRulesState() => RulesEmptyState.IsVisible = _target.Rules.Count == 0;
 
     private void RulesList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
@@ -161,9 +169,7 @@ public partial class StrategyEditorWindow : Window
     private void UpdateEditingChrome()
     {
         var editing = _editingRule != null;
-        RulesHintText.Text = editing
-            ? "正在编辑选中条目。请在下方高亮区域修改后点「保存」，或点「取消编辑」退出。"
-            : "点击条目载入到下方对应区域修改，完成后点「保存」；点「取消编辑」或取消选中可退出编辑。";
+        RulesHintText.Text = editing ? "正在编辑选中规则" : "未选择规则";
         RulesHintText.Classes.Set("editing", editing);
         SetSectionEditing(RaritySection, _editingRule?.Kind == StrategyRuleKind.Rarity);
         SetSectionEditing(CareerSection, _editingRule?.Kind is StrategyRuleKind.Career or StrategyRuleKind.CareerRange);
@@ -247,17 +253,17 @@ public partial class StrategyEditorWindow : Window
         if (insertAt < 0)
             insertAt = 1;
 
-        var tagBg = TryGetResource("MaterialPrimaryLightBrush", ActualThemeVariant, out var brush)
+        var tagBg = TryGetResource("AppPrimarySoftBrush", ActualThemeVariant, out var brush)
                     && brush is IBrush b
             ? b
-            : new SolidColorBrush(Color.FromRgb(237, 231, 246));
+            : new SolidColorBrush(Color.FromRgb(239, 236, 250));
 
         foreach (var name in _staffSubsetDraft)
         {
             var border = new Border
             {
                 Background = tagBg,
-                CornerRadius = new CornerRadius(12),
+                CornerRadius = new CornerRadius(6),
                 Padding = new Thickness(8, 3, 4, 3),
                 Margin = new Thickness(0, 0, 6, 4),
                 VerticalAlignment = VerticalAlignment.Center
@@ -273,12 +279,15 @@ public partial class StrategyEditorWindow : Window
             var remove = new Button
             {
                 Content = "×",
-                Padding = new Thickness(4, 0),
+                MinHeight = 26,
+                Height = 26,
+                Padding = new Thickness(6, 0),
                 Tag = name,
                 VerticalAlignment = VerticalAlignment.Center
             };
-            if (TryGetResource("FlatButton", ActualThemeVariant, out var st) && st is ControlTheme flat)
-                remove.Theme = flat;
+            remove.Classes.Add("danger");
+            remove.Classes.Add("compact");
+            ToolTip.SetTip(remove, "移除干员");
             remove.Click += RemoveStaffSubsetTag_Click;
             row.Children.Add(remove);
             border.Child = row;

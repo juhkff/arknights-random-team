@@ -2,72 +2,138 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:assists="clr-namespace:Material.Styles.Assists;assembly=Material.Styles"
         xmlns:models="clr-namespace:arknights_random_team.Models"
         mc:Ignorable="d"
         x:Class="arknights_random_team.Views.StaffPickDialog"
         Title="选择干员"
-        Width="360"
-        Height="420"
-        MinHeight="320"
+        Width="480"
+        Height="560"
+        MinWidth="420"
+        MinHeight="460"
         WindowStartupLocation="CenterOwner"
         FontFamily="{StaticResource AppFont}"
         FontSize="14"
-        Background="{DynamicResource MaterialPaperBrush}">
+        Background="{StaticResource AppBackgroundBrush}">
     <Window.Styles>
-        <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="10,8" />
+        <Style Selector="ListBox#StaffList">
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="ListBox#StaffList ListBoxItem">
+            <Setter Property="MinHeight" Value="46" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
-        <Style Selector="ListBoxItem:selected">
-            <Setter Property="Background" Value="{DynamicResource MaterialPrimaryLightBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource MaterialPrimaryMidBrush}" />
-            <Setter Property="BorderThickness" Value="3,0,0,0" />
+        <Style Selector="ListBox#StaffList ListBoxItem:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppInputHoverBrush}" />
         </Style>
-        <Style Selector="ListBoxItem:selected /template/ Border#PART_RootBorder">
-            <Setter Property="Background" Value="{DynamicResource MaterialPrimaryLightBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource MaterialPrimaryMidBrush}" />
-            <Setter Property="BorderThickness" Value="3,0,0,0" />
-        </Style>
-        <Style Selector="ListBoxItem:selected /template/ Border#PART_HoverEffect">
-            <Setter Property="Opacity" Value="0" />
-        </Style>
-        <Style Selector="ListBoxItem:selected:pointerover /template/ Border#PART_HoverEffect">
-            <Setter Property="Opacity" Value="0" />
+        <Style Selector="ListBox#StaffList ListBoxItem:selected">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
     </Window.Styles>
-    <Grid Margin="16" RowDefinitions="Auto,*,Auto">
-        <StackPanel Margin="0,0,0,12">
+
+    <Grid RowDefinitions="72,*,66">
+        <Border Grid.Row="0"
+                Padding="22,0"
+                Background="{StaticResource AppSurfaceBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <StackPanel VerticalAlignment="Center" Spacing="3">
+                <TextBlock FontSize="19" FontWeight="Bold" Text="选择干员" />
+                <TextBlock Classes="caption" Text="可同时选择多名干员" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1"
+              Margin="20,18"
+              RowDefinitions="Auto,12,Auto,10,*">
             <TextBox Name="SearchBox"
-                     Classes="outline"
-                     Theme="{StaticResource OutlineTextBox}"
-                     UseFloatingPlaceholder="True"
-                     assists:TextFieldAssist.Label="输入名称筛选"
+                     Grid.Row="0"
+                     Classes="form-control dense"
+                     HorizontalAlignment="Stretch"
+                     PlaceholderText="搜索干员名称"
                      TextChanged="SearchBox_TextChanged" />
-            <TextBlock Margin="0,8,0,0"
-                       FontSize="12"
-                       Opacity="0.65"
-                       TextWrapping="Wrap"
-                       Text="提示：点击条目即可多选或取消选中；已选项左侧有紫色条与底色区分。已加入列表的干员不会再出现。" />
-        </StackPanel>
-        <ListBox Name="StaffList"
-                 Grid.Row="1"
-                 Margin="0,0,0,12"
-                 SelectionMode="Multiple,Toggle"
-                 DoubleTapped="StaffList_DoubleTapped"
-                 KeyDown="StaffList_KeyDown">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="models:Staff">
-                    <TextBlock Text="{Binding Name}" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <StackPanel Grid.Row="2"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal"
-                    Spacing="8">
-            <Button Content="确定" Click="Ok_Click" />
-            <Button Theme="{StaticResource FlatButton}" Content="取消" Click="Cancel_Click" />
-        </StackPanel>
+
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+                <TextBlock Name="ResultCountText"
+                           VerticalAlignment="Center"
+                           Classes="caption"
+                           Text="0 名可选" />
+                <Border Grid.Column="1"
+                        Padding="9,4"
+                        Background="{StaticResource AppPrimarySoftBrush}"
+                        CornerRadius="6">
+                    <TextBlock Name="SelectedCountText"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppPrimaryBrush}"
+                               Text="已选 0 名" />
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="4" Classes="surface data-frame" ClipToBounds="True">
+                <Grid>
+                    <ListBox Name="StaffList"
+                             SelectionMode="Multiple,Toggle"
+                             SelectionChanged="StaffList_SelectionChanged"
+                             DoubleTapped="StaffList_DoubleTapped"
+                             KeyDown="StaffList_KeyDown">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:Staff">
+                                <Border BorderBrush="#E9ECEF" BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="*,Auto,Auto">
+                                        <TextBlock VerticalAlignment="Center"
+                                                   FontWeight="SemiBold"
+                                                   Text="{Binding Name}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1"
+                                                   Margin="12,0"
+                                                   VerticalAlignment="Center"
+                                                   Classes="caption"
+                                                   Text="{Binding Star, StringFormat='{}{0} 星'}" />
+                                        <TextBlock Grid.Column="2"
+                                                   MinWidth="44"
+                                                   VerticalAlignment="Center"
+                                                   Classes="caption"
+                                                   Text="{Binding Career}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Name="SearchEmptyState"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"
+                               Classes="muted"
+                               FontWeight="SemiBold"
+                               Text="没有符合条件的干员" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Padding="22,0"
+                Background="{StaticResource AppSurfaceBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <StackPanel HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                <Button Classes="secondary" Content="取消" Click="Cancel_Click" />
+                <Button Classes="primary" MinWidth="88" Content="确定" Click="Ok_Click" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

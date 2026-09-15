@@ -2,61 +2,130 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
              xmlns:domain="clr-namespace:arknights_random_team.Domain"
              mc:Ignorable="d"
-             d:DesignWidth="600"
+             d:DesignWidth="760"
              d:DesignHeight="640"
              x:Class="arknights_random_team.Views.RandomStrategyView"
              FontFamily="{StaticResource AppFont}">
-    <DockPanel>
-        <Grid Margin="0,0,0,12" DockPanel.Dock="Top">
-            <TextBlock VerticalAlignment="Center"
-                       FontSize="18"
-                       FontWeight="Bold"
-                       Text="随机策略" />
-            <Button HorizontalAlignment="Right"
-                    Content="添加"
+    <UserControl.Styles>
+        <Style Selector="Border.strategy-card">
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Padding" Value="18,16" />
+        </Style>
+        <Style Selector="Border.strategy-card:pointerover">
+            <Setter Property="BorderBrush" Value="#CFC8EE" />
+            <Setter Property="BoxShadow" Value="0 3 10 0 #16000000" />
+        </Style>
+        <Style Selector="Border.rule-summary">
+            <Setter Property="Margin" Value="0,3,0,0" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
+            <Setter Property="CornerRadius" Value="5" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,14,*">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                <Border Width="4"
+                        Height="26"
+                        Background="{StaticResource AppSignalBrush}"
+                        CornerRadius="2" />
+                <TextBlock Classes="section-title"
+                           VerticalAlignment="Center"
+                           Text="策略方案" />
+                <Border Padding="9,4"
+                        Background="{StaticResource AppPrimarySoftBrush}"
+                        CornerRadius="6">
+                    <TextBlock Name="StrategyCountText"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppPrimaryBrush}"
+                               Text="0 个" />
+                </Border>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Classes="primary"
+                    Content="新建策略"
                     Click="AddStrategy_Click" />
         </Grid>
-        <ScrollViewer>
-            <ItemsControl Name="StrategyItems">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="domain:RandomStrategyDefinition">
-                        <controls:Card Margin="0,0,0,12" Padding="12">
-                            <Grid RowDefinitions="Auto,Auto,Auto">
-                                <Grid>
-                                    <TextBlock FontSize="16"
-                                               FontWeight="Bold"
-                                               Text="{Binding Name}" />
-                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
-                                        <Button Theme="{StaticResource FlatButton}"
-                                                Content="编辑"
-                                                Tag="{Binding}"
-                                                Click="EditStrategy_Click" />
-                                        <Button Theme="{StaticResource FlatButton}"
-                                                Content="删除"
-                                                Foreground="#c62828"
-                                                Tag="{Binding}"
-                                                Click="DeleteStrategy_Click" />
-                                    </StackPanel>
+
+        <Grid Grid.Row="2">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <ItemsControl Name="StrategyItems">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="domain:RandomStrategyDefinition">
+                            <Border Classes="surface strategy-card">
+                                <Grid RowDefinitions="Auto,12,Auto">
+                                    <Grid Grid.Row="0" ColumnDefinitions="4,12,*,Auto">
+                                        <Border Grid.Column="0"
+                                                Width="4"
+                                                VerticalAlignment="Stretch"
+                                                Background="{StaticResource AppSignalBrush}"
+                                                CornerRadius="2" />
+                                        <TextBlock Grid.Column="2"
+                                                   Margin="0,0,12,0"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="16"
+                                                   FontWeight="SemiBold"
+                                                   Text="{Binding Name}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Grid.Column="3"
+                                                    Orientation="Horizontal"
+                                                    Spacing="4">
+                                            <Button Classes="secondary compact"
+                                                    Content="编辑"
+                                                    Tag="{Binding}"
+                                                    Click="EditStrategy_Click" />
+                                            <Button Classes="danger compact"
+                                                    Content="删除"
+                                                    Tag="{Binding}"
+                                                    Click="DeleteStrategy_Click" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding Rules}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="domain:StrategyRule">
+                                                <Border Classes="rule-summary">
+                                                    <Grid ColumnDefinitions="4,*">
+                                                        <Border Width="3"
+                                                                Margin="0,1,9,1"
+                                                                Background="{StaticResource AppPrimaryBrush}"
+                                                                CornerRadius="2" />
+                                                        <TextBlock Grid.Column="1"
+                                                                   VerticalAlignment="Center"
+                                                                   Text="{Binding SummaryLine}"
+                                                                   TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </Grid>
-                                <TextBlock Grid.Row="1"
-                                           Margin="0,6,0,2"
-                                           Foreground="{DynamicResource MaterialBodyLightBrush}"
-                                           Text="条目：" />
-                                <ItemsControl Grid.Row="2" ItemsSource="{Binding Rules}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="domain:StrategyRule">
-                                            <TextBlock Margin="0,1,0,0" Text="{Binding SummaryLine}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Grid>
-                        </controls:Card>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-    </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <StackPanel Name="StrategyEmptyState"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsHitTestVisible="False"
+                        Spacing="10">
+                <Border Width="32"
+                        Height="3"
+                        HorizontalAlignment="Center"
+                        Background="{StaticResource AppPrimaryBrush}"
+                        CornerRadius="2" />
+                <TextBlock Classes="muted"
+                           HorizontalAlignment="Center"
+                           FontWeight="SemiBold"
+                           Text="暂无随机策略" />
+            </StackPanel>
+        </Grid>
+    </Grid>
 </UserControl>
