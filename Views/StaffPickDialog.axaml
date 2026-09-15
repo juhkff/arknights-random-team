@@ -6,8 +6,8 @@
         mc:Ignorable="d"
         x:Class="arknights_random_team.Views.StaffPickDialog"
         Title="选择干员"
-        Width="480"
-        Height="560"
+        Width="520"
+        Height="620"
         MinWidth="420"
         MinHeight="460"
         WindowStartupLocation="CenterOwner"
@@ -21,14 +21,15 @@
             <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style Selector="ListBox#StaffList ListBoxItem">
-            <Setter Property="MinHeight" Value="46" />
-            <Setter Property="Margin" Value="0,1" />
-            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinHeight" Value="60" />
+            <Setter Property="Margin" Value="0,2" />
+            <Setter Property="Padding" Value="14,0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="3,0,0,0" />
-            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="CornerRadius" Value="8" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="ListBox#StaffList ListBoxItem:pointerover">
@@ -39,23 +40,30 @@
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
+        <Style Selector="ListBox#StaffList ListBoxItem:selected TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="ListBox#StaffList ListBoxItem:focus-visible">
+            <Setter Property="BorderBrush" Value="{StaticResource AppSignalBrush}" />
+        </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="72,*,66">
+    <Grid RowDefinitions="88,*,80">
         <Border Grid.Row="0"
-                Padding="22,0"
+                Padding="24,0"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
                 BorderThickness="0,0,0,1">
-            <StackPanel VerticalAlignment="Center" Spacing="3">
-                <TextBlock FontSize="19" FontWeight="Bold" Text="选择干员" />
+            <StackPanel VerticalAlignment="Center" Spacing="4">
+                <TextBlock Classes="eyebrow" Text="OPERATOR SELECT" />
+                <TextBlock FontSize="20" FontWeight="Bold" Text="选择干员" />
                 <TextBlock Classes="caption" Text="可同时选择多名干员" />
             </StackPanel>
         </Border>
 
         <Grid Grid.Row="1"
-              Margin="20,18"
-              RowDefinitions="Auto,12,Auto,10,*">
+              Margin="24,18"
+              RowDefinitions="Auto,16,Auto,12,*">
             <TextBox Name="SearchBox"
                      Grid.Row="0"
                      Classes="form-control dense"
@@ -69,8 +77,10 @@
                            Classes="caption"
                            Text="0 名可选" />
                 <Border Grid.Column="1"
-                        Padding="9,4"
+                        Padding="10,6"
                         Background="{StaticResource AppPrimarySoftBrush}"
+                        BorderBrush="{StaticResource AppPrimaryBrush}"
+                        BorderThickness="1"
                         CornerRadius="6">
                     <TextBlock Name="SelectedCountText"
                                FontSize="12"
@@ -89,7 +99,7 @@
                              KeyDown="StaffList_KeyDown">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Staff">
-                                <Border BorderBrush="#E9ECEF" BorderThickness="0,0,0,1">
+                                <Border BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="0,0,0,1">
                                     <Grid ColumnDefinitions="*,Auto,Auto">
                                         <TextBlock VerticalAlignment="Center"
                                                    FontWeight="SemiBold"
@@ -123,16 +133,16 @@
         </Grid>
 
         <Border Grid.Row="2"
-                Padding="22,0"
+                Padding="24,0"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
                 BorderThickness="0,1,0,0">
             <StackPanel HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
-                        Spacing="8">
-                <Button Classes="secondary" Content="取消" Click="Cancel_Click" />
-                <Button Classes="primary" MinWidth="88" Content="确定" Click="Ok_Click" />
+                        Spacing="12">
+                <Button Classes="secondary" MinWidth="96" Content="取消" Click="Cancel_Click" />
+                <Button Classes="primary" MinWidth="112" Content="确定" Click="Ok_Click" />
             </StackPanel>
         </Border>
     </Grid>

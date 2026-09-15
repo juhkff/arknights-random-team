@@ -4,38 +4,44 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="clr-namespace:arknights_random_team.Models"
              mc:Ignorable="d"
-             d:DesignWidth="760"
-             d:DesignHeight="600"
+             d:DesignWidth="888"
+             d:DesignHeight="640"
              x:Class="arknights_random_team.Views.InputView"
              FontFamily="{StaticResource AppFont}">
     <UserControl.Styles>
         <Style Selector="ToggleButton.star-choice">
-            <Setter Property="MinWidth" Value="38" />
-            <Setter Property="Height" Value="38" />
+            <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
+            <Setter Property="MinWidth" Value="48" />
+            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="Height" Value="48" />
             <Setter Property="Margin" Value="2" />
             <Setter Property="Padding" Value="4,0" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="ToggleButton.star-choice:pointerover">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="ToggleButton.star-choice:checked">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppBackgroundBrush}" />
         </Style>
         <Style Selector="Border.sync-status.success">
             <Setter Property="Background" Value="{StaticResource AppAccentSoftBrush}" />
-            <Setter Property="BorderBrush" Value="#B8DDD5" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppAccentBrush}" />
         </Style>
         <Style Selector="Border.sync-status.error">
             <Setter Property="Background" Value="{StaticResource AppDangerSoftBrush}" />
-            <Setter Property="BorderBrush" Value="#EDC4C9" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppDangerBrush}" />
         </Style>
         <Style Selector="Border.sync-status.success TextBlock">
             <Setter Property="Foreground" Value="{StaticResource AppAccentBrush}" />
@@ -45,127 +51,132 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="3*,20,2*">
-        <Border Grid.Column="0" Classes="surface" Padding="22">
-            <Grid RowDefinitions="Auto,20,Auto,16,Auto,16,Auto,16,Auto,22,Auto">
-                <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
-                    <Border Width="4"
-                            Background="{StaticResource AppSignalBrush}"
-                            CornerRadius="2" />
-                    <StackPanel Grid.Column="2" Spacing="4">
-                        <TextBlock Classes="section-title" Text="手动录入" />
-                        <TextBlock Classes="caption" Text="干员基础信息" />
-                    </StackPanel>
-                </Grid>
-
-                <StackPanel Grid.Row="2" Spacing="7">
-                    <TextBlock Classes="field-label" Text="干员名称" />
-                    <TextBox Name="NameTextBox"
-                             Classes="form-control dense"
-                             HorizontalAlignment="Stretch"
-                             PlaceholderText="输入名称" />
-                </StackPanel>
-
-                <Grid Grid.Row="4" ColumnDefinitions="*,16,*">
-                    <StackPanel Grid.Column="0" Spacing="7">
-                        <TextBlock Classes="field-label" Text="职业" />
-                        <ComboBox Name="CareerCombo"
-                                  Classes="form-control dense"
-                                  HorizontalAlignment="Stretch"
-                                  PlaceholderText="选择职业"
-                                  SelectedIndex="-1"
-                                  ItemsSource="{x:Static models:AppOptions.Careers}" />
-                    </StackPanel>
-                    <Grid Grid.Column="2" ColumnDefinitions="*,8,*">
-                        <StackPanel Grid.Column="0" Spacing="7">
-                            <TextBlock Classes="field-label" Text="精英阶段" />
-                            <TextBox Name="EliteTextBox"
-                                     Classes="form-control dense"
-                                     HorizontalAlignment="Stretch"
-                                     Text="2"
-                                     PlaceholderText="0–2"
-                                     InputMethod.IsInputMethodEnabled="False"
-                                     TextChanged="EliteTextBox_TextChanged"
-                                     LostFocus="EliteTextBox_LostFocus" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2" Spacing="7">
-                            <TextBlock Classes="field-label" Text="当前等级" />
-                            <TextBox Name="RankTextBox"
-                                     Classes="form-control dense"
-                                     HorizontalAlignment="Stretch"
-                                     Text="1"
-                                     PlaceholderText="1–90"
-                                     InputMethod.IsInputMethodEnabled="False"
-                                     TextChanged="RankTextBox_TextChanged"
-                                     LostFocus="RankTextBox_LostFocus" />
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <Grid ColumnDefinitions="3*,20,2*" Margin="0,0,0,4">
+            <Border Grid.Column="0" Classes="surface" Padding="22">
+                <Grid RowDefinitions="Auto,24,Auto,18,Auto,18,Auto,20,Auto,22,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
+                        <Border Width="4"
+                                Background="{StaticResource AppSignalBrush}"
+                                CornerRadius="2" />
+                        <StackPanel Grid.Column="2" Spacing="5">
+                            <TextBlock Classes="eyebrow" Text="01 / MANUAL ENTRY" />
+                            <TextBlock Classes="section-title" Text="手动录入" />
                         </StackPanel>
                     </Grid>
+
+                    <StackPanel Grid.Row="2" Spacing="8">
+                        <TextBlock Classes="field-label" Text="干员名称" />
+                        <TextBox Name="NameTextBox"
+                                 Classes="form-control dense"
+                                 HorizontalAlignment="Stretch"
+                                 PlaceholderText="输入名称" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="4" ColumnDefinitions="*,16,*">
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <TextBlock Classes="field-label" Text="职业" />
+                            <ComboBox Name="CareerCombo"
+                                      Classes="form-control dense"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="选择职业"
+                                      SelectedIndex="-1"
+                                      ItemsSource="{x:Static models:AppOptions.Careers}" />
+                        </StackPanel>
+                        <Grid Grid.Column="2" ColumnDefinitions="*,10,*">
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <TextBlock Classes="field-label" Text="精英阶段" />
+                                <TextBox Name="EliteTextBox"
+                                         Classes="form-control dense"
+                                         HorizontalAlignment="Stretch"
+                                         Text="2"
+                                         PlaceholderText="0–2"
+                                         InputMethod.IsInputMethodEnabled="False"
+                                         TextChanged="EliteTextBox_TextChanged"
+                                         LostFocus="EliteTextBox_LostFocus" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="8">
+                                <TextBlock Classes="field-label" Text="当前等级" />
+                                <TextBox Name="RankTextBox"
+                                         Classes="form-control dense"
+                                         HorizontalAlignment="Stretch"
+                                         Text="1"
+                                         PlaceholderText="1–90"
+                                         InputMethod.IsInputMethodEnabled="False"
+                                         TextChanged="RankTextBox_TextChanged"
+                                         LostFocus="RankTextBox_LostFocus" />
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+
+                    <StackPanel Grid.Row="6" Spacing="8">
+                        <TextBlock Classes="field-label" Text="稀有度" />
+                        <UniformGrid Columns="6" Rows="1">
+                            <ToggleButton Name="Star1Button" Classes="star-choice" Tag="1" Content="1★" Click="StarChoice_Click" />
+                            <ToggleButton Name="Star2Button" Classes="star-choice" Tag="2" Content="2★" Click="StarChoice_Click" />
+                            <ToggleButton Name="Star3Button" Classes="star-choice" Tag="3" Content="3★" Click="StarChoice_Click" />
+                            <ToggleButton Name="Star4Button" Classes="star-choice" Tag="4" Content="4★" Click="StarChoice_Click" />
+                            <ToggleButton Name="Star5Button" Classes="star-choice" Tag="5" Content="5★" Click="StarChoice_Click" />
+                            <ToggleButton Name="Star6Button" Classes="star-choice" Tag="6" Content="6★" Click="StarChoice_Click" />
+                        </UniformGrid>
+                    </StackPanel>
+
+                    <Border Grid.Row="8"
+                            Height="1"
+                            Background="{StaticResource AppBorderBrush}" />
+
+                    <Button Grid.Row="10"
+                            MinWidth="144"
+                            HorizontalAlignment="Stretch"
+                            Classes="primary"
+                            Content="添加到列表"
+                            Click="Input_Click" />
                 </Grid>
+            </Border>
 
-                <StackPanel Grid.Row="6" Spacing="7">
-                    <TextBlock Classes="field-label" Text="稀有度" />
-                    <UniformGrid Columns="6" Rows="1">
-                        <ToggleButton Name="Star1Button" Classes="star-choice" Tag="1" Content="1★" Click="StarChoice_Click" />
-                        <ToggleButton Name="Star2Button" Classes="star-choice" Tag="2" Content="2★" Click="StarChoice_Click" />
-                        <ToggleButton Name="Star3Button" Classes="star-choice" Tag="3" Content="3★" Click="StarChoice_Click" />
-                        <ToggleButton Name="Star4Button" Classes="star-choice" Tag="4" Content="4★" Click="StarChoice_Click" />
-                        <ToggleButton Name="Star5Button" Classes="star-choice" Tag="5" Content="5★" Click="StarChoice_Click" />
-                        <ToggleButton Name="Star6Button" Classes="star-choice" Tag="6" Content="6★" Click="StarChoice_Click" />
-                    </UniformGrid>
-                </StackPanel>
+            <Border Grid.Column="2" Classes="surface" Padding="22">
+                <Grid RowDefinitions="Auto,24,Auto,20,Auto,*,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
+                        <Border Width="4"
+                                Background="{StaticResource AppAccentBrush}"
+                                CornerRadius="2" />
+                        <StackPanel Grid.Column="2" Spacing="5">
+                            <TextBlock Classes="eyebrow" Text="02 / DATABASE SYNC" />
+                            <TextBlock Classes="section-title" Text="数据库同步" />
+                            <TextBlock Classes="caption"
+                                       Text="ArknightsGameData · 国服"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
 
-                <Border Grid.Row="8"
-                        Height="1"
-                        Background="{StaticResource AppBorderBrush}" />
-
-                <Button Grid.Row="10"
-                        MinWidth="124"
-                        HorizontalAlignment="Right"
-                        Classes="primary"
-                        Content="添加到列表"
-                        Click="Input_Click" />
-            </Grid>
-        </Border>
-
-        <Border Grid.Column="2" Classes="surface" Padding="22">
-            <Grid RowDefinitions="Auto,20,Auto,16,Auto,*,Auto">
-                <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
-                    <Border Width="4"
-                            Background="{StaticResource AppAccentBrush}"
-                            CornerRadius="2" />
-                    <StackPanel Grid.Column="2" Spacing="4">
-                        <TextBlock Classes="section-title" Text="数据库同步" />
-                        <TextBlock Classes="caption"
-                                   Text="ArknightsGameData · 国服"
+                    <StackPanel Grid.Row="2" Spacing="8">
+                        <TextBlock Classes="field-label" Text="同步范围" />
+                        <TextBlock Classes="muted"
+                                   Text="按稀有度选择正式干员"
                                    TextWrapping="Wrap" />
                     </StackPanel>
+
+                    <Border Name="SyncStatusPanel"
+                            Grid.Row="4"
+                            Classes="surface-subtle sync-status"
+                            MinHeight="84"
+                            Padding="14,12">
+                        <TextBlock Name="SyncStatusText"
+                                   VerticalAlignment="Center"
+                                   Classes="caption"
+                                   TextWrapping="Wrap" />
+                    </Border>
+
+                    <Button Name="OpenSyncButton"
+                            Grid.Row="6"
+                            Margin="0,24,0,0"
+                            HorizontalAlignment="Stretch"
+                            Classes="secondary"
+                            Content="选择并同步"
+                            Click="OpenSyncButton_Click" />
                 </Grid>
-
-                <StackPanel Grid.Row="2" Spacing="7">
-                    <TextBlock Classes="field-label" Text="同步范围" />
-                    <TextBlock Classes="muted"
-                               Text="按稀有度选择正式干员"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-
-                <Border Name="SyncStatusPanel"
-                        Grid.Row="4"
-                        Classes="surface-subtle sync-status"
-                        MinHeight="58"
-                        Padding="12,10">
-                    <TextBlock Name="SyncStatusText"
-                               VerticalAlignment="Center"
-                               Classes="caption"
-                               TextWrapping="Wrap" />
-                </Border>
-
-                <Button Name="OpenSyncButton"
-                        Grid.Row="6"
-                        HorizontalAlignment="Stretch"
-                        Classes="secondary"
-                        Content="选择并同步"
-                        Click="OpenSyncButton_Click" />
-            </Grid>
-        </Border>
-    </Grid>
+            </Border>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

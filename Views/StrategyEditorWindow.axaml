@@ -7,8 +7,8 @@
         mc:Ignorable="d"
         x:Class="arknights_random_team.Views.StrategyEditorWindow"
         Title="编辑随机策略"
-        Width="900"
-        Height="720"
+        Width="960"
+        Height="740"
         MinWidth="760"
         MinHeight="600"
         CanResize="True"
@@ -19,18 +19,18 @@
     <Window.Styles>
         <Style Selector="TextBox.inline">
             <Setter Property="MinWidth" Value="72" />
-            <Setter Property="MinHeight" Value="40" />
-            <Setter Property="Height" Value="40" />
-            <Setter Property="MaxHeight" Value="40" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="MaxHeight" Value="44" />
             <Setter Property="Padding" Value="10,3" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.inline">
-            <Setter Property="MinHeight" Value="40" />
-            <Setter Property="Height" Value="40" />
-            <Setter Property="MaxHeight" Value="40" />
-            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="MaxHeight" Value="44" />
+            <Setter Property="Padding" Value="14,0" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
         </Style>
         <Style Selector="ListBox#RulesList">
@@ -40,11 +40,21 @@
         </Style>
         <Style Selector="ListBox#RulesList ListBoxItem">
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0,0,0,6" />
-            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="MinHeight" Value="56" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Border.rule-row">
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:pointerover Border.rule-row">
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="ListBox#RulesList ListBoxItem:selected">
             <Setter Property="Background" Value="Transparent" />
@@ -52,6 +62,14 @@
         <Style Selector="ListBox#RulesList ListBoxItem:selected Border.rule-row">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:selected TextBlock.rule-text">
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="ListBox#RulesList ListBoxItem:focus-visible Border.rule-row">
+            <Setter Property="BorderBrush" Value="{StaticResource AppSignalBrush}" />
         </Style>
         <Style Selector="ListBox#RulesList Button.cancel-edit">
             <Setter Property="IsVisible" Value="False" />
@@ -64,33 +82,48 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Border.form-section">
-            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Padding" Value="18,16" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="CornerRadius" Value="10" />
         </Style>
         <Style Selector="Border.form-section.editing">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+        <Style Selector="Border.staff-chip">
+            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.staff-chip TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Border.staff-chip Button">
+            <Setter Property="MinWidth" Value="40" />
+            <Setter Property="Width" Value="40" />
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="72,*,68">
+    <Grid RowDefinitions="92,*,80">
         <Border Grid.Row="0"
                 Padding="24,0"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
                 BorderThickness="0,0,0,1">
-            <StackPanel VerticalAlignment="Center" Spacing="3">
-                <TextBlock FontSize="20" FontWeight="Bold" Text="随机策略编辑器" />
+            <StackPanel VerticalAlignment="Center" Spacing="4">
+                <TextBlock Classes="eyebrow" Text="STRATEGY / RULE BUILDER" />
+                <TextBlock FontSize="22" FontWeight="Bold" Text="随机策略编辑器" />
                 <TextBlock Classes="caption" Text="配置阵容生成时需要满足的规则" />
             </StackPanel>
         </Border>
 
         <Grid Grid.Row="1"
               Margin="24,20"
-              ColumnDefinitions="330,20,*">
+              ColumnDefinitions="280,20,*">
             <Grid Grid.Column="0" RowDefinitions="Auto,18,*">
                 <Border Grid.Row="0" Classes="surface" Padding="16">
                     <StackPanel Spacing="8">
@@ -103,14 +136,11 @@
                 </Border>
 
                 <Border Grid.Row="2" Classes="surface" Padding="16">
-                    <Grid RowDefinitions="Auto,10,*,10,Auto">
-                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                    <Grid RowDefinitions="Auto,14,*,12,Auto">
+                        <StackPanel Grid.Row="0" Spacing="5">
                             <TextBlock Classes="section-title" Text="已有规则" />
-                            <TextBlock Grid.Column="1"
-                                       VerticalAlignment="Center"
-                                       Classes="caption"
-                                       Text="选择后可编辑" />
-                        </Grid>
+                            <TextBlock Classes="caption" Text="选择后可编辑" />
+                        </StackPanel>
 
                         <Grid Grid.Row="2">
                             <ListBox Name="RulesList"
@@ -118,29 +148,28 @@
                                      SelectionChanged="RulesList_SelectionChanged">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate x:DataType="domain:StrategyRule">
-                                        <Border Classes="rule-row"
-                                                Padding="10,8"
-                                                Background="{StaticResource AppSurfaceSubtleBrush}"
-                                                BorderBrush="Transparent"
-                                                BorderThickness="1"
-                                                CornerRadius="6">
-                                            <Grid ColumnDefinitions="4,*,Auto">
-                                                <Border Width="3"
-                                                        Margin="0,1,9,1"
-                                                        Background="{StaticResource AppPrimaryBrush}"
-                                                        CornerRadius="2" />
-                                                <TextBlock Grid.Column="1"
-                                                           VerticalAlignment="Center"
-                                                           Text="{Binding SummaryLine}"
-                                                           TextWrapping="Wrap" />
-                                                <StackPanel Grid.Column="2"
-                                                            Margin="8,0,0,0"
+                                        <Border Classes="rule-row">
+                                            <Grid RowDefinitions="Auto,12,Auto">
+                                                <Grid Grid.Row="0" ColumnDefinitions="3,10,*">
+                                                    <Border Width="3"
+                                                            Margin="0,2"
+                                                            Background="{StaticResource AppPrimaryBrush}"
+                                                            CornerRadius="2" />
+                                                    <TextBlock Grid.Column="2"
+                                                               Classes="rule-text"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding SummaryLine}"
+                                                               TextWrapping="Wrap" />
+                                                </Grid>
+                                                <StackPanel Grid.Row="2"
+                                                            HorizontalAlignment="Right"
                                                             Orientation="Horizontal"
-                                                            Spacing="2">
+                                                            Spacing="8">
                                                     <Button Classes="secondary compact cancel-edit"
                                                             Content="取消编辑"
                                                             Click="CancelRuleEdit_Click" />
                                                     <Button Classes="danger compact"
+                                                            MinWidth="64"
                                                             Content="移除"
                                                             Tag="{Binding}"
                                                             Click="RemoveRule_Click" />
@@ -163,13 +192,14 @@
                         <TextBlock Name="RulesHintText"
                                    Grid.Row="4"
                                    Classes="caption rules-hint"
+                                   TextWrapping="Wrap"
                                    Text="未选择规则" />
                     </Grid>
                 </Border>
             </Grid>
 
-            <Grid Grid.Column="2" RowDefinitions="Auto,12,*">
-                <StackPanel Grid.Row="0" Spacing="3">
+            <Grid Grid.Column="2" RowDefinitions="Auto,14,*">
+                <StackPanel Grid.Row="0" Spacing="5">
                     <TextBlock Classes="section-title" Text="规则构建器" />
                     <TextBlock Classes="caption" Text="稀有度、职业与指定干员" />
                 </StackPanel>
@@ -177,12 +207,12 @@
                 <ScrollViewer Grid.Row="2"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto">
-                    <StackPanel Spacing="10">
+                    <StackPanel Spacing="14">
                         <Border Name="RaritySection" Classes="form-section">
-                            <StackPanel Spacing="12">
-                                <TextBlock FontWeight="SemiBold" Text="稀有度人数" />
-                                <Grid ColumnDefinitions="1.1*,10,*,10,Auto"
-                                      RowDefinitions="Auto,6,40">
+                            <StackPanel Spacing="14">
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Text="稀有度人数" />
+                                <Grid ColumnDefinitions="*,12,*,12,80"
+                                      RowDefinitions="Auto,8,44">
                                     <TextBlock Grid.Column="0" Classes="caption" Text="稀有度" />
                                     <TextBlock Grid.Column="2" Classes="caption" Text="人数" />
                                     <ComboBox Name="StarCombo"
@@ -201,6 +231,7 @@
                                             Grid.Row="2"
                                             Grid.Column="4"
                                             Classes="primary inline"
+                                            HorizontalAlignment="Stretch"
                                             Content="添加"
                                             Click="AddRarityRule_Click" />
                                 </Grid>
@@ -208,13 +239,12 @@
                         </Border>
 
                         <Border Name="CareerSection" Classes="form-section">
-                            <StackPanel Spacing="12">
-                                <TextBlock FontWeight="SemiBold" Text="职业人数" />
-                                <Grid ColumnDefinitions="1.1*,10,*,10,1.45*,10,Auto"
-                                      RowDefinitions="Auto,6,40">
+                            <StackPanel Spacing="14">
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Text="职业人数" />
+                                <Grid ColumnDefinitions="*,12,*"
+                                      RowDefinitions="Auto,8,44">
                                     <TextBlock Grid.Column="0" Classes="caption" Text="职业" />
                                     <TextBlock Grid.Column="2" Classes="caption" Text="约束" />
-                                    <TextBlock Grid.Column="4" Classes="caption" Text="人数 / 范围" />
                                     <ComboBox Name="CareerCombo"
                                               Grid.Row="2"
                                               Grid.Column="0"
@@ -230,12 +260,16 @@
                                         <ComboBoxItem Content="固定值" />
                                         <ComboBoxItem Content="范围" />
                                     </ComboBox>
-                                    <Grid Grid.Row="2" Grid.Column="4">
+                                </Grid>
+                                <Grid ColumnDefinitions="*,12,80"
+                                      RowDefinitions="Auto,8,44">
+                                    <TextBlock Grid.Column="0" Classes="caption" Text="人数 / 范围" />
+                                    <Grid Grid.Row="2" Grid.Column="0">
                                         <TextBox Name="CareerCountBox"
                                                  Classes="inline dense"
                                                  HorizontalAlignment="Stretch"
                                                  PlaceholderText="数量" />
-                                        <Grid ColumnDefinitions="*,6,*">
+                                        <Grid ColumnDefinitions="*,10,*">
                                             <TextBox Name="CareerRangeMinBox"
                                                      Grid.Column="0"
                                                      Classes="inline dense"
@@ -252,8 +286,9 @@
                                     </Grid>
                                     <Button Name="CareerRuleSubmitButton"
                                             Grid.Row="2"
-                                            Grid.Column="6"
+                                            Grid.Column="2"
                                             Classes="primary inline"
+                                            HorizontalAlignment="Stretch"
                                             Content="添加"
                                             Click="AddCareerConstraint_Click" />
                                 </Grid>
@@ -261,21 +296,21 @@
                         </Border>
 
                         <Border Name="StaffSection" Classes="form-section">
-                            <StackPanel Spacing="12">
-                                <TextBlock FontWeight="SemiBold" Text="指定干员人数" />
-                                <StackPanel Spacing="6">
+                            <StackPanel Spacing="14">
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Text="指定干员人数" />
+                                <StackPanel Spacing="8">
                                     <TextBlock Classes="caption" Text="干员范围" />
-                                    <WrapPanel Name="StaffSubsetFlowPanel" MinHeight="36">
+                                    <WrapPanel Name="StaffSubsetFlowPanel" MinHeight="52">
                                         <Button Name="StaffSubsetAddButton"
                                                 Classes="secondary inline"
-                                                MinWidth="96"
-                                                Margin="0,0,8,6"
+                                                MinWidth="112"
+                                                Margin="0,0,8,8"
                                                 Content="选择干员"
                                                 Click="StaffSubsetAddButton_Click" />
                                     </WrapPanel>
                                 </StackPanel>
-                                <Grid ColumnDefinitions="*,10,1.45*,10,Auto"
-                                      RowDefinitions="Auto,6,40">
+                                <Grid ColumnDefinitions="*,12,1.5*"
+                                      RowDefinitions="Auto,8,44,14,44">
                                     <TextBlock Grid.Column="0" Classes="caption" Text="约束" />
                                     <TextBlock Grid.Column="2" Classes="caption" Text="人数 / 范围" />
                                     <ComboBox Name="StaffSubsetModeCombo"
@@ -296,7 +331,7 @@
                                     <Grid Name="StaffSubsetRangeInputPanel"
                                           Grid.Row="2"
                                           Grid.Column="2"
-                                          ColumnDefinitions="*,6,*"
+                                          ColumnDefinitions="*,10,*"
                                           IsVisible="False">
                                         <TextBox Name="StaffSubsetRangeMinBox"
                                                  Grid.Column="0"
@@ -310,8 +345,11 @@
                                                  PlaceholderText="最大" />
                                     </Grid>
                                     <Button Name="StaffSubsetRuleSubmitButton"
-                                            Grid.Row="2"
-                                            Grid.Column="4"
+                                            Grid.Row="4"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="3"
+                                            MinWidth="104"
+                                            HorizontalAlignment="Right"
                                             Classes="primary inline"
                                             Content="添加"
                                             Click="AddStaffSubsetRule_Click" />
@@ -331,9 +369,9 @@
             <StackPanel HorizontalAlignment="Right"
                         VerticalAlignment="Center"
                         Orientation="Horizontal"
-                        Spacing="8">
-                <Button Classes="secondary" Content="取消" Click="Cancel_Click" />
-                <Button Classes="primary" Content="保存策略" Click="Ok_Click" />
+                        Spacing="12">
+                <Button Classes="secondary" MinWidth="96" Content="取消" Click="Cancel_Click" />
+                <Button Classes="primary" MinWidth="128" Content="保存策略" Click="Ok_Click" />
             </StackPanel>
         </Border>
     </Grid>

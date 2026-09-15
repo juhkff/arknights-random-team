@@ -10,42 +10,52 @@
              FontFamily="{StaticResource AppFont}">
     <UserControl.Styles>
         <Style Selector="Border.strategy-card">
-            <Setter Property="Margin" Value="0,0,0,12" />
-            <Setter Property="Padding" Value="18,16" />
+            <Setter Property="Margin" Value="0,0,0,16" />
+            <Setter Property="Padding" Value="20" />
         </Style>
         <Style Selector="Border.strategy-card:pointerover">
-            <Setter Property="BorderBrush" Value="#CFC8EE" />
-            <Setter Property="BoxShadow" Value="0 3 10 0 #16000000" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BoxShadow" Value="0 4 14 0 #24000000" />
         </Style>
         <Style Selector="Border.rule-summary">
-            <Setter Property="Margin" Value="0,3,0,0" />
-            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="Margin" Value="0,6,0,0" />
+            <Setter Property="Padding" Value="12,10" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
-            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="7" />
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,14,*">
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                <Border Width="4"
-                        Height="26"
-                        Background="{StaticResource AppSignalBrush}"
-                        CornerRadius="2" />
-                <TextBlock Classes="section-title"
-                           VerticalAlignment="Center"
-                           Text="策略方案" />
-                <Border Padding="9,4"
-                        Background="{StaticResource AppPrimarySoftBrush}"
-                        CornerRadius="6">
-                    <TextBlock Name="StrategyCountText"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               Foreground="{StaticResource AppPrimaryBrush}"
-                               Text="0 个" />
-                </Border>
+    <Grid RowDefinitions="Auto,18,*">
+        <Grid Grid.Row="0" ColumnDefinitions="*,16,Auto">
+            <StackPanel VerticalAlignment="Center" Spacing="6">
+                <TextBlock Classes="eyebrow" Text="STRATEGY LIBRARY" />
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Border Width="4"
+                            Height="28"
+                            Background="{StaticResource AppSignalBrush}"
+                            CornerRadius="2" />
+                    <TextBlock Classes="section-title"
+                               VerticalAlignment="Center"
+                               Text="策略方案" />
+                    <Border Padding="10,5"
+                            Background="{StaticResource AppPrimarySoftBrush}"
+                            BorderBrush="{StaticResource AppPrimaryBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                        <TextBlock Name="StrategyCountText"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppPrimaryBrush}"
+                                   Text="0 个" />
+                    </Border>
+                </StackPanel>
             </StackPanel>
-            <Button Grid.Column="1"
+            <Button Grid.Column="2"
+                    MinWidth="128"
+                    VerticalAlignment="Center"
                     Classes="primary"
                     Content="新建策略"
                     Click="AddStrategy_Click" />
@@ -66,20 +76,22 @@
                                                 Background="{StaticResource AppSignalBrush}"
                                                 CornerRadius="2" />
                                         <TextBlock Grid.Column="2"
-                                                   Margin="0,0,12,0"
+                                                   Margin="0,0,16,0"
                                                    VerticalAlignment="Center"
-                                                   FontSize="16"
+                                                   FontSize="18"
                                                    FontWeight="SemiBold"
                                                    Text="{Binding Name}"
                                                    TextTrimming="CharacterEllipsis" />
                                         <StackPanel Grid.Column="3"
                                                     Orientation="Horizontal"
-                                                    Spacing="4">
-                                            <Button Classes="secondary compact"
+                                                    Spacing="8">
+                                            <Button Classes="secondary"
+                                                    MinWidth="72"
                                                     Content="编辑"
                                                     Tag="{Binding}"
                                                     Click="EditStrategy_Click" />
-                                            <Button Classes="danger compact"
+                                            <Button Classes="danger"
+                                                    MinWidth="72"
                                                     Content="删除"
                                                     Tag="{Binding}"
                                                     Click="DeleteStrategy_Click" />
@@ -90,12 +102,12 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="domain:StrategyRule">
                                                 <Border Classes="rule-summary">
-                                                    <Grid ColumnDefinitions="4,*">
+                                                    <Grid ColumnDefinitions="3,10,*">
                                                         <Border Width="3"
-                                                                Margin="0,1,9,1"
+                                                                Margin="0,2"
                                                                 Background="{StaticResource AppPrimaryBrush}"
                                                                 CornerRadius="2" />
-                                                        <TextBlock Grid.Column="1"
+                                                        <TextBlock Grid.Column="2"
                                                                    VerticalAlignment="Center"
                                                                    Text="{Binding SummaryLine}"
                                                                    TextWrapping="Wrap" />
@@ -123,8 +135,12 @@
                         CornerRadius="2" />
                 <TextBlock Classes="muted"
                            HorizontalAlignment="Center"
+                           FontSize="18"
                            FontWeight="SemiBold"
                            Text="暂无随机策略" />
+                <TextBlock Classes="caption"
+                           HorizontalAlignment="Center"
+                           Text="新建规则，控制稀有度、职业与干员范围。" />
             </StackPanel>
         </Grid>
     </Grid>

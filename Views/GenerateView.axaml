@@ -5,147 +5,252 @@
              xmlns:models="clr-namespace:arknights_random_team.Models"
              xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
-             d:DesignWidth="760"
-             d:DesignHeight="640"
+             d:DesignWidth="900"
+             d:DesignHeight="650"
              x:Class="arknights_random_team.Views.GenerateView"
              x:DataType="views:GenerateView"
              FontFamily="{StaticResource AppFont}">
-    <Grid RowDefinitions="Auto,20,*">
-        <Border Grid.Row="0" Classes="surface" Padding="0" ClipToBounds="True">
-            <Grid RowDefinitions="4,*">
-                <Border Grid.Row="0"
-                        HorizontalAlignment="Stretch"
+    <UserControl.Styles>
+        <Style Selector="Button.count-preset">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+        </Style>
+        <Style Selector="Button.count-preset.selected">
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.count-preset:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppSecondaryHoverBrush}" />
+        </Style>
+        <Style Selector="Button.count-preset:pressed">
+            <Setter Property="Background" Value="{StaticResource AppSecondaryPressedBrush}" />
+        </Style>
+        <Style Selector="Button.count-preset.selected:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.count-preset.selected:pressed">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryPressedBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+        </Style>
+        <Style Selector="DataGrid#ResultGrid DataGridCell TextBlock.operator-name">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+
+        <!-- 编队卡片 -->
+        <Style Selector="TextBlock.roster-name">
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.roster-pips">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="LetterSpacing" Value="1.5" />
+            <Setter Property="Foreground" Value="{StaticResource AppSignalBrush}" />
+        </Style>
+        <Style Selector="TextBlock.roster-glyph">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.roster-badge">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,22,*">
+        <Border Grid.Row="0" Classes="surface">
+            <Grid>
+                <!-- Decorative geometry never intercepts clicks. -->
+                <Path Width="140" Height="86" Margin="0,0,0,0"
+                      HorizontalAlignment="Right" VerticalAlignment="Top"
+                      IsHitTestVisible="False" Opacity="0.12"
+                      Stroke="{StaticResource AppPrimaryBrush}" StrokeThickness="1"
+                      Stretch="Fill" Data="M 0,0 L 54,0 140,86 M 32,0 L 86,0 140,54 M 82,0 L 140,58" />
+                <Border Width="54" Height="3" Margin="22,0,0,0"
+                        HorizontalAlignment="Left" VerticalAlignment="Top"
                         Background="{StaticResource AppPrimaryBrush}" />
-                <Grid Grid.Row="1"
-                      Margin="20,16,20,20"
-                      ColumnDefinitions="*,20,190,20,112"
-                      RowDefinitions="Auto,8,44">
-                    <TextBlock Grid.Row="0"
-                               Grid.Column="0"
-                               Classes="field-label"
-                               Text="使用策略" />
-                    <ComboBox Name="StrategyCombo"
-                              Grid.Row="2"
-                              Grid.Column="0"
-                              Classes="form-control dense"
-                              HorizontalAlignment="Stretch"
-                              PlaceholderText="选择策略">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="views:StrategyComboItem">
-                                <TextBlock VerticalAlignment="Center"
-                                           Text="{Binding DisplayName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
+                <Grid Margin="22,20" RowDefinitions="Auto,18,Auto,18,Auto">
+                    <StackPanel Spacing="5">
+                        <TextBlock Classes="eyebrow" Text="SQUAD / CONFIGURATION" />
+                        <TextBlock FontSize="23" FontWeight="Bold" Text="随机编队，准备出击。" />
+                    </StackPanel>
 
-                    <Grid Grid.Row="0" Grid.Column="2" ColumnDefinitions="*,Auto">
-                        <TextBlock Classes="field-label" Text="阵容人数" />
-                        <Border Grid.Column="1"
-                                MinWidth="34"
-                                Padding="8,2"
-                                Background="{StaticResource AppPrimarySoftBrush}"
-                                CornerRadius="5">
-                            <TextBlock Name="RandomNumText"
-                                       HorizontalAlignment="Center"
-                                       FontWeight="Bold"
-                                       Foreground="{StaticResource AppPrimaryBrush}"
-                                       Text="1" />
-                        </Border>
+                    <Grid Grid.Row="2" ColumnDefinitions="*,24,*">
+                        <Grid Grid.Column="0" RowDefinitions="32,8,48,8,40">
+                            <TextBlock Classes="field-label" Text="01 / 选择作战策略" />
+                            <ComboBox Name="StrategyCombo" Grid.Row="2"
+                                      Classes="form-control dense"
+                                      HorizontalAlignment="Stretch"
+                                      AutomationProperties.Name="作战策略"
+                                      PlaceholderText="选择策略">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="views:StrategyComboItem">
+                                        <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   Text="{Binding DisplayName}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Grid.Row="4" Classes="caption" VerticalAlignment="Center"
+                                       TextWrapping="Wrap" Text="不选策略，自由随机；自定义规则前往「随机策略」。" />
+                        </Grid>
+
+                        <Grid Grid.Column="2" RowDefinitions="32,8,48,8,40">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="field-label" Text="02 / 阵容人数" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Name="RandomNumText" FontFamily="{StaticResource AppMonoFont}"
+                                               FontSize="24" FontWeight="Bold"
+                                               Foreground="{StaticResource AppPrimaryBrush}" Text="1" />
+                                    <TextBlock Name="TeamSizeLimitText" Classes="caption"
+                                               VerticalAlignment="Center" Text="/ 12" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid Grid.Row="2" ColumnDefinitions="48,6,*,6,48">
+                                <Button Name="DecreaseCountButton" Classes="icon" Content="−" FontSize="24"
+                                        AutomationProperties.Name="减少一名干员" ToolTip.Tip="减少一名干员"
+                                        Click="DecreaseCount_Click" />
+                                <!-- Keep the slider free of any input-shell or outer border. -->
+                                <Slider Name="CountSlider" Grid.Column="2" Height="48" Margin="4,0"
+                                        VerticalAlignment="Center" ZIndex="10" ClipToBounds="False"
+                                        Minimum="1" Maximum="12" TickFrequency="1" TickPlacement="None"
+                                        IsSnapToTickEnabled="True"
+                                        SmallChange="1" LargeChange="1"
+                                        AutomationProperties.Name="阵容人数"
+                                        Theme="{StaticResource MaterialDiscreteSliderV}" Value="1"
+                                        PropertyChanged="CountSlider_OnPropertyChanged" />
+                                <Button Name="IncreaseCountButton" Grid.Column="4" Classes="icon" Content="＋" FontSize="22"
+                                        AutomationProperties.Name="增加一名干员" ToolTip.Tip="增加一名干员"
+                                        Click="IncreaseCount_Click" />
+                            </Grid>
+                            <Grid Grid.Row="4" ColumnDefinitions="*,8,*,8,*,8,*">
+                                <Button Name="SoloPresetButton" Classes="compact count-preset" Content="1 人" Tag="1"
+                                        AutomationProperties.Name="选择一人阵容" Click="CountPreset_Click" />
+                                <Button Name="FourPresetButton" Grid.Column="2" Classes="compact count-preset" Content="4 人" Tag="4"
+                                        AutomationProperties.Name="选择四人阵容" Click="CountPreset_Click" />
+                                <Button Name="SixPresetButton" Grid.Column="4" Classes="compact count-preset" Content="6 人" Tag="6"
+                                        AutomationProperties.Name="选择六人阵容" Click="CountPreset_Click" />
+                                <Button Name="FullPresetButton" Grid.Column="6" Classes="compact count-preset" Content="满编"
+                                        Tag="{x:Static models:AppOptions.MaxTeamSize}"
+                                        AutomationProperties.Name="选择满编阵容" Click="CountPreset_Click" />
+                            </Grid>
+                        </Grid>
                     </Grid>
-                    <Border Grid.Row="2"
-                            Grid.Column="2"
-                            Classes="input-shell"
-                            Padding="10,0">
-                        <Slider Name="CountSlider"
-                                Height="40"
-                                Margin="0"
-                                VerticalAlignment="Center"
-                                ZIndex="10"
-                                ClipToBounds="False"
-                                Minimum="1"
-                                Maximum="12"
-                                TickFrequency="1"
-                                TickPlacement="None"
-                                IsSnapToTickEnabled="True"
-                                Theme="{StaticResource MaterialDiscreteSliderV}"
-                                Value="1"
-                                PropertyChanged="CountSlider_OnPropertyChanged" />
-                    </Border>
 
-                    <Button Grid.Row="2"
-                            Grid.Column="4"
-                            Height="44"
-                            Classes="primary"
-                            Content="生成阵容"
-                            Click="Generate_Click" />
+                    <Button Name="GenerateButton" Grid.Row="4" Classes="primary" Height="58"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                            AutomationProperties.Name="生成随机阵容" Click="Generate_Click">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                <Path Width="20" Height="20" Stretch="Uniform"
+                                      Stroke="{StaticResource AppOnPrimaryBrush}" StrokeThickness="2"
+                                      Data="M 2,5 L 6,5 14,15 20,15 M 16,11 L 20,15 16,19 M 2,15 L 6,15 14,5 20,5 M 16,1 L 20,5 16,9" />
+                                <TextBlock FontSize="17" FontWeight="Bold" VerticalAlignment="Center" Text="生成阵容" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" FontFamily="{StaticResource AppMonoFont}" FontSize="12"
+                                       VerticalAlignment="Center" Text="DEPLOY  →" />
+                        </Grid>
+                    </Button>
                 </Grid>
             </Grid>
         </Border>
 
         <Grid Grid.Row="2" RowDefinitions="Auto,12,*">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
-                    <Border Width="4"
-                            Height="24"
-                            Background="{StaticResource AppSignalBrush}"
-                            CornerRadius="2" />
-                    <TextBlock Classes="section-title"
-                               VerticalAlignment="Center"
-                               Text="阵容结果" />
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                    <Border Width="4" Height="22" Background="{StaticResource AppSignalBrush}" CornerRadius="2" />
+                    <TextBlock Classes="section-title" VerticalAlignment="Center" Text="出战名单" />
+                    <TextBlock Classes="eyebrow" VerticalAlignment="Center" Foreground="{StaticResource AppMutedTextBrush}"
+                               Text="/ ROSTER" />
                 </StackPanel>
-                <TextBlock Name="ResultCountText"
-                           Grid.Column="1"
-                           VerticalAlignment="Center"
-                           Classes="caption"
-                           Text="0 名干员" />
+                <Border Grid.Column="1" Classes="chip" VerticalAlignment="Center"
+                        Background="{StaticResource AppPrimarySoftBrush}"
+                        BorderBrush="{StaticResource AppPrimaryGlowBrush}">
+                    <TextBlock Name="ResultCountText" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{StaticResource AppPrimaryBrush}" Text="0 名干员" />
+                </Border>
             </Grid>
 
-            <Border Grid.Row="2" Classes="surface data-frame" ClipToBounds="True">
+            <Border Grid.Row="2" Classes="surface" Padding="0" ClipToBounds="True">
                 <Grid>
-                    <DataGrid Name="ResultGrid"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserReorderColumns="False"
-                              ItemsSource="{Binding ResultList}"
-                              Sorting="ResultGrid_Sorting">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Width="2*"
-                                                MinWidth="150"
-                                                Header="名称"
-                                                SortMemberPath="Name"
-                                                Binding="{Binding Name, x:DataType=models:Staff}" />
-                            <DataGridTextColumn Width="1.4*"
-                                                MinWidth="110"
-                                                Header="等级"
-                                                SortMemberPath="Level.Description"
-                                                Binding="{Binding Level.Description, x:DataType=models:Staff}" />
-                            <DataGridTextColumn Width="*"
-                                                MinWidth="80"
-                                                Header="稀有度"
-                                                SortMemberPath="Star"
-                                                Binding="{Binding Star, x:DataType=models:Staff}" />
-                            <DataGridTextColumn Width="*"
-                                                MinWidth="88"
-                                                Header="职业"
-                                                SortMemberPath="Career"
-                                                Binding="{Binding Career, x:DataType=models:Staff}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <!-- 顶部战术压线 -->
+                    <Grid RowDefinitions="3,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="76,*,0.55*">
+                            <Border Background="{StaticResource AppSignalBrush}" />
+                            <Border Grid.Column="1" Background="{StaticResource AppPrimaryGlowBrush}" />
+                            <Border Grid.Column="2" Background="{StaticResource AppBorderBrush}" />
+                        </Grid>
 
-                    <StackPanel Name="ResultEmptyState"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                IsHitTestVisible="False"
-                                Spacing="10">
-                        <Border Width="32"
-                                Height="3"
-                                HorizontalAlignment="Center"
-                                Background="{StaticResource AppPrimaryBrush}"
-                                CornerRadius="2" />
-                        <TextBlock Classes="muted"
-                                   HorizontalAlignment="Center"
-                                   FontWeight="SemiBold"
-                                   Text="尚未生成阵容" />
+                        <ScrollViewer Grid.Row="1"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsControl Name="RosterItems" Margin="16,16,16,8" ItemsSource="{Binding ResultList}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Staff">
+                                        <ContentControl Theme="{StaticResource AppRosterCardTheme}"
+                                                        Width="212"
+                                                        Height="82"
+                                                        Margin="0,0,12,12"
+                                                        Foreground="{Binding CareerBrush}"
+                                                        ToolTip.Tip="{Binding Level.Description}">
+                                            <Grid RowDefinitions="Auto,*,Auto">
+                                                <Grid ColumnDefinitions="34,11,*">
+                                                    <Border Classes="roster-badge"
+                                                            BorderBrush="{Binding CareerBrush}">
+                                                        <TextBlock Classes="roster-glyph"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{Binding CareerBrush}"
+                                                                   Text="{Binding CareerGlyph}" />
+                                                    </Border>
+                                                    <TextBlock Grid.Column="2"
+                                                               Classes="roster-name"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding Name}" />
+                                                </Grid>
+
+                                                <StackPanel Grid.Row="2"
+                                                            Orientation="Horizontal"
+                                                            VerticalAlignment="Center"
+                                                            Spacing="8">
+                                                    <TextBlock Classes="roster-pips"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding StarGlyphs}" />
+                                                    <TextBlock Classes="mono"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding Level.Description}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </ContentControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <StackPanel Name="ResultEmptyState" Margin="16,48,16,0"
+                                HorizontalAlignment="Center" VerticalAlignment="Center"
+                                IsHitTestVisible="False" Spacing="8">
+                        <Path Width="38" Height="38" HorizontalAlignment="Center" Stretch="Uniform"
+                              Stroke="{StaticResource AppPrimaryBrush}" StrokeThickness="1.4" Opacity="0.75"
+                              Data="M 0,12 L 0,0 12,0 M 28,0 L 40,0 40,12 M 40,28 L 40,40 28,40 M 12,40 L 0,40 0,28 M 14,20 L 26,20 M 20,14 L 20,26" />
+                        <TextBlock HorizontalAlignment="Center" FontWeight="SemiBold" Text="等待部署" />
+                        <TextBlock Classes="caption" HorizontalAlignment="Center" Text="选好策略与人数，点击「生成阵容」开始。" />
                     </StackPanel>
                 </Grid>
             </Border>

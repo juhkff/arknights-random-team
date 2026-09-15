@@ -1,8 +1,13 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Avalonia.Threading;
 using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
@@ -26,7 +31,7 @@ public partial class GenerateView : UserControl
         ResultList.CollectionChanged += (_, _) => UpdateResultState();
         CountSlider.Maximum = AppOptions.MaxTeamSize;
         RefreshStrategyCombo();
-        RandomNumText.Text = ((int)CountSlider.Value).ToString();
+        UpdateTeamSizeControls();
         UpdateResultState();
     }
 
@@ -49,9 +54,44 @@ public partial class GenerateView : UserControl
 
     private void CountSlider_OnPropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
     {
-        if (e.Property != Slider.ValueProperty || RandomNumText == null)
+        if (e.Property == Slider.ValueProperty || e.Property == Slider.MaximumProperty)
+            UpdateTeamSizeControls();
+    }
+
+    private void UpdateTeamSizeControls()
+    {
+        // XAML sets the slider value before the remaining controls are created.
+        if (RandomNumText == null || CountSlider == null || FullPresetButton == null)
             return;
-        RandomNumText.Text = ((int)CountSlider.Value).ToString();
+
+        var count = (int)CountSlider.Value;
+        RandomNumText.Text = count.ToString();
+        TeamSizeLimitText.Text = $"/ {(int)CountSlider.Maximum}";
+        DecreaseCountButton.IsEnabled = count > CountSlider.Minimum;
+        IncreaseCountButton.IsEnabled = count < CountSlider.Maximum;
+
+        foreach (var preset in new[] { SoloPresetButton, FourPresetButton, SixPresetButton, FullPresetButton })
+        {
+            if (!int.TryParse(preset.Tag?.ToString(), out var size))
+                continue;
+            preset.IsEnabled = size >= CountSlider.Minimum && size <= CountSlider.Maximum;
+            preset.Classes.Set("selected", count == size);
+        }
+    }
+
+    private void SetTeamSize(int count) =>
+        CountSlider.Value = Math.Clamp(count, (int)CountSlider.Minimum, (int)CountSlider.Maximum);
+
+    private void DecreaseCount_Click(object? sender, RoutedEventArgs e) =>
+        SetTeamSize((int)CountSlider.Value - 1);
+
+    private void IncreaseCount_Click(object? sender, RoutedEventArgs e) =>
+        SetTeamSize((int)CountSlider.Value + 1);
+
+    private void CountPreset_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && int.TryParse(button.Tag?.ToString(), out var count))
+            SetTeamSize(count);
     }
 
     private void UpdateResultState()
@@ -61,6 +101,62 @@ public partial class GenerateView : UserControl
 
         ResultEmptyState.IsVisible = ResultList.Count == 0;
         ResultCountText.Text = $"{ResultList.Count} 名干员";
+
+        if (ResultList.Count > 0)
+            QueueRosterReveal();
+    }
+
+    /// <summary>
+    /// 编队卡片逐张浮现：容器生成后再统一播放，避免和 ItemsControl 的布局打架。
+    /// </summary>
+    private void QueueRosterReveal()
+    {
+        Dispatcher.UIThread.Post(PlayRosterReveal, DispatcherPriority.Background);
+    }
+
+    private void PlayRosterReveal()
+    {
+        if (RosterItems == null)
+            return;
+
+        // 用定时器逐张揭示：比 Animation.RunAsync 更好预测，动画结束后不会残留中间值。
+        var cards = RosterItems.GetRealizedContainers().OfType<Control>().ToList();
+        foreach (var card in cards)
+        {
+            card.Opacity = 0;
+            card.RenderTransform = new TranslateTransform(0, 14);
+        }
+
+        var step = 0;
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(45) };
+        timer.Tick += (_, _) =>
+        {
+            if (step >= cards.Count)
+            {
+                timer.Stop();
+                return;
+            }
+
+            Reveal(cards[step]);
+            step++;
+
+            if (step >= cards.Count)
+                timer.Stop();
+        };
+        timer.Start();
+    }
+
+    /// <summary>把一张卡片从「隐藏上浮」推到最终位置，随后清掉临时属性。</summary>
+    private static void Reveal(Control card)
+    {
+        card.Transitions = new Transitions
+        {
+            new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(240), Easing = new CubicEaseOut() },
+            new TransformOperationsTransition { Property = RenderTransformProperty, Duration = TimeSpan.FromMilliseconds(280), Easing = new CubicEaseOut() }
+        };
+
+        card.Opacity = 1;
+        card.RenderTransform = new TranslateTransform(0, 0);
     }
 
     private async void Generate_Click(object? sender, RoutedEventArgs e)
@@ -164,7 +260,4 @@ public partial class GenerateView : UserControl
         foreach (var index in indexSet)
             ResultList.Add(pool[index]);
     }
-
-    private void ResultGrid_Sorting(object? sender, DataGridColumnEventArgs e) =>
-        DataGridMultiSort.Apply(ResultGrid, e);
 }

@@ -256,7 +256,7 @@ public partial class StrategyEditorWindow : Window
         var tagBg = TryGetResource("AppPrimarySoftBrush", ActualThemeVariant, out var brush)
                     && brush is IBrush b
             ? b
-            : new SolidColorBrush(Color.FromRgb(239, 236, 250));
+            : new SolidColorBrush(Color.FromRgb(24, 58, 56));
 
         foreach (var name in _staffSubsetDraft)
         {
@@ -279,9 +279,11 @@ public partial class StrategyEditorWindow : Window
             var remove = new Button
             {
                 Content = "×",
-                MinHeight = 26,
-                Height = 26,
-                Padding = new Thickness(6, 0),
+                MinWidth = 40,
+                Width = 40,
+                MinHeight = 40,
+                Height = 40,
+                Padding = new Thickness(0),
                 Tag = name,
                 VerticalAlignment = VerticalAlignment.Center
             };

@@ -2,11 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:arknights_random_team.Models"
+        xmlns:views="clr-namespace:arknights_random_team.Views"
         mc:Ignorable="d"
         x:Class="arknights_random_team.Views.OperatorSyncDialog"
         Title="同步干员"
-        Width="460"
-        Height="360"
+        Width="544"
+        Height="588"
         CanResize="False"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
@@ -14,73 +16,340 @@
         FontSize="14"
         Background="{StaticResource AppBackgroundBrush}"
         KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <!-- 整块卡片就是选择控件：默认空心圆点，选中后点亮为薄荷色对勾。 -->
+        <ControlTheme x:Key="SyncStarTile" TargetType="CheckBox">
+            <Setter Property="FocusAdorner" Value="{x:Null}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid>
+                        <!-- 焦点环独立成层，避免和 Material 主题自带的描边互相覆盖。 -->
+                        <Border Name="PART_FocusRing"
+                                Margin="-3"
+                                IsHitTestVisible="False"
+                                Opacity="0"
+                                BorderBrush="{StaticResource AppSignalBrush}"
+                                BorderThickness="2"
+                                CornerRadius="10" />
+                        <Border Name="PART_CardRoot"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <BrushTransition Property="Background" Duration="0:0:0.16" />
+                                    <BrushTransition Property="BorderBrush" Duration="0:0:0.16" />
+                                </Transitions>
+                            </Border.Transitions>
+                            <ContentPresenter Name="PART_ContentPresenter"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Padding="{TemplateBinding Padding}"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:focus-visible /template/ Border#PART_FocusRing">
+                <Setter Property="Opacity" Value="1" />
+            </Style>
+        </ControlTheme>
+    </Window.Resources>
+
     <Window.Styles>
         <Style Selector="CheckBox.sync-star">
-            <Setter Property="MinHeight" Value="46" />
-            <Setter Property="Margin" Value="4" />
-            <Setter Property="Padding" Value="10,0" />
-            <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="Theme" Value="{StaticResource SyncStarTile}" />
+            <Setter Property="Height" Value="76" />
+            <Setter Property="Margin" Value="0,0,12,12" />
+            <Setter Property="Padding" Value="24,0,18,0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="#0F1924" />
+            <Setter Property="BorderBrush" Value="#1D2D3B" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:pointerover">
+            <Setter Property="Background" Value="#15232F" />
+            <Setter Property="BorderBrush" Value="#31485C" />
         </Style>
         <Style Selector="CheckBox.sync-star:checked">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="Background" Value="#132C2E" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:checked:pointerover">
+            <Setter Property="Background" Value="#183739" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:checked:pressed">
+            <Setter Property="Background" Value="#0D2124" />
+        </Style>
+
+        <Style Selector="CheckBox.sync-star TextBlock.star-glyph">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="Foreground" Value="#7C93A8" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:checked TextBlock.star-glyph">
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="CheckBox.sync-star TextBlock.star-value">
+            <Setter Property="FontFamily" Value="{StaticResource AppMonoFont}" />
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:checked TextBlock.star-value">
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+
+        <!-- 选中指示器：空心圆环 → 实心薄荷圆 + 矢量对勾。 -->
+        <Style Selector="CheckBox.sync-star Border.select-dot">
+            <Setter Property="BorderBrush" Value="#3B5468" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:pointerover Border.select-dot">
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="CheckBox.sync-star:checked Border.select-dot">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="CheckBox.sync-star Path.select-tick">
+            <Setter Property="Stroke" Value="{StaticResource AppOnPrimaryBrush}" />
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="CheckBox.sync-star:checked Path.select-tick">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <!-- 页脚：文字式取消 + 实心主按钮，右边距与内容对齐。 -->
+        <Style Selector="Button.dialog-cancel">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="20,0" />
+        </Style>
+        <Style Selector="Button.dialog-cancel:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppInputHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="Button.dialog-cancel:pressed">
+            <Setter Property="Background" Value="{StaticResource AppTableHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="Button.dialog-confirm">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="24,0" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="TextBlock.FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Button.dialog-confirm:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryHoverBrush}" />
+        </Style>
+        <Style Selector="Button.dialog-confirm:pressed">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryPressedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryPressedBrush}" />
+        </Style>
+        <Style Selector="Button.dialog-confirm /template/ Border#PART_RootBorder">
+            <Setter Property="BoxShadow" Value="none" />
+        </Style>
+        <Style Selector="Button.dialog-confirm Path">
+            <Setter Property="Stroke" Value="{StaticResource AppOnPrimaryBrush}" />
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="72,*,66">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!-- 标题区 -->
         <Border Grid.Row="0"
-                Padding="22,0"
+                Padding="28,24,28,22"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
-                BorderThickness="0,0,0,1">
-            <StackPanel VerticalAlignment="Center" Spacing="3">
-                <TextBlock FontSize="19" FontWeight="Bold" Text="同步干员" />
-                <TextBlock Classes="caption" Text="ArknightsGameData · 国服" />
-            </StackPanel>
-        </Border>
-
-        <StackPanel Grid.Row="1" Margin="22,18" Spacing="10">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock VerticalAlignment="Center"
-                           Classes="field-label"
-                           Text="选择稀有度" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
-                    <Button Classes="secondary compact" Content="全选" Click="SelectAll_Click" />
-                    <Button Classes="secondary compact" Content="清除" Click="ClearAll_Click" />
+                BorderThickness="0,0,0,1"
+                ClipToBounds="True">
+            <Grid>
+                <Path Width="150"
+                      Height="92"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom"
+                      IsHitTestVisible="False"
+                      Stroke="{StaticResource AppBorderBrush}"
+                      StrokeThickness="1"
+                      Opacity="0.55"
+                      Data="M 0,92 L 58,26 H 150 M 30,92 L 88,26 M 60,92 L 118,26" />
+                <StackPanel Spacing="7">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="16"
+                                Height="2"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource AppSignalBrush}" />
+                        <TextBlock FontSize="9"
+                                   FontWeight="SemiBold"
+                                   LetterSpacing="2.4"
+                                   Foreground="{StaticResource AppSignalBrush}"
+                                   Text="DATABASE LINK" />
+                    </StackPanel>
+                    <TextBlock FontSize="23" FontWeight="Bold" Text="同步干员" />
+                    <TextBlock Classes="caption"
+                               Text="按稀有度从 ArknightsGameData 国服数据追加正式干员" />
                 </StackPanel>
             </Grid>
+        </Border>
 
-            <UniformGrid Name="StarGrid" Columns="3" Rows="2" />
+        <!-- 已选进度条：把「选了几档」变成一眼可见的仪表。 -->
+        <Grid Grid.Row="1" Margin="28,20,28,0" Height="4">
+            <Border Name="SelectionTrack" Background="#16232F" CornerRadius="2" />
+            <Border Name="SelectionMeter"
+                    Width="0"
+                    HorizontalAlignment="Left"
+                    Background="{StaticResource AppPrimaryBrush}"
+                    CornerRadius="2">
+                <Border.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Width" Duration="0:0:0.18" />
+                    </Transitions>
+                </Border.Transitions>
+            </Border>
+        </Grid>
 
-            <TextBlock Name="ValidationText"
-                       MinHeight="18"
-                       IsVisible="False"
-                       FontSize="12"
-                       Foreground="{StaticResource AppDangerBrush}"
-                       Text="请至少选择一个稀有度。" />
+        <!-- 稀有度选择 -->
+        <StackPanel Grid.Row="2" Margin="28,22,28,22" Spacing="14">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Classes="field-label" VerticalAlignment="Center" Text="选择同步的稀有度" />
+                <Button Grid.Column="1"
+                        Classes="compact"
+                        Height="36"
+                        MinHeight="36"
+                        Margin="0,0,8,0"
+                        Padding="14,0"
+                        Foreground="{StaticResource AppMutedTextBrush}"
+                        Content="全选"
+                        Click="SelectAll_Click" />
+                <Button Grid.Column="2"
+                        Classes="compact"
+                        Height="36"
+                        MinHeight="36"
+                        Padding="14,0"
+                        Foreground="{StaticResource AppMutedTextBrush}"
+                        Content="清除"
+                        Click="ClearAll_Click" />
+            </Grid>
+
+            <ItemsControl Name="StarItems">
+                <ItemsControl.ItemsSource>
+                    <x:Static Member="models:AppOptions.Stars" />
+                </ItemsControl.ItemsSource>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="2" Rows="3" Margin="0,0,-12,-12" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="views:SyncStarOption">
+                        <CheckBox Classes="sync-star"
+                                  IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                  Click="StarCheckBox_Click">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+                                    <TextBlock Classes="star-glyph" Text="★" />
+                                    <TextBlock Classes="star-value" Text="{Binding Star}" />
+                                </StackPanel>
+                                <Border Classes="select-dot"
+                                        Width="20"
+                                        Height="20"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        BorderThickness="1.5"
+                                        CornerRadius="10">
+                                    <Path Classes="select-tick"
+                                          Width="11"
+                                          Height="9"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Stretch="None"
+                                          StrokeThickness="2"
+                                          StrokeLineCap="Round"
+                                          StrokeJoin="Round"
+                                          Data="M 1,4.8 L 4,8 L 10,1" />
+                                </Border>
+                            </Grid>
+                        </CheckBox>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Grid ColumnDefinitions="*,Auto" MinHeight="24">
+                <TextBlock Name="ValidationText"
+                           VerticalAlignment="Center"
+                           FontSize="13"
+                           Foreground="{StaticResource AppDangerBrush}"
+                           TextWrapping="Wrap"
+                           IsVisible="False"
+                           Text="请至少选择一个稀有度。" />
+                <TextBlock Name="SyncCountText"
+                           Grid.Column="1"
+                           VerticalAlignment="Center"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource AppPrimaryBrush}"
+                           Text="已选 0 / 6" />
+            </Grid>
         </StackPanel>
 
-        <Border Grid.Row="2"
-                Padding="22,0"
+        <!-- 页脚 -->
+        <Border Grid.Row="3"
+                Padding="28,0"
+                Height="88"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
                 BorderThickness="0,1,0,0">
-            <StackPanel HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Orientation="Horizontal"
-                        Spacing="8">
-                <Button Classes="secondary" Content="取消" Click="Cancel_Click" />
-                <Button Name="SyncButton"
-                        Classes="primary"
-                        MinWidth="104"
-                        Content="开始同步"
-                        Click="Sync_Click" />
-            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                <TextBlock Classes="caption"
+                           VerticalAlignment="Center"
+                           Text="同步不会覆盖已有干员" />
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Spacing="10">
+                    <Button Classes="dialog-cancel"
+                            Height="46"
+                            MinWidth="92"
+                            Content="取消"
+                            Click="Cancel_Click" />
+                    <Button Name="SyncButton"
+                            Classes="dialog-confirm"
+                            Height="46"
+                            MinWidth="172"
+                            AutomationProperties.Name="开始同步"
+                            Click="Sync_Click">
+                        <Grid ColumnDefinitions="Auto,10,Auto">
+                            <Path Width="17"
+                                  Height="16"
+                                  VerticalAlignment="Center"
+                                  Stretch="None"
+                                  Stroke="{StaticResource AppOnPrimaryBrush}"
+                                  StrokeThickness="2"
+                                  StrokeLineCap="Round"
+                                  StrokeJoin="Round"
+                                  Data="M 1,8 L 12,8 M 8,3 L 13,8 L 8,13" />
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="开始同步" />
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>

@@ -2,7 +2,7 @@ using arknights_random_team.Domain;
 
 namespace arknights_random_team.Models;
 
-public class Staff : AutomaticNotify
+public partial class Staff : AutomaticNotify
 {
     private string _name = "";
     private int _star = 1;
