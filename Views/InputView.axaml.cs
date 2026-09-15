@@ -8,24 +8,92 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Material.Styles.Controls;
 using Material.Styles.Models;
+using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
 namespace arknights_random_team.Views;
 
 public partial class InputView : UserControl
 {
+    private readonly OperatorSyncService _operatorSyncService = new();
     private int _star = 1;
     private readonly List<TextBlock> _starGlyphs = [];
     private bool _updatingLevelText;
+    private bool _syncInProgress;
 
     public InputView()
     {
         InitializeComponent();
         BuildStarBar();
         CareerCombo.SelectedIndex = -1;
+        UpdateSyncStatus();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    private async void OpenSyncButton_Click(object? sender, RoutedEventArgs e)
+    {
+        var owner = this.FindWindow();
+        var dialog = new OperatorSyncDialog();
+        var accepted = owner != null && await dialog.ShowDialog<bool>(owner);
+        if (!accepted || dialog.Selection is not { } selection)
+            return;
+
+        AppState.OperatorSyncSettings.SelectedStars = selection.SelectedStars.ToHashSet();
+        AppState.SaveOperatorSyncSettings();
+        await SyncOperatorsAsync(selection.SelectedStars);
+    }
+
+    private async Task SyncOperatorsAsync(IReadOnlySet<int> selectedStars)
+    {
+        if (_syncInProgress)
+            return;
+
+        _syncInProgress = true;
+        OpenSyncButton.IsEnabled = false;
+        SyncStatusText.Text = "正在同步所选稀有度...";
+
+        try
+        {
+            var result = await _operatorSyncService.SyncAsync(
+                AppState.StaffList,
+                AppState.OperatorSyncSettings,
+                selectedStars);
+            AppState.SaveOperatorData();
+
+            SyncStatusText.Text = $"新增 {result.Added} 名，校正 {result.Updated} 名，跳过 {result.Unchanged} 名。";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException or TaskCanceledException)
+        {
+            SyncStatusText.Text = $"同步失败：{ex.Message}";
+        }
+        finally
+        {
+            _syncInProgress = false;
+            OpenSyncButton.IsEnabled = true;
+        }
+    }
+
+    private void UpdateSyncStatus()
+    {
+        if (AppState.OperatorSyncSettingsError is { } settingsError)
+        {
+            SyncStatusText.Text = settingsError;
+            return;
+        }
+
+        var settings = AppState.OperatorSyncSettings;
+        if (settings.LastSuccessfulSync is not { } lastSync)
+        {
+            SyncStatusText.Text = settings.SelectedStars is { Count: > 0 }
+                ? "尚未同步"
+                : "尚未设置同步稀有度";
+            return;
+        }
+
+        var stars = string.Join("、", settings.SelectedStars!.Order());
+        SyncStatusText.Text = $"上次同步 {lastSync.ToLocalTime():yyyy-MM-dd HH:mm} · {stars} 星";
+    }
 
     private void BuildStarBar()
     {

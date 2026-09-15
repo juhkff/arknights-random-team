@@ -165,7 +165,19 @@
             <Setter Property="Foreground" Value="{DynamicResource MaterialPrimaryMidBrush}" />
         </Style>
     </UserControl.Styles>
-    <DataGrid Name="StaffGrid"
+    <Grid RowDefinitions="Auto,*">
+        <Button Name="ClearAllButton"
+                Grid.Row="0"
+                Margin="0,0,0,12"
+                Padding="12,6"
+                HorizontalAlignment="Right"
+                Theme="{StaticResource FlatButton}"
+                Foreground="#C62828"
+                FontWeight="Bold"
+                Content="清空列表"
+                Click="ClearAll_Click" />
+        <DataGrid Name="StaffGrid"
+              Grid.Row="1"
               AutoGenerateColumns="False"
               CanUserReorderColumns="False"
               CanUserResizeColumns="False"
@@ -299,5 +311,6 @@
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
         </DataGrid.Columns>
-    </DataGrid>
+        </DataGrid>
+    </Grid>
 </UserControl>

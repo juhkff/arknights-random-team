@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
 using arknights_random_team.Domain;
@@ -11,6 +12,10 @@ public static class AppState
     public static ObservableCollection<Staff> StaffList { get; } = [];
 
     public static ObservableCollection<RandomStrategyDefinition> Strategies { get; } = [];
+
+    public static OperatorSyncSettings OperatorSyncSettings { get; private set; } = new();
+
+    public static string? OperatorSyncSettingsError { get; private set; }
 
     /// <summary>
     /// 数据文件目录。调试 / <c>dotnet run</c> 时进程是 dotnet.exe，不能用 <see cref="Environment.ProcessPath"/>。
@@ -38,10 +43,13 @@ public static class AppState
 
     private static string StrategyPath => Path.Combine(DataDirectory, "RandomStrategies.json");
 
+    private static string OperatorSyncSettingsPath => Path.Combine(DataDirectory, "OperatorSyncSettings.json");
+
     public static void Initialize()
     {
         LoadStaff();
         StrategyPersistence.Load(StrategyPath, Strategies);
+        LoadOperatorSyncSettings();
     }
 
     public static void Save()
@@ -49,6 +57,27 @@ public static class AppState
         Directory.CreateDirectory(DataDirectory);
         SaveStaff();
         StrategyPersistence.Save(StrategyPath, Strategies);
+        if (OperatorSyncSettings.SelectedStars is { Count: > 0 })
+            SaveOperatorSyncSettings();
+    }
+
+    public static void SaveOperatorData()
+    {
+        Directory.CreateDirectory(DataDirectory);
+        SaveStaff();
+        SaveOperatorSyncSettings();
+    }
+
+    public static void SaveOperatorSyncSettings()
+    {
+        ValidateOperatorSyncSettings(OperatorSyncSettings);
+        Directory.CreateDirectory(DataDirectory);
+        var json = JsonSerializer.Serialize(OperatorSyncSettings, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        File.WriteAllText(OperatorSyncSettingsPath, json);
+        OperatorSyncSettingsError = null;
     }
 
     public static HashSet<string> GetNameSet() => StaffList.Select(staff => staff.Name).ToHashSet();
@@ -77,7 +106,8 @@ public static class AppState
                     Name = name,
                     Star = int.TryParse(each.Element("star")?.Value, out var star) ? star : 1,
                     Career = careerType,
-                    IsSelected = int.TryParse(each.Element("selected")?.Value, out var selected) && selected != 0
+                    IsSelected = int.TryParse(each.Element("selected")?.Value, out var selected) && selected != 0,
+                    SourceId = NullIfWhiteSpace(each.Element("sourceId")?.Value)
                 };
 
                 var levelText = each.Element("level")?.Value;
@@ -97,6 +127,44 @@ public static class AppState
                 StaffList.Add(staff);
             }
         }
+    }
+
+    private static void LoadOperatorSyncSettings()
+    {
+        OperatorSyncSettings = new OperatorSyncSettings();
+        OperatorSyncSettingsError = null;
+        if (!File.Exists(OperatorSyncSettingsPath))
+            return;
+
+        try
+        {
+            var settings = JsonSerializer.Deserialize<OperatorSyncSettings>(
+                File.ReadAllText(OperatorSyncSettingsPath));
+            if (settings == null)
+                throw new InvalidDataException("同步设置内容为空");
+            if (settings.SelectedStars == null)
+                throw new InvalidDataException("同步设置缺少 SelectedStars 字段");
+            if (settings.SelectedStars.Count == 0)
+                throw new InvalidDataException("同步设置中的 SelectedStars 至少需要一个稀有度");
+            if (settings.SelectedStars.Any(star => star is < 1 or > 6))
+                throw new InvalidDataException("同步设置中的 SelectedStars 只能包含 1 到 6");
+
+            OperatorSyncSettings = settings;
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or InvalidDataException)
+        {
+            OperatorSyncSettingsError = $"无法加载 {Path.GetFileName(OperatorSyncSettingsPath)}：{ex.Message}";
+        }
+    }
+
+    private static void ValidateOperatorSyncSettings(OperatorSyncSettings settings)
+    {
+        if (settings.SelectedStars == null)
+            throw new InvalidDataException("同步设置缺少 SelectedStars 字段");
+        if (settings.SelectedStars.Count == 0)
+            throw new InvalidDataException("请至少选择一个需要同步的稀有度");
+        if (settings.SelectedStars.Any(star => star is < 1 or > 6))
+            throw new InvalidDataException("同步稀有度只能是 1 到 6");
     }
 
     private static void SaveStaff()
@@ -145,6 +213,15 @@ public static class AppState
         staffElement.AppendChild(starElement);
         staffElement.AppendChild(levelElement);
         staffElement.AppendChild(selectedElement);
+        if (!string.IsNullOrWhiteSpace(staff.SourceId))
+        {
+            var sourceIdElement = file.CreateElement("sourceId");
+            sourceIdElement.InnerText = staff.SourceId;
+            staffElement.AppendChild(sourceIdElement);
+        }
         parentNode.AppendChild(staffElement);
     }
+
+    private static string? NullIfWhiteSpace(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

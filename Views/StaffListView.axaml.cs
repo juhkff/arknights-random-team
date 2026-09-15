@@ -1,6 +1,5 @@
-using System.ComponentModel;
+using System.Collections.Specialized;
 using Avalonia;
-using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -21,11 +20,33 @@ public partial class StaffListView : UserControl
     {
         DataContext = new ListModel();
         InitializeComponent();
+        UpdateClearButton();
+        AppState.StaffList.CollectionChanged += StaffList_CollectionChanged;
         AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel);
         Loaded += (_, _) => ClearGridSelection();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    private void StaffList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+        UpdateClearButton();
+
+    private void UpdateClearButton() => ClearAllButton.IsEnabled = AppState.StaffList.Count > 0;
+
+    private async void ClearAll_Click(object? sender, RoutedEventArgs e)
+    {
+        var count = AppState.StaffList.Count;
+        if (count == 0)
+            return;
+
+        var owner = this.FindWindow();
+        if (!await AppDialogs.Confirm(owner, $"确定清空全部 {count} 名干员？此操作无法撤销。"))
+            return;
+
+        AppState.StaffList.Clear();
+        AppState.SaveOperatorData();
+        ClearGridSelection();
+    }
 
     private void OnPreviewPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -86,21 +107,7 @@ public partial class StaffListView : UserControl
     private void StaffGrid_Sorting(object? sender, DataGridColumnEventArgs e)
     {
         _suppressRowSelection = true;
-
-        var sorts = StaffGrid.CollectionView?.SortDescriptions;
-        if (sorts is not null)
-        {
-            var path = e.Column.SortMemberPath;
-            if (!string.IsNullOrEmpty(path))
-            {
-                var current = sorts.FirstOrDefault(item => item.HasPropertyPath && item.PropertyPath == path);
-                if (current?.Direction == ListSortDirection.Descending)
-                {
-                    e.Handled = true;
-                    sorts.Clear();
-                }
-            }
-        }
+        DataGridMultiSort.Apply(StaffGrid, e);
 
         void ClearIfSuppressed()
         {

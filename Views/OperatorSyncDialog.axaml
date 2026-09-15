@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="arknights_random_team.Views.OperatorSyncDialog"
+        Title="同步干员"
+        CanResize="False"
+        ShowInTaskbar="False"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{StaticResource AppFont}"
+        FontSize="14"
+        KeyDown="Window_KeyDown">
+    <Border MinWidth="400"
+            Padding="24,20,24,16"
+            Background="{DynamicResource MaterialPaperBrush}">
+        <StackPanel Spacing="16">
+            <StackPanel Spacing="4">
+                <TextBlock FontSize="18" FontWeight="Bold" Text="选择同步稀有度" />
+                <TextBlock Foreground="{DynamicResource MaterialBodyLightBrush}"
+                           Text="只会追加缺少的干员，并校正已有干员的固定信息。"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+
+            <UniformGrid Name="StarGrid" Columns="3" Rows="2" />
+
+            <TextBlock Name="ValidationText"
+                       IsVisible="False"
+                       Foreground="#C62828"
+                       Text="请至少选择一个稀有度。" />
+
+            <StackPanel HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        Spacing="8">
+                <Button MinWidth="72"
+                        Theme="{StaticResource FlatButton}"
+                        Content="取消"
+                        Click="Cancel_Click" />
+                <Button Name="SyncButton"
+                        MinWidth="96"
+                        FontWeight="Bold"
+                        Content="开始同步"
+                        Click="Sync_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

@@ -1,7 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -156,21 +154,6 @@ public partial class GenerateView : UserControl
             ResultList.Add(pool[index]);
     }
 
-    private void ResultGrid_Sorting(object? sender, DataGridColumnEventArgs e)
-    {
-        var sorts = ResultGrid.CollectionView?.SortDescriptions;
-        if (sorts is null)
-            return;
-
-        var path = e.Column.SortMemberPath;
-        if (string.IsNullOrEmpty(path))
-            return;
-
-        var current = sorts.FirstOrDefault(item => item.HasPropertyPath && item.PropertyPath == path);
-        if (current?.Direction != ListSortDirection.Descending)
-            return;
-
-        e.Handled = true;
-        sorts.Clear();
-    }
+    private void ResultGrid_Sorting(object? sender, DataGridColumnEventArgs e) =>
+        DataGridMultiSort.Apply(ResultGrid, e);
 }

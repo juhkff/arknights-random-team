@@ -88,7 +88,7 @@
     <Grid HorizontalAlignment="Center"
           VerticalAlignment="Center"
           ColumnDefinitions="Auto,16,200"
-          RowDefinitions="36,36,36,36,Auto"
+          RowDefinitions="36,36,36,36,Auto,Auto"
           RowSpacing="20">
         <TextBlock Classes="field-label" Text="干员名称：" />
         <TextBox Name="NameTextBox"
@@ -161,5 +161,27 @@
                 Cursor="Hand"
                 Content="录入"
                 Click="Input_Click" />
+
+        <StackPanel Grid.Row="5"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    Spacing="6">
+            <Button Name="OpenSyncButton"
+                    MinWidth="160"
+                    Theme="{StaticResource FlatButton}"
+                    Foreground="{DynamicResource MaterialPrimaryMidBrush}"
+                    FontWeight="Bold"
+                    Content="从数据库同步干员"
+                    Click="OpenSyncButton_Click" />
+            <TextBlock Name="SyncStatusText"
+                       MaxWidth="300"
+                       HorizontalAlignment="Center"
+                       FontSize="12"
+                       Foreground="{DynamicResource MaterialBodyLightBrush}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap" />
+        </StackPanel>
     </Grid>
 </UserControl>

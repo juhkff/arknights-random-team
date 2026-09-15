@@ -9,6 +9,7 @@ public class Staff : AutomaticNotify
     private Level _level = Level.GenerateDefaultLevel();
     private Career _career;
     private bool _isSelected;
+    private string? _sourceId;
 
     public string Name
     {
@@ -38,5 +39,12 @@ public class Staff : AutomaticNotify
     {
         get => _level;
         set => SetProperty(ref _level, value);
+    }
+
+    /// <summary>外部数据源中的稳定标识；手工录入的干员为空。</summary>
+    public string? SourceId
+    {
+        get => _sourceId;
+        set => SetProperty(ref _sourceId, value);
     }
 }
