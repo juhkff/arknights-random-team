@@ -2,7 +2,13 @@
 
 跨平台版本（Windows / macOS / Linux + 浏览器），基于 [Avalonia](https://avaloniaui.net/) 与 [Material.Avalonia](https://github.com/AvaloniaCommunity/Material.Avalonia)，由早期 WPF 项目 [Arknights-StaffRandomSelect](https://github.com/juhkff/Arknights-StaffRandomSelect) 移植而来。
 
-**[▶ 在线试用 Web 版](https://juhkff.github.io/arknights-random-team/)** —— 同一套代码编译为 WebAssembly，无需安装，打开即用。
+<p align="center">
+  <a href="https://juhkff.github.io/arknights-random-team/"><b>▶ 在线试用 Web 版</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/juhkff/arknights-random-team/releases/latest">下载桌面版</a>
+</p>
+
+同一套代码编译为 WebAssembly，无需安装、打开即用。首次加载需下载运行时，请稍候。
 
 > Web 版为体验用途：浏览器内没有文件系统，录入的干员与策略**只保存在内存中，刷新页面即重置**；需要长期保存数据请下载桌面版。
 
