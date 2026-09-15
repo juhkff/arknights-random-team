@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>arknights_random_team.Browser</RootNamespace>
+        <AssemblyName>arknights-random-team-web</AssemblyName>
+        <!-- WebAssembly 宿主默认视为自包含，会拒绝引用非自包含的项目。 -->
+        <SelfContained>false</SelfContained>
+        <!-- 本项目本身就是浏览器专用，入口点只在 browser 平台可用，无需平台兼容性告警。 -->
+        <NoWarn>$(NoWarn);CA1416</NoWarn>
+        <!-- 资源全部使用相对路径（wwwroot/main.js 里 import './_framework/dotnet.js'），
+             因此既能部署在域名根目录，也能部署在 GitHub Pages 的 /<仓库名>/ 子路径下。 -->
+        <!-- 浏览器里没有文件系统，数据只存在内存中，不再保存任何本地文件。 -->
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Browser" Version="12.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- 复用共享库里的全部界面与逻辑，只替换入口点。 -->
+        <ProjectReference Include="../Core/arknights-random-team.Core.csproj" />
+    </ItemGroup>
+</Project>

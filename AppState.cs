@@ -22,8 +22,17 @@ public static class AppState
     /// </summary>
     public static string DataDirectory { get; } = ResolveDataDirectory();
 
+    /// <summary>
+    /// 浏览器（WebAssembly）里没有文件系统，数据只保存在内存中，刷新页面即重置。
+    /// 桌面端始终为 true。
+    /// </summary>
+    public static bool UseFileStorage => !OperatingSystem.IsBrowser();
+
     private static string ResolveDataDirectory()
     {
+        if (OperatingSystem.IsBrowser())
+            return "";
+
         var processPath = Environment.ProcessPath;
         if (!string.IsNullOrWhiteSpace(processPath))
         {
@@ -54,6 +63,9 @@ public static class AppState
 
     public static void Save()
     {
+        if (!UseFileStorage)
+            return;
+
         Directory.CreateDirectory(DataDirectory);
         SaveStaff();
         StrategyPersistence.Save(StrategyPath, Strategies);
@@ -63,6 +75,9 @@ public static class AppState
 
     public static void SaveOperatorData()
     {
+        if (!UseFileStorage)
+            return;
+
         Directory.CreateDirectory(DataDirectory);
         SaveStaff();
         SaveOperatorSyncSettings();
@@ -71,6 +86,13 @@ public static class AppState
     public static void SaveOperatorSyncSettings()
     {
         ValidateOperatorSyncSettings(OperatorSyncSettings);
+
+        if (!UseFileStorage)
+        {
+            OperatorSyncSettingsError = null;
+            return;
+        }
+
         Directory.CreateDirectory(DataDirectory);
         var json = JsonSerializer.Serialize(OperatorSyncSettings, new JsonSerializerOptions
         {
@@ -85,7 +107,7 @@ public static class AppState
     private static void LoadStaff()
     {
         StaffList.Clear();
-        if (!File.Exists(StaffPath))
+        if (!UseFileStorage || !File.Exists(StaffPath))
             return;
 
         var xDocument = XDocument.Load(StaffPath);
@@ -133,7 +155,7 @@ public static class AppState
     {
         OperatorSyncSettings = new OperatorSyncSettings();
         OperatorSyncSettingsError = null;
-        if (!File.Exists(OperatorSyncSettingsPath))
+        if (!UseFileStorage || !File.Exists(OperatorSyncSettingsPath))
             return;
 
         try

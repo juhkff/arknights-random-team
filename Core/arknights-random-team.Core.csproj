@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>arknights_random_team</RootNamespace>
+        <AssemblyName>arknights-random-team.Core</AssemblyName>
+        <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <!-- 由代码自行实现 InitializeComponent，避免 Rider 无法解析生成方法 -->
+        <AvaloniaNameGeneratorBehavior>OnlyProperties</AvaloniaNameGeneratorBehavior>
+        <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+        <!-- 共享库不自带入口点，Main 由 desktop / browser 两个宿主项目各自提供。 -->
+        <GenerateProgramFile>false</GenerateProgramFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="12.1.1" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+        <PackageReference Include="Material.Avalonia" Version="3.18.0" />
+        <PackageReference Include="Material.Avalonia.DataGrid" Version="3.18.0" />
+        <PackageReference Include="Material.Avalonia.Dialogs" Version="3.18.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- 图标同时供窗口图标使用；桌面端把同一个文件作为 EXE 图标。 -->
+        <AvaloniaResource Include="../Assets/icon-256.png" Link="Assets/icon-256.png" />
+    </ItemGroup>
+
+    <!--
+        界面与业务逻辑集中在这里，桌面端与 WebAssembly 端各自只保留入口点。
+        用通配符包含上级目录的源文件，因此原文件位置与命名空间都无需改动。
+    -->
+    <ItemGroup>
+        <Compile Include="../**/*.cs"
+                 Exclude="../bin/**;../obj/**;../Core/**;../browser/**;../desktop/**;../Program.cs" />
+        <AvaloniaXaml Include="../**/*.axaml"
+                      Exclude="../bin/**;../obj/**;../Core/**;../browser/**;../desktop/**" />
+        <None Remove="../**/*.axaml" />
+    </ItemGroup>
+</Project>

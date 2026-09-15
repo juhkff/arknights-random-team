@@ -1,0 +1,83 @@
+name: Deploy Web (GitHub Pages)
+
+on:
+  push:
+    branches: ["master"]
+    paths:
+      - "Core/**"
+      - "browser/**"
+      - "Assets/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只保留一次部署；新的推送取消排队中的旧任务，但不打断正在进行的发布。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build WebAssembly
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: |
+            Core/arknights-random-team.Core.csproj
+            browser/arknights-random-team.Browser.csproj
+
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Publish WebAssembly
+        run: >-
+          dotnet publish browser/arknights-random-team.Browser.csproj
+          --configuration Release
+          --output publish/web
+
+      - name: Prepare site
+        run: |
+          # 静态站点根目录就是 wwwroot；同时写入 .nojekyll，
+          # 避免 GitHub Pages 的 Jekyll 处理把 _framework 目录忽略掉。
+          mkdir -p site
+          cp -r publish/web/wwwroot/. site/
+          touch site/.nojekyll
+          du -sh site
+          test -f site/index.html
+          test -f site/main.js
+          test -f site/_framework/dotnet.js
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

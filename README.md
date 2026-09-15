@@ -1,6 +1,10 @@
 # 明日方舟随机阵容生成器
 
-跨平台版本（Windows / macOS / Linux），基于 [Avalonia](https://avaloniaui.net/) 与 [Material.Avalonia](https://github.com/AvaloniaCommunity/Material.Avalonia)，由早期 WPF 项目 [Arknights-StaffRandomSelect](https://github.com/juhkff/Arknights-StaffRandomSelect) 移植而来。
+跨平台版本（Windows / macOS / Linux + 浏览器），基于 [Avalonia](https://avaloniaui.net/) 与 [Material.Avalonia](https://github.com/AvaloniaCommunity/Material.Avalonia)，由早期 WPF 项目 [Arknights-StaffRandomSelect](https://github.com/juhkff/Arknights-StaffRandomSelect) 移植而来。
+
+**[▶ 在线试用 Web 版](https://juhkff.github.io/arknights-random-team/)** —— 同一套代码编译为 WebAssembly，无需安装，打开即用。
+
+> Web 版为体验用途：浏览器内没有文件系统，录入的干员与策略**只保存在内存中，刷新页面即重置**；需要长期保存数据请下载桌面版。
 
 加入备用干员后，可以按勾选池随机生成通关阵容，也可用「随机策略」限制稀有度、职业或特定干员人数。
 
@@ -14,6 +18,18 @@
 
 干员数据保存在程序目录下的 `StaffList.xml`，策略保存在 `RandomStrategies.json`，同步设置保存在 `OperatorSyncSettings.json`。可直接把旧项目同目录下的 `StaffList.xml` 和 `RandomStrategies.json` 拷过来继续用。
 
+## 项目结构
+
+界面与业务逻辑集中在一个共享库里，桌面端和 Web 端各自只保留一个入口点，因此两端功能完全一致：
+
+| 目录 | 说明 |
+| --- | --- |
+| `Core/` | 共享库：全部界面（XAML）、视图逻辑、数据模型与策略算法 |
+| `desktop/` | 桌面端入口，输出 Windows / macOS / Linux 可执行文件 |
+| `browser/` | Web 端入口，编译为 WebAssembly，部署到 GitHub Pages |
+| `Assets/` | 应用图标，桌面端同时用作可执行文件图标 |
+| `tools/` | 图标生成脚本 |
+
 ## 干员同步
 
 在「干员录入」中点击「从数据库同步干员」，可在子窗口多选需要同步的稀有度，所选稀有度会保存供下次使用。默认数据源为 [Kengxxiao/ArknightsGameData](https://github.com/Kengxxiao/ArknightsGameData) 的国服游戏数据，GitHub Raw 不可用时会自动尝试 jsDelivr 镜像。
@@ -25,13 +41,23 @@
 需要 [.NET 10 SDK](https://dotnet.microsoft.com/download)。
 
 ```bash
-dotnet run --project arknights-random-team.csproj
+# 桌面端
+dotnet run --project desktop/arknights-random-team.Desktop.csproj
 ```
 
 发布示例：
 
 ```bash
-dotnet publish -c Release -r win-x64 --self-contained false
-dotnet publish -c Release -r osx-arm64 --self-contained false
-dotnet publish -c Release -r linux-x64 --self-contained false
+dotnet publish desktop/arknights-random-team.Desktop.csproj -c Release -r win-x64 --self-contained false
+dotnet publish desktop/arknights-random-team.Desktop.csproj -c Release -r osx-arm64 --self-contained false
+dotnet publish desktop/arknights-random-team.Desktop.csproj -c Release -r linux-x64 --self-contained false
 ```
+
+Web 端本地预览（需要 `wasm-tools` 工作负载：`dotnet workload install wasm-tools`）：
+
+```bash
+dotnet publish browser/arknights-random-team.Browser.csproj -c Release -o publish/web
+# 用任意静态服务器托管 publish/web 即可，例如：
+python3 -m http.server 8080 --directory publish/web
+```
+
