@@ -34,10 +34,14 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
-          cache: true
-          cache-dependency-path: |
-            Core/arknights-random-team.Core.csproj
-            browser/arknights-random-team.Browser.csproj
+
+      # 显式缓存 NuGet 包目录（wasm-tools 与运行时包都在其中，省下的时间很可观）
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - name: Install wasm-tools workload
         run: dotnet workload install wasm-tools

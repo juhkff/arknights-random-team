@@ -25,10 +25,14 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
-          cache: true
-          cache-dependency-path: |
-            Core/arknights-random-team.Core.csproj
-            desktop/arknights-random-team.Desktop.csproj
+
+      # 显式缓存 NuGet 包目录：不依赖 setup-dotnet 的缓存后置步骤（它失败会让整个构建判负）
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - name: Restore
         run: dotnet restore arknights-random-team.sln
@@ -61,10 +65,14 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
-          cache: true
-          cache-dependency-path: |
-            Core/arknights-random-team.Core.csproj
-            desktop/arknights-random-team.Desktop.csproj
+
+      # 显式缓存 NuGet 包目录：不依赖 setup-dotnet 的缓存后置步骤（它失败会让整个构建判负）
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - name: Restore for ${{ matrix.rid }}
         run: dotnet restore desktop/arknights-random-team.Desktop.csproj --runtime ${{ matrix.rid }}
