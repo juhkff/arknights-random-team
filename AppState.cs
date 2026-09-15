@@ -48,11 +48,21 @@ public static class AppState
         return Path.GetFullPath(AppContext.BaseDirectory);
     }
 
-    private static string StaffPath => Path.Combine(DataDirectory, "StaffList.xml");
+    /// <summary>启动阶段日志：浏览器控制台里排查 WebAssembly 启动问题用。</summary>
+    public static void LogTrace(string message)
+    {
+        Console.WriteLine($"[ARK] {message}");
+        System.Diagnostics.Debug.WriteLine($"[ARK] {message}");
+    }
 
-    private static string StrategyPath => Path.Combine(DataDirectory, "RandomStrategies.json");
+    private static string SafeCombine(string name) =>
+        string.IsNullOrEmpty(DataDirectory) ? "" : Path.Combine(DataDirectory, name);
 
-    private static string OperatorSyncSettingsPath => Path.Combine(DataDirectory, "OperatorSyncSettings.json");
+    private static string StaffPath => SafeCombine("StaffList.xml");
+
+    private static string StrategyPath => SafeCombine("RandomStrategies.json");
+
+    private static string OperatorSyncSettingsPath => SafeCombine("OperatorSyncSettings.json");
 
     public static void Initialize()
     {

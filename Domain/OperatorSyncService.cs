@@ -187,10 +187,12 @@ public sealed class OperatorSyncService
 
     private static HttpClient CreateHttpClient()
     {
-        var handler = new HttpClientHandler
-        {
-            AutomaticDecompression = DecompressionMethods.All
-        };
+        // 浏览器（WebAssembly）的 BrowserHttpHandler 不支持 AutomaticDecompression——
+        // 解压由浏览器自己处理，设置了会直接抛 PlatformNotSupportedException。
+        var handler = new HttpClientHandler();
+        if (!OperatingSystem.IsBrowser())
+            handler.AutomaticDecompression = DecompressionMethods.All;
+
         var client = new HttpClient(handler)
         {
             Timeout = TimeSpan.FromSeconds(120)

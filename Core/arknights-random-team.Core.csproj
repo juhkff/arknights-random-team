@@ -24,6 +24,9 @@
     <ItemGroup>
         <!-- 图标同时供窗口图标使用；桌面端把同一个文件作为 EXE 图标。 -->
         <AvaloniaResource Include="../Assets/icon-256.png" Link="Assets/icon-256.png" />
+        <!-- 内嵌中文字体子集（国标 GB2312 全字集 + 界面符号，约 1.9MB）。
+             WebAssembly 下 Skia 无法枚举系统字体，不内嵌就只能显示方块。 -->
+        <AvaloniaResource Include="../Assets/NotoSansSC-App.otf" Link="Assets/NotoSansSC-App.otf" />
     </ItemGroup>
 
     <!--

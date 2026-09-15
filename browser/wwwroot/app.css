@@ -13,10 +13,14 @@ html, body {
     height: 100vh;
 }
 
-/* Avalonia 会把自己的根元素挂到 #out 下，保证它撑满视口 */
+/* Avalonia 把自己挂到 #out 下；这里让外壳视图填满视口 */
 #out > * {
     width: 100%;
     height: 100%;
+}
+
+#out {
+    display: block;
 }
 
 canvas {

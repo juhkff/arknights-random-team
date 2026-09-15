@@ -12,8 +12,8 @@
         <NoWarn>$(NoWarn);CA1416</NoWarn>
         <!-- 资源全部使用相对路径（wwwroot/main.js 里 import './_framework/dotnet.js'），
              因此既能部署在域名根目录，也能部署在 GitHub Pages 的 /<仓库名>/ 子路径下。 -->
-        <!-- 浏览器里没有文件系统，数据只存在内存中，不再保存任何本地文件。 -->
-        <InvariantGlobalization>true</InvariantGlobalization>
+        <!-- 注意：不要开启 InvariantGlobalization。它会裁掉全球化数据，
+             Skia 就无法按 Unicode 区段匹配字体回退，中文会全部变成方块。 -->
         <PublishTrimmed>true</PublishTrimmed>
         <TrimMode>partial</TrimMode>
     </PropertyGroup>
