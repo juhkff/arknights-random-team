@@ -385,17 +385,6 @@
         <Style Selector="Button.danger /template/ Border#PART_FocusRing">
             <Setter Property="BorderBrush" Value="{StaticResource AppDangerBrush}" />
         </Style>
-        <Style Selector="Button.icon">
-            <Setter Property="MinWidth" Value="48" />
-            <Setter Property="Width" Value="48" />
-            <Setter Property="MinHeight" Value="48" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="Padding" Value="0" />
-        </Style>
-        <Style Selector="Button.icon:pointerover">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
         <Style Selector="Button.text">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
