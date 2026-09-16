@@ -30,8 +30,7 @@ public partial class RandomStrategyView : UserControl
     private async void AddStrategy_Click(object? sender, RoutedEventArgs e)
     {
         var draft = new RandomStrategyDefinition();
-        var win = new StrategyEditorWindow(draft);
-        var ok = await win.ShowDialog<bool>(this.FindWindow()!);
+        var ok = await AppHost.ShowAsync<bool>(new StrategyEditorDialog(draft));
         if (ok)
             AppState.Strategies.Add(draft);
     }
@@ -41,8 +40,7 @@ public partial class RandomStrategyView : UserControl
         if ((sender as Control)?.Tag is not RandomStrategyDefinition def)
             return;
 
-        var win = new StrategyEditorWindow(def);
-        await win.ShowDialog<bool>(this.FindWindow()!);
+        await AppHost.ShowAsync<bool>(new StrategyEditorDialog(def));
         RefreshList();
     }
 
@@ -51,7 +49,7 @@ public partial class RandomStrategyView : UserControl
         if ((sender as Control)?.Tag is not RandomStrategyDefinition def)
             return;
 
-        if (!await AppDialogs.Confirm(this.FindWindow(), $"确定删除策略「{def.Name}」？"))
+        if (!await AppHost.ConfirmAsync($"确定删除策略「{def.Name}」？"))
             return;
 
         AppState.Strategies.Remove(def);

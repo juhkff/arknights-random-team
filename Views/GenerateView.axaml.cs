@@ -161,7 +161,6 @@ public partial class GenerateView : UserControl
 
     private async void Generate_Click(object? sender, RoutedEventArgs e)
     {
-        var owner = this.FindWindow();
         var resultNum = (int)CountSlider.Value;
         var pool = AppState.StaffList
             .Where(x => x.IsSelected)
@@ -171,13 +170,13 @@ public partial class GenerateView : UserControl
 
         if (pool.Count <= 0)
         {
-            await AppDialogs.Alert(owner, "请先在干员列表中勾选参与随机的干员。");
+            await AppHost.AlertAsync("请先在干员列表中勾选参与随机的干员。");
             return;
         }
 
         if (resultNum > pool.Count)
         {
-            await AppDialogs.Alert(owner, "随机数量不能大于已选干员人数。");
+            await AppHost.AlertAsync("随机数量不能大于已选干员人数。");
             return;
         }
 
@@ -195,7 +194,7 @@ public partial class GenerateView : UserControl
 
         if (!StrategyRules.TryMerge(strategy.Rules, out var merged, out var mergeError))
         {
-            await AppDialogs.Alert(owner, mergeError, "无法满足策略");
+            await AppHost.AlertAsync(mergeError, "无法满足策略");
             return;
         }
 
@@ -212,13 +211,13 @@ public partial class GenerateView : UserControl
 
         if (rarityReq.Values.Sum() > resultNum || careerExact.Values.Sum() > resultNum)
         {
-            await AppDialogs.Alert(owner, "策略中要求的稀有度人数或职业人数总和超过了当前「随机数量」，请调整策略或数量。", "无法满足策略");
+            await AppHost.AlertAsync("策略中要求的稀有度人数或职业人数总和超过了当前「随机数量」，请调整策略或数量。", "无法满足策略");
             return;
         }
 
         if (StrategyRules.MinCareerSlots(careerExact, careerRange) > resultNum)
         {
-            await AppDialogs.Alert(owner, "策略中各职业数量（及范围下限）之和超过了当前「随机数量」，请调整策略或数量。", "无法满足策略");
+            await AppHost.AlertAsync("策略中各职业数量（及范围下限）之和超过了当前「随机数量」，请调整策略或数量。", "无法满足策略");
             return;
         }
 
@@ -231,14 +230,14 @@ public partial class GenerateView : UserControl
             var nMax = Math.Min(Math.Min(maxTake, inPool), resultNum);
             if (nMin > nMax)
             {
-                await AppDialogs.Alert(owner, "「某些干员总数」与当前已选干员池或随机数量不兼容，请调整勾选或策略。", "无法满足策略");
+                await AppHost.AlertAsync("「某些干员总数」与当前已选干员池或随机数量不兼容，请调整勾选或策略。", "无法满足策略");
                 return;
             }
         }
 
         if (!ConstrainedTeamPicker.TryPick(pool, resultNum, rarityReq, careerExact, careerRange, staffSubsets, random, out var team))
         {
-            await AppDialogs.Alert(owner, "在当前已选干员池下无法凑出满足该策略的阵容，请增加/调整勾选干员或修改策略条目。", "无法满足策略");
+            await AppHost.AlertAsync("在当前已选干员池下无法凑出满足该策略的阵容，请增加/调整勾选干员或修改策略条目。", "无法满足策略");
             return;
         }
 

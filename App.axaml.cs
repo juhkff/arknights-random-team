@@ -18,14 +18,18 @@ public partial class App : Application
     {
         switch (ApplicationLifetime)
         {
-            // 桌面端：常规窗口 + 退出时保存
+            // 桌面端：常规窗口 + 退出时保存。
+            // 对话框走原生窗口（与引入 Web 版之前一致），因此注册窗口展示方式。
             case IClassicDesktopStyleApplicationLifetime desktop:
+                AppHost.Presenter = new WindowPresenter();
                 desktop.MainWindow = new MainWindow { Icon = LoadAppIcon() };
                 desktop.Exit += (_, _) => AppState.Save();
                 break;
 
-            // 浏览器（WebAssembly）：单视图生命周期，没有窗口系统，必须显式挂载主视图
+            // 浏览器（WebAssembly）：单视图生命周期，没有窗口系统，
+            // 对话框只能用应用内叠加层，因此注册叠加层展示方式。
             case ISingleViewApplicationLifetime singleView:
+                AppHost.Presenter = new OverlayPresenter(new ModalLayer());
                 singleView.MainView = new MainView();
                 break;
         }

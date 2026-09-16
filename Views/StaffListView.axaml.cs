@@ -44,8 +44,7 @@ public partial class StaffListView : UserControl
         if (count == 0)
             return;
 
-        var owner = this.FindWindow();
-        if (!await AppDialogs.Confirm(owner, $"确定清空全部 {count} 名干员？此操作无法撤销。"))
+        if (!await AppHost.ConfirmAsync($"确定清空全部 {count} 名干员？此操作无法撤销。"))
             return;
 
         AppState.StaffList.Clear();
@@ -154,8 +153,7 @@ public partial class StaffListView : UserControl
         if (sender is not Button { Tag: Staff staff })
             return;
 
-        var owner = this.FindWindow();
-        if (!await AppDialogs.Confirm(owner, $"确定删除「{staff.Name}」？"))
+        if (!await AppHost.ConfirmAsync($"确定删除「{staff.Name}」？"))
             return;
 
         AppState.StaffList.Remove(staff);

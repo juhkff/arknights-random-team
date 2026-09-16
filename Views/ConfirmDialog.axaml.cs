@@ -1,35 +1,27 @@
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 
 namespace arknights_random_team.Views;
 
-public partial class ConfirmDialog : Window
+/// <summary>确认对话框；确认返回 <c>true</c>，取消或按 Escape 返回 <c>false</c>。</summary>
+public partial class ConfirmDialog : ModalContent
 {
-    public ConfirmDialog() : this("确定执行此操作？")
+    public ConfirmDialog() : this("确认操作", "确定执行此操作？")
     {
     }
 
-    public ConfirmDialog(string message)
+    public ConfirmDialog(string title, string message)
     {
         InitializeComponent();
+        TitleText.Text = title;
         MessageText.Text = message;
         Loaded += (_, _) => CancelButton.Focus();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
-    private void Ok_Click(object? sender, RoutedEventArgs e) => Close(true);
+    private void Ok_Click(object? sender, RoutedEventArgs e) => RequestClose(true);
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
-
-    private void Window_KeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Escape)
-            return;
-
-        e.Handled = true;
-        Close(false);
-    }
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => RequestClose(false);
 }

@@ -1,22 +1,19 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:domain="clr-namespace:arknights_random_team.Domain"
-        xmlns:models="clr-namespace:arknights_random_team.Models"
-        mc:Ignorable="d"
-        x:Class="arknights_random_team.Views.StrategyEditorWindow"
-        Title="编辑随机策略"
-        Width="960"
-        Height="740"
-        MinWidth="760"
-        MinHeight="600"
-        CanResize="True"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="{StaticResource AppFont}"
-        FontSize="14"
-        Background="{StaticResource AppBackgroundBrush}">
-    <Window.Styles>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:domain="clr-namespace:arknights_random_team.Domain"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             mc:Ignorable="d"
+             x:Class="arknights_random_team.Views.StrategyEditorDialog"
+             Width="960"
+             Height="740"
+             MinWidth="600"
+             MinHeight="440"
+             FontFamily="{StaticResource AppFont}"
+             FontSize="14"
+             Background="Transparent">
+    <UserControl.Styles>
         <Style Selector="TextBox.inline">
             <Setter Property="MinWidth" Value="72" />
             <Setter Property="MinHeight" Value="44" />
@@ -106,7 +103,7 @@
             <Setter Property="MinWidth" Value="40" />
             <Setter Property="Width" Value="40" />
         </Style>
-    </Window.Styles>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="92,*,80">
         <Border Grid.Row="0"
@@ -375,4 +372,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</Window>
+</UserControl>

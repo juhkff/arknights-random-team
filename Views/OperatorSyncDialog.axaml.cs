@@ -1,13 +1,12 @@
 using System.ComponentModel;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using arknights_random_team.Models;
 
 namespace arknights_random_team.Views;
 
-public partial class OperatorSyncDialog : Window
+public partial class OperatorSyncDialog : ModalContent
 {
     public OperatorSyncDialog()
     {
@@ -74,19 +73,10 @@ public partial class OperatorSyncDialog : Window
         }
 
         Selection = new OperatorSyncSelection(selectedStars);
-        Close(true);
+        RequestClose(true);
     }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
-
-    private void Window_KeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Escape)
-            return;
-
-        e.Handled = true;
-        Close(false);
-    }
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => RequestClose(false);
 }
 
 /// <summary>稀有度卡片状态；选中状态直接绑定，不依赖虚拟化后的容器。</summary>

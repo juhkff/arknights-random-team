@@ -33,9 +33,8 @@ public partial class InputView : UserControl
 
     private async void OpenSyncButton_Click(object? sender, RoutedEventArgs e)
     {
-        var owner = this.FindWindow();
         var dialog = new OperatorSyncDialog();
-        var accepted = owner != null && await dialog.ShowDialog<bool>(owner);
+        var accepted = await AppHost.ShowAsync<bool>(dialog);
         if (!accepted || dialog.Selection is not { } selection)
             return;
 

@@ -1,20 +1,18 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:models="clr-namespace:arknights_random_team.Models"
-        mc:Ignorable="d"
-        x:Class="arknights_random_team.Views.StaffPickDialog"
-        Title="选择干员"
-        Width="520"
-        Height="620"
-        MinWidth="420"
-        MinHeight="460"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="{StaticResource AppFont}"
-        FontSize="14"
-        Background="{StaticResource AppBackgroundBrush}">
-    <Window.Styles>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             mc:Ignorable="d"
+             x:Class="arknights_random_team.Views.StaffPickDialog"
+             Width="520"
+             Height="620"
+             MinWidth="420"
+             MinHeight="420"
+             FontFamily="{StaticResource AppFont}"
+             FontSize="14"
+             Background="Transparent">
+    <UserControl.Styles>
         <Style Selector="ListBox#StaffList">
             <Setter Property="Padding" Value="4" />
             <Setter Property="Background" Value="Transparent" />
@@ -46,7 +44,7 @@
         <Style Selector="ListBox#StaffList ListBoxItem:focus-visible">
             <Setter Property="BorderBrush" Value="{StaticResource AppSignalBrush}" />
         </Style>
-    </Window.Styles>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="88,*,80">
         <Border Grid.Row="0"
@@ -146,4 +144,4 @@
             </StackPanel>
         </Border>
     </Grid>
-</Window>
+</UserControl>

@@ -14,7 +14,7 @@ using arknights_random_team.Models;
 
 namespace arknights_random_team.Views;
 
-public partial class StrategyEditorWindow : Window
+public partial class StrategyEditorDialog : ModalContent
 {
     private readonly RandomStrategyDefinition _target;
     private readonly string _backupName;
@@ -24,11 +24,11 @@ public partial class StrategyEditorWindow : Window
     private bool _rulesListSelectionSuppress;
     private bool _committed;
 
-    public StrategyEditorWindow() : this(new RandomStrategyDefinition())
+    public StrategyEditorDialog() : this(new RandomStrategyDefinition())
     {
     }
 
-    public StrategyEditorWindow(RandomStrategyDefinition target)
+    public StrategyEditorDialog(RandomStrategyDefinition target)
     {
         _target = target;
         _backupName = _target.Name;
@@ -38,7 +38,14 @@ public partial class StrategyEditorWindow : Window
         NameBox.Text = _target.Name;
         RulesList.ItemsSource = _target.Rules;
         _target.Rules.CollectionChanged += Rules_CollectionChanged;
-        Closed += (_, _) => _target.Rules.CollectionChanged -= Rules_CollectionChanged;
+        DetachedFromVisualTree += (_, _) =>
+        {
+            _target.Rules.CollectionChanged -= Rules_CollectionChanged;
+
+            // 关闭时仍未提交，说明是被 Escape 之类的方式取消的，需要回滚草稿改动。
+            if (!_committed)
+                RestoreBackup();
+        };
         UpdateRulesState();
         StarCombo.SelectedItem = 6;
         CareerCombo.SelectedItem = Career.先锋;
@@ -308,7 +315,7 @@ public partial class StrategyEditorWindow : Window
     private async void StaffSubsetAddButton_Click(object? sender, RoutedEventArgs e)
     {
         var dlg = new StaffPickDialog(_staffSubsetDraft);
-        var ok = await dlg.ShowDialog<bool>(this);
+        var ok = await AppHost.ShowAsync<bool>(dlg);
         if (!ok || dlg.SelectedStaffNames.Count == 0)
             return;
 
@@ -318,7 +325,7 @@ public partial class StrategyEditorWindow : Window
             var trimmed = n.Trim();
             if (!nameSet.Contains(trimmed))
             {
-                await AppDialogs.Alert(this, $"干员「{trimmed}」未在干员列表中录入，已跳过。");
+                await AppHost.AlertAsync($"干员「{trimmed}」未在干员列表中录入，已跳过。");
                 continue;
             }
 
@@ -334,14 +341,14 @@ public partial class StrategyEditorWindow : Window
     {
         if (_staffSubsetDraft.Count == 0)
         {
-            await AppDialogs.Alert(this, "请至少选择一名干员。");
+            await AppHost.AlertAsync("请至少选择一名干员。");
             return;
         }
 
         if (_editingRule != null &&
             _editingRule.Kind is not StrategyRuleKind.StaffSubsetExact and not StrategyRuleKind.StaffSubsetRange)
         {
-            await AppDialogs.Alert(this, "当前选中条目不是「某些干员总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
+            await AppHost.AlertAsync("当前选中条目不是「某些干员总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
             return;
         }
 
@@ -350,7 +357,7 @@ public partial class StrategyEditorWindow : Window
         {
             if (!nameSet.Contains(n))
             {
-                await AppDialogs.Alert(this, $"干员「{n}」未在干员列表中录入。");
+                await AppHost.AlertAsync($"干员「{n}」未在干员列表中录入。");
                 return;
             }
         }
@@ -361,13 +368,13 @@ public partial class StrategyEditorWindow : Window
         {
             if (!int.TryParse(StaffSubsetExactCountBox.Text?.Trim(), out var cn) || cn < 0)
             {
-                await AppDialogs.Alert(this, "请输入正确的固定人数（非负整数）。");
+                await AppHost.AlertAsync("请输入正确的固定人数（非负整数）。");
                 return;
             }
 
             if (cn > names.Count)
             {
-                await AppDialogs.Alert(this, "固定人数不能大于已选干员种类数。");
+                await AppHost.AlertAsync("固定人数不能大于已选干员种类数。");
                 return;
             }
 
@@ -382,25 +389,25 @@ public partial class StrategyEditorWindow : Window
         {
             if (!int.TryParse(StaffSubsetRangeMinBox.Text?.Trim(), out var lo) || lo < 0)
             {
-                await AppDialogs.Alert(this, "请输入正确的范围下限（非负整数）。");
+                await AppHost.AlertAsync("请输入正确的范围下限（非负整数）。");
                 return;
             }
 
             if (!int.TryParse(StaffSubsetRangeMaxBox.Text?.Trim(), out var hi))
             {
-                await AppDialogs.Alert(this, "请输入正确的范围上限（整数）。");
+                await AppHost.AlertAsync("请输入正确的范围上限（整数）。");
                 return;
             }
 
             if (lo > hi)
             {
-                await AppDialogs.Alert(this, "范围下限不能大于上限。");
+                await AppHost.AlertAsync("范围下限不能大于上限。");
                 return;
             }
 
             if (hi > names.Count)
             {
-                await AppDialogs.Alert(this, "范围上限不能大于已选干员种类数。");
+                await AppHost.AlertAsync("范围上限不能大于已选干员种类数。");
                 return;
             }
 
@@ -501,7 +508,7 @@ public partial class StrategyEditorWindow : Window
 
         if (!StrategyRules.TryValidate(prospective, out var error))
         {
-            await AppDialogs.Alert(this, error, "条目冲突");
+            await AppHost.AlertAsync(error, "条目冲突");
             return false;
         }
 
@@ -517,7 +524,7 @@ public partial class StrategyEditorWindow : Window
     {
         if (_editingRule != null && _editingRule.Kind != StrategyRuleKind.Rarity)
         {
-            await AppDialogs.Alert(this, "当前选中条目不是「某星干员总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
+            await AppHost.AlertAsync("当前选中条目不是「某星干员总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
             return;
         }
 
@@ -525,7 +532,7 @@ public partial class StrategyEditorWindow : Window
             return;
         if (!int.TryParse(RarityCountBox.Text?.Trim(), out var n) || n <= 0)
         {
-            await AppDialogs.Alert(this, "请输入正确的稀有度数量（正整数）。");
+            await AppHost.AlertAsync("请输入正确的稀有度数量（正整数）。");
             return;
         }
 
@@ -541,7 +548,7 @@ public partial class StrategyEditorWindow : Window
         if (_editingRule != null &&
             _editingRule.Kind is not StrategyRuleKind.Career and not StrategyRuleKind.CareerRange)
         {
-            await AppDialogs.Alert(this, "当前选中条目不是「某职业总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
+            await AppHost.AlertAsync("当前选中条目不是「某职业总数」类型。请先点「取消编辑」或选择对应条目后再操作。");
             return;
         }
 
@@ -549,7 +556,7 @@ public partial class StrategyEditorWindow : Window
         {
             if (!int.TryParse(CareerCountBox.Text?.Trim(), out var n) || n <= 0)
             {
-                await AppDialogs.Alert(this, "请输入正确的职业数量（正整数）。");
+                await AppHost.AlertAsync("请输入正确的职业数量（正整数）。");
                 return;
             }
 
@@ -560,19 +567,19 @@ public partial class StrategyEditorWindow : Window
 
         if (!int.TryParse(CareerRangeMinBox.Text?.Trim(), out var lo) || lo < 0)
         {
-            await AppDialogs.Alert(this, "请输入正确的范围下限（非负整数）。");
+            await AppHost.AlertAsync("请输入正确的范围下限（非负整数）。");
             return;
         }
 
         if (!int.TryParse(CareerRangeMaxBox.Text?.Trim(), out var hi))
         {
-            await AppDialogs.Alert(this, "请输入正确的范围上限（整数）。");
+            await AppHost.AlertAsync("请输入正确的范围上限（整数）。");
             return;
         }
 
         if (lo > hi)
         {
-            await AppDialogs.Alert(this, "范围下限不能大于上限。");
+            await AppHost.AlertAsync("范围下限不能大于上限。");
             return;
         }
 
@@ -591,7 +598,7 @@ public partial class StrategyEditorWindow : Window
         var name = NameBox.Text?.Trim();
         if (string.IsNullOrEmpty(name))
         {
-            await AppDialogs.Alert(this, "请填写策略名称。");
+            await AppHost.AlertAsync("请填写策略名称。");
             return;
         }
 
@@ -599,25 +606,18 @@ public partial class StrategyEditorWindow : Window
 
         if (!StrategyRules.TryValidate(_target.Rules, out var error))
         {
-            await AppDialogs.Alert(this, error, "策略存在冲突");
+            await AppHost.AlertAsync(error, "策略存在冲突");
             return;
         }
 
         _committed = true;
-        Close(true);
+        RequestClose(true);
     }
 
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         RestoreBackup();
         _committed = true;
-        Close(false);
-    }
-
-    protected override void OnClosing(WindowClosingEventArgs e)
-    {
-        if (!_committed)
-            RestoreBackup();
-        base.OnClosing(e);
+        RequestClose(false);
     }
 }

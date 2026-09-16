@@ -18,6 +18,12 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+
+        // 浏览器端把叠加层挂进「对话框宿主位」；桌面端 Presenter 是 WindowPresenter，
+        // Overlay 为 null，这里什么也不加——桌面端的对话框是独立原生窗口。
+        if (AppHost.Presenter?.Overlay is { } overlay)
+            DialogHost.Content = overlay;
+
         SwitchPage(
             _generate,
             "阵容生成",

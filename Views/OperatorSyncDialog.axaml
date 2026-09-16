@@ -1,22 +1,19 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:models="clr-namespace:arknights_random_team.Models"
-        xmlns:views="clr-namespace:arknights_random_team.Views"
-        mc:Ignorable="d"
-        x:Class="arknights_random_team.Views.OperatorSyncDialog"
-        Title="同步干员"
-        Width="544"
-        Height="588"
-        CanResize="False"
-        ShowInTaskbar="False"
-        WindowStartupLocation="CenterOwner"
-        FontFamily="{StaticResource AppFont}"
-        FontSize="14"
-        Background="{StaticResource AppBackgroundBrush}"
-        KeyDown="Window_KeyDown">
-    <Window.Resources>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
+             mc:Ignorable="d"
+             x:Class="arknights_random_team.Views.OperatorSyncDialog"
+             Width="544"
+             Height="588"
+             MinWidth="440"
+             MinHeight="440"
+             FontFamily="{StaticResource AppFont}"
+             FontSize="14"
+             Background="Transparent">
+    <UserControl.Resources>
         <!-- 整块卡片就是选择控件：默认空心圆点，选中后点亮为薄荷色对勾。 -->
         <ControlTheme x:Key="SyncStarTile" TargetType="CheckBox">
             <Setter Property="FocusAdorner" Value="{x:Null}" />
@@ -56,9 +53,9 @@
                 <Setter Property="Opacity" Value="1" />
             </Style>
         </ControlTheme>
-    </Window.Resources>
+    </UserControl.Resources>
 
-    <Window.Styles>
+    <UserControl.Styles>
         <Style Selector="CheckBox.sync-star">
             <Setter Property="Theme" Value="{StaticResource SyncStarTile}" />
             <Setter Property="Height" Value="76" />
@@ -170,7 +167,7 @@
         <Style Selector="Button.dialog-confirm Path">
             <Setter Property="Stroke" Value="{StaticResource AppOnPrimaryBrush}" />
         </Style>
-    </Window.Styles>
+    </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <!-- 标题区 -->
@@ -352,4 +349,4 @@
             </Grid>
         </Border>
     </Grid>
-</Window>
+</UserControl>

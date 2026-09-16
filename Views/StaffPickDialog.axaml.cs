@@ -6,7 +6,7 @@ using arknights_random_team.Models;
 
 namespace arknights_random_team.Views;
 
-public partial class StaffPickDialog : Window
+public partial class StaffPickDialog : ModalContent
 {
     private readonly List<Staff> _all;
     private readonly HashSet<string> _excludeNames;
@@ -82,13 +82,13 @@ public partial class StaffPickDialog : Window
 
         if (names.Count == 0)
         {
-            await AppDialogs.Alert(this, "请先在列表中选择至少一名干员（可点击多选）。");
+            await AppHost.AlertAsync("请先在列表中选择至少一名干员（可点击多选）。");
             return;
         }
 
         SelectedStaffNames = names;
-        Close(true);
+        RequestClose(true);
     }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => RequestClose(false);
 }

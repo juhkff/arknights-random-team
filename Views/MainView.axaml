@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
              d:DesignWidth="1160"
              d:DesignHeight="820"
@@ -118,10 +119,15 @@
         </Style>
     </UserControl.Styles>
 
-    <controls:SnackbarHost HostName="MainSnackbar"
-                           SnackbarHorizontalAlignment="Center"
-                           SnackbarVerticalAlignment="Bottom">
-        <Grid ColumnDefinitions="212,*">
+    <!--
+        模态层与外壳叠在同一格里：对话框铺在整个界面（含侧栏与标题）之上。
+        放在 SnackbarHost 之后，保证操作提示不会被遮罩压暗。
+    -->
+    <Grid>
+        <controls:SnackbarHost HostName="MainSnackbar"
+                               SnackbarHorizontalAlignment="Center"
+                               SnackbarVerticalAlignment="Bottom">
+            <Grid ColumnDefinitions="212,*">
             <Border Grid.Column="0"
                     Background="{StaticResource AppSidebarBrush}"
                     BorderBrush="{StaticResource AppBorderBrush}"
@@ -356,5 +362,14 @@
                                 ClipToBounds="False" />
             </Grid>
         </Grid>
-    </controls:SnackbarHost>
+        </controls:SnackbarHost>
+
+        <!--
+            对话框宿主位：浏览器端挂叠加层（没有窗口系统），桌面端为空
+            （桌面端用原生窗口，见 WindowPresenter）。由 MainView 构造函数填充。
+        -->
+        <ContentControl Name="DialogHost"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" />
+    </Grid>
 </UserControl>
