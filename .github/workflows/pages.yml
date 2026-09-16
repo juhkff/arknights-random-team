@@ -4,9 +4,17 @@ on:
   push:
     branches: ["master"]
     paths:
-      - "Core/**"
+      # 站点本身
       - "browser/**"
       - "Assets/**"
+      # Core 工程用通配符把仓库根目录的源码全部吸进来（../**/*.cs、../**/*.axaml），
+      # 所以根目录的界面与逻辑也必须列入，否则改了 Views/ 之类的文件不会触发重新部署。
+      - "Core/**"
+      - "*.cs"
+      - "*.axaml"
+      - "Views/**"
+      - "Domain/**"
+      - "Models/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
