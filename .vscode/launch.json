@@ -9,8 +9,10 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            // 如果已更改目标框架，请确保更新程序路径。
-            "program": "${workspaceFolder}/bin/Debug/net10.0/arknights-random-team.dll",
+            // 注意：项目已拆分为 Core / desktop / browser 三个工程，
+            // 桌面端入口在 desktop/，输出目录也随之变成 desktop/bin/<配置>/net10.0/
+            // （旧的 ${workspaceFolder}/bin/Debug/... 是拆分前的位置，改了源码也不会更新）。
+            "program": "${workspaceFolder}/desktop/bin/Debug/net10.0/arknights-random-team.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             // 有关“控制台”字段的详细信息，请参阅 https://aka.ms/VSCode-CS-LaunchJson-Console

@@ -18,7 +18,22 @@
     ],
     "tasks": [
         {
+            // 只构建桌面端：构建整个 .sln 会连带把 browser(WASM) 一起编，
+            // 那需要 wasm-tools 工作负载，且和桌面端调试无关。
             "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/desktop/arknights-random-team.Desktop.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            // 需要单独构建全部三个工程（含 Web 版）时用这个
+            "label": "build-all",
             "command": "dotnet",
             "type": "process",
             "args": [
@@ -35,7 +50,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/arknights-random-team.csproj",
+                "${workspaceFolder}/desktop/arknights-random-team.Desktop.csproj",
                 "-c",
                 "Release",
                 "-r",
@@ -57,7 +72,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/arknights-random-team.csproj",
+                "${workspaceFolder}/desktop/arknights-random-team.Desktop.csproj",
                 "-c",
                 "Release",
                 "-r",
@@ -74,6 +89,22 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "publish-web",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/browser/arknights-random-team.Browser.csproj",
+                "-c",
+                "Release",
+                "-o",
+                "${workspaceFolder}/publish/web",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "watch",
             "command": "dotnet",
             "type": "process",
@@ -81,7 +112,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/arknights-random-team.sln"
+                "${workspaceFolder}/desktop/arknights-random-team.Desktop.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
