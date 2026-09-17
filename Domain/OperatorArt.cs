@@ -46,10 +46,13 @@ public static class OperatorArt
             : Build("portrait", sourceId, "_1");
 
     /// <summary>
-    /// 官方职业图标。文件名沿用游戏/社区资源的英文职业名，
-    /// 与 <see cref="Models.Career"/> 一一对应（先锋=vanguard、近卫=guard、狙击=sniper、
-    /// 重装=defender、医疗=medic、辅助=supporter、术师=caster、特种=specialist）。
-    /// 图标很小（3~8KB），不依赖干员的 SourceId，所有干员共用。
+    /// 官方职业图标的嵌入资源地址。
+    ///
+    /// 职业图标只有 8 个、合计约 40KB，而且所有干员共用同一套，
+    /// 所以直接随程序打包，不走网络：刷新即用、离线可用，也不受 CDN 可用性影响。
+    /// 文件名沿用游戏/社区资源的英文职业名，与 <see cref="Models.Career"/> 一一对应
+    /// （先锋=vanguard、近卫=guard、狙击=sniper、重装=defender、
+    ///  医疗=medic、辅助=supporter、术师=caster、特种=specialist）。
     /// </summary>
     public static IReadOnlyList<Uri> CareerIcon(string careerSlug)
     {
@@ -59,8 +62,12 @@ public static class OperatorArt
             return [];
         }
 
+        // 嵌入资源优先；远端地址只作为兜底（万一资源缺失也能显示）
+        var embedded = new Uri(
+            $"avares://arknights-random-team.Core/Assets/ClassIcons/class_{careerSlug}.png");
+
         var path = $"{IconRepo}/classes/class_{careerSlug}.png";
-        return Mirrors.Select(m => new Uri($"{m}/{path}")).ToArray();
+        return [embedded, .. Mirrors.Select(m => new Uri($"{m}/{path}"))];
     }
 
     private static IReadOnlyList<Uri> Build(string folder, string? sourceId, string suffix)

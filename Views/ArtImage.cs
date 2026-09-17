@@ -197,7 +197,11 @@ public static class ArtImage
     {
         try
         {
-            await using var stream = await SharedHttp.GetStreamAsync(uri).ConfigureAwait(false);
+            // 嵌入资源（avares://）不走网络：HttpClient 不认这个协议，
+            // 必须先分流，否则会先失败一次再回退，白白等一个超时。
+            await using var stream = uri.Scheme == "avares"
+                ? Avalonia.Platform.AssetLoader.Open(uri)
+                : await SharedHttp.GetStreamAsync(uri).ConfigureAwait(false);
 
             // 必须先读进 MemoryStream：Skia 解码需要可寻址的流，
             // 直接把响应的网络流交给 Bitmap 会抛「Unable to load bitmap from provided data」。
