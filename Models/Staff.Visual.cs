@@ -54,12 +54,15 @@ public partial class Staff
     {
         get
         {
+            // 精二用专属立绘（_2），取不到时展示层会自动回退
+            var elite2 = Level.EliteLevel >= 2;
             var primary = _usePortrait
-                ? Domain.OperatorArt.Portrait(SourceId)
+                ? Domain.OperatorArt.Portrait(SourceId, elite2)
                 : Domain.OperatorArt.Avatar(SourceId);
+            // 头像本身不分精英阶段，回退时用默认立绘即可
             var secondary = _usePortrait
                 ? Domain.OperatorArt.Avatar(SourceId)
-                : Domain.OperatorArt.Portrait(SourceId);
+                : Domain.OperatorArt.Portrait(SourceId, elite2);
 
             return [.. primary, .. secondary];
         }

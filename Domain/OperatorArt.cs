@@ -33,8 +33,17 @@ public static class OperatorArt
     /// <summary>头像小图（约 50KB，180×180），列表卡片默认用它。</summary>
     public static IReadOnlyList<Uri> Avatar(string? sourceId) => Build("avatar", sourceId, "");
 
-    /// <summary>半身立绘大图，用于切换后的展示。</summary>
-    public static IReadOnlyList<Uri> Portrait(string? sourceId) => Build("portrait", sourceId, "_1");
+    /// <summary>
+    /// 半身立绘大图。
+    ///
+    /// 立绘分精英阶段：<c>_1</c> 是默认立绘，<c>_2</c> 是精英二专属立绘。
+    /// 精二的干员优先用 <c>_2</c>，取不到会自动回退到 <c>_1</c>
+    /// （不是所有干员都有精二立绘，回退由展示层按顺序尝试完成）。
+    /// </summary>
+    public static IReadOnlyList<Uri> Portrait(string? sourceId, bool elite2 = false) =>
+        elite2
+            ? [.. Build("portrait", sourceId, "_2"), .. Build("portrait", sourceId, "_1")]
+            : Build("portrait", sourceId, "_1");
 
     /// <summary>
     /// 官方职业图标。文件名沿用游戏/社区资源的英文职业名，

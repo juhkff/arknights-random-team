@@ -38,7 +38,34 @@ public partial class Staff : AutomaticNotify
     public Level Level
     {
         get => _level;
-        set => SetProperty(ref _level, value);
+        set
+        {
+            if (ReferenceEquals(_level, value))
+                return;
+
+            // 换对象时先退订旧的，避免残留订阅
+            _level.PropertyChanged -= Level_PropertyChanged;
+            if (!SetProperty(ref _level, value))
+            {
+                _level.PropertyChanged += Level_PropertyChanged;
+                return;
+            }
+
+            _level.PropertyChanged += Level_PropertyChanged;
+
+            // 精英阶段决定卡片用哪张立绘（精二有专属立绘），要跟着转发一次通知
+            RaiseArtChanged();
+        }
+    }
+
+    /// <summary>
+    /// 精英阶段被就地改动时（表格里直接编辑精英列就是这种情况），
+    /// 卡片立绘要跟着换，所以转发一次 <see cref="ArtUris"/> 的通知。
+    /// </summary>
+    private void Level_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Models.Level.EliteLevel))
+            RaiseArtChanged();
     }
 
     /// <summary>外部数据源中的稳定标识；手工录入的干员为空。</summary>
