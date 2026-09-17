@@ -69,4 +69,43 @@ public class ListModel : AutomaticNotify
             OnPropertyChanged(nameof(SelectedStaffCount));
         }
     }
+
+    // ---- 展示方式：表格 / 卡片，以及卡片立绘规格 ----
+
+    private bool _isCardView;
+    private bool _usePortrait;
+
+    /// <summary>是否用卡片视图（默认表格；表格才支持行内编辑与多列排序）。</summary>
+    public bool IsCardView
+    {
+        get => _isCardView;
+        set
+        {
+            if (!SetProperty(ref _isCardView, value))
+                return;
+
+            OnPropertyChanged(nameof(IsGridView));
+        }
+    }
+
+    /// <summary>
+    /// 表格视图是否可见。用独立布尔量而不是枚举加转换器，
+    /// 是为了在 XAML 里直接绑 IsVisible。
+    /// </summary>
+    public bool IsGridView => !_isCardView;
+
+    /// <summary>卡片用半身立绘大图，而不是头像小图。</summary>
+    public bool UsePortrait
+    {
+        get => _usePortrait;
+        set
+        {
+            if (!SetProperty(ref _usePortrait, value))
+                return;
+
+            // 每张卡片的图源都要跟着换，逐张通知
+            foreach (var staff in StaffList)
+                staff.RaiseArtChanged();
+        }
+    }
 }

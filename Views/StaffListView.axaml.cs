@@ -28,6 +28,37 @@ public partial class StaffListView : UserControl
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
+    private void GridView_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is ListModel model)
+            model.IsCardView = false;
+    }
+
+    private void CardView_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ListModel model)
+            return;
+
+        model.IsCardView = true;
+
+        // 卡片第一次显示时才需要立绘，切过去顺手把每张卡的图源刷一遍，
+        // 让滚动到可视区的那些卡片按需发起下载。
+        foreach (var staff in model.StaffList)
+            staff.RaiseArtChanged();
+    }
+
+    private void AvatarMode_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is ListModel model)
+            model.UsePortrait = false;
+    }
+
+    private void PortraitMode_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is ListModel model)
+            model.UsePortrait = true;
+    }
+
     private void StaffList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
         UpdateClearButton();
 
