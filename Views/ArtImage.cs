@@ -58,6 +58,7 @@ public static class ArtImage
 
     private static int _cacheHits;
     private static int _networkLoads;
+    private static int _failedLoads;
 
     /// <summary>本次运行中命中缓存的次数（不含重复请求）。</summary>
     public static int CacheHits => Volatile.Read(ref _cacheHits);
@@ -68,16 +69,24 @@ public static class ArtImage
     /// <summary>本次运行中从本地磁盘缓存读出的次数。</summary>
     public static int DiskHits => LocalImageStore.Hits;
 
+    /// <summary>候选地址均失败的次数。有候选 URL 不等于加载成功。</summary>
+    public static int FailedLoads => Volatile.Read(ref _failedLoads);
+
+    public static readonly AttachedProperty<ArtLoadState> LoadStateProperty =
+        AvaloniaProperty.RegisterAttached<Image, ArtLoadState>("LoadState", typeof(ArtImage));
+
     /// <summary>记录哪些 Image 当前挂在可视树上（这个 Avalonia 版本没有现成的判断方法）。</summary>
     private static readonly ConditionalWeakTable<Image, object> Attached = new();
+
+    public static readonly AttachedProperty<CancellationTokenSource?> LoadCtsProperty =
+        AvaloniaProperty.RegisterAttached<Image, CancellationTokenSource?>("LoadCts", typeof(ArtImage));
 
     public static readonly AttachedProperty<IReadOnlyList<Uri>?> SourcesProperty =
         AvaloniaProperty.RegisterAttached<Image, IReadOnlyList<Uri>?>("Sources", typeof(ArtImage));
 
     /// <summary>
-    /// 另一规格的候选地址（切换「头像 / 半身像」时显示的那一组）。
-    /// 与 <see cref="SourcesProperty"/> 一起预载，切换只是换显示，不必重新下载 ——
-    /// 否则切一次就要重载所有卡片，人一多界面会明显卡住。
+    /// 另一规格的候选地址。切换视图时由绑定换到 <see cref="SourcesProperty"/> 再加载，
+    /// 不再在每张卡上同时预载另一套图，避免切入头像模式就拉全部立绘。
     /// </summary>
     public static readonly AttachedProperty<IReadOnlyList<Uri>?> AlternateSourcesProperty =
         AvaloniaProperty.RegisterAttached<Image, IReadOnlyList<Uri>?>("AlternateSources", typeof(ArtImage));
@@ -85,7 +94,6 @@ public static class ArtImage
     static ArtImage()
     {
         SourcesProperty.Changed.AddClassHandler<Image, IReadOnlyList<Uri>?>(OnSourcesChanged);
-        AlternateSourcesProperty.Changed.AddClassHandler<Image, IReadOnlyList<Uri>?>(OnAlternateChanged);
     }
 
     public static IReadOnlyList<Uri>? GetSources(Image image) => image.GetValue(SourcesProperty);
@@ -97,33 +105,30 @@ public static class ArtImage
     public static void SetAlternateSources(Image image, IReadOnlyList<Uri>? value) =>
         image.SetValue(AlternateSourcesProperty, value);
 
-    /// <summary>把另一规格也预载进来（后台排队，不阻塞当前显示）。</summary>
-    private static void OnAlternateChanged(Image image, AvaloniaPropertyChangedEventArgs<IReadOnlyList<Uri>?> args)
-    {
-        if (args.NewValue.Value is not { Count: > 0 } list)
-            return;
+    public static ArtLoadState GetLoadState(Image image) => image.GetValue(LoadStateProperty);
 
-        foreach (var uri in list)
-            _ = GetOrLoadAsync(uri);
-    }
+    public static void SetLoadState(Image image, ArtLoadState value) => image.SetValue(LoadStateProperty, value);
 
     private static void OnSourcesChanged(Image image, AvaloniaPropertyChangedEventArgs<IReadOnlyList<Uri>?> args)
     {
         image.AttachedToVisualTree -= OnAttached;
         image.DetachedFromVisualTree -= OnDetached;
+        CancelLoad(image);
+        image.Source = null;
 
         var list = args.NewValue.Value;
         if (list is null || list.Count == 0)
         {
-            image.Source = null;
+            SetLoadState(image, ArtLoadState.Empty);
             return;
         }
 
         image.AttachedToVisualTree += OnAttached;
         image.DetachedFromVisualTree += OnDetached;
+        SetLoadState(image, ArtLoadState.Loading);
 
         if (Attached.TryGetValue(image, out _))
-            _ = LoadAnyAsync(image, list);
+            StartLoad(image, list);
     }
 
     private static void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -133,14 +138,10 @@ public static class ArtImage
 
         Attached.AddOrUpdate(image, new object());
 
-        if (GetAlternateSources(image) is { Count: > 0 } alt)
-        {
-            foreach (var uri in alt)
-                _ = GetOrLoadAsync(uri);
-        }
-
         if (GetSources(image) is { Count: > 0 } list)
-            _ = LoadAnyAsync(image, list);
+            StartLoad(image, list);
+        else
+            SetLoadState(image, ArtLoadState.Empty);
     }
 
     private static void OnDetached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -150,55 +151,98 @@ public static class ArtImage
         if (sender is not Image image)
             return;
 
+        CancelLoad(image);
         Attached.Remove(image);
         image.Source = null;
     }
 
-    /// <summary>按顺序尝试各候选地址，第一个成功的就用。</summary>
-    private static async Task LoadAnyAsync(Image image, IReadOnlyList<Uri> candidates)
+    private static void CancelLoad(Image image)
     {
-        foreach (var uri in candidates)
+        if (image.GetValue(LoadCtsProperty) is not { } cts)
+            return;
+
+        image.SetValue(LoadCtsProperty, null);
+        cts.Cancel();
+        cts.Dispose();
+    }
+
+    private static void StartLoad(Image image, IReadOnlyList<Uri> list)
+    {
+        CancelLoad(image);
+        var cts = new CancellationTokenSource();
+        image.SetValue(LoadCtsProperty, cts);
+        _ = LoadAnyAsync(image, list, cts.Token);
+    }
+
+    /// <summary>按顺序尝试各候选地址，第一个成功的就用。</summary>
+    private static async Task LoadAnyAsync(Image image, IReadOnlyList<Uri> candidates, CancellationToken ct)
+    {
+        try
         {
-            var bitmap = await GetOrLoadAsync(uri).ConfigureAwait(true);
-            if (bitmap is null)
-                continue;
+            await Dispatcher.UIThread.InvokeAsync(() => SetLoadState(image, ArtLoadState.Loading));
 
-            // 让头部的加载统计跟着刷新
+            foreach (var uri in candidates)
+            {
+                ct.ThrowIfCancellationRequested();
+                var bitmap = await GetOrLoadAsync(uri, ct).ConfigureAwait(true);
+                if (bitmap is null)
+                    continue;
+
+                StatsChanged?.Invoke(null, EventArgs.Empty);
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (Attached.TryGetValue(image, out _) && ReferenceEquals(GetSources(image), candidates))
+                    {
+                        image.Source = bitmap;
+                        SetLoadState(image, ArtLoadState.Loaded);
+                    }
+                });
+                return;
+            }
+
+            Interlocked.Increment(ref _failedLoads);
             StatsChanged?.Invoke(null, EventArgs.Empty);
-
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                // 下载期间卡片可能已被回收或换了地址，这里确认一下再赋值
                 if (Attached.TryGetValue(image, out _) && ReferenceEquals(GetSources(image), candidates))
-                    image.Source = bitmap;
+                {
+                    image.Source = null;
+                    SetLoadState(image, ArtLoadState.Failed);
+                }
             });
-            return;
+        }
+        catch (OperationCanceledException)
+        {
+            // 切视图或离开页面时主动取消，避免占着下载名额。
         }
     }
 
-    private static Task<Bitmap?> GetOrLoadAsync(Uri uri)
+    private static async Task<Bitmap?> GetOrLoadAsync(Uri uri, CancellationToken ct)
     {
         if (Cache.TryGetValue(uri, out var existing))
         {
             if (existing.IsCompletedSuccessfully && existing.Result is not null)
                 Interlocked.Increment(ref _cacheHits);
             Touch(uri);
-            return existing;
+            return await existing.WaitAsync(ct).ConfigureAwait(false);
         }
 
-        var task = LoadThrottledAsync(uri);
-        // 并发请求同一地址时，先到的那个任务胜出，后来的复用同一个任务
-        task = Cache.GetOrAdd(uri, task);
-        return task;
-    }
-
-    private static async Task<Bitmap?> LoadThrottledAsync(Uri uri)
-    {
-        await Gate.WaitAsync().ConfigureAwait(false);
+        await Gate.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            if (Cache.TryGetValue(uri, out existing))
+            {
+                if (existing.IsCompletedSuccessfully && existing.Result is not null)
+                    Interlocked.Increment(ref _cacheHits);
+                Touch(uri);
+                return await existing.ConfigureAwait(false);
+            }
+
             Interlocked.Increment(ref _networkLoads);
-            var bitmap = await LoadCoreAsync(uri).ConfigureAwait(false);
+            var load = LoadCoreAsync(uri);
+            Cache[uri] = load;
+            var bitmap = await load.ConfigureAwait(false);
             if (bitmap is not null)
                 Touch(uri);
             return bitmap;
@@ -220,6 +264,11 @@ public static class ArtImage
             // 解码需要可寻址的流：Skia 对普通网络流会抛
             // 「Unable to load bitmap from provided data」，所以统一先拿到字节。
             using var buffer = new MemoryStream(bytes);
+            // 全身立绘约 1024 宽，列表里同时解码上百张会占几百 MB。
+            // 卡片显示宽度只有 180，解码到 512 足够清晰。
+            if (PngWidth(bytes) is > 512)
+                return Bitmap.DecodeToWidth(buffer, 512);
+
             return new Bitmap(buffer);
         }
         catch
@@ -227,6 +276,15 @@ public static class ArtImage
             // 网络失败、图不存在、解码失败都视作「没有立绘」，卡片显示占位即可
             return null;
         }
+    }
+
+    /// <summary>PNG IHDR 里的宽度；不是 PNG 或太短则返回 null。</summary>
+    private static int? PngWidth(byte[] bytes)
+    {
+        if (bytes.Length < 24 || bytes[0] != 0x89 || bytes[1] != (byte)'P')
+            return null;
+
+        return (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
     }
 
     /// <summary>取图片字节：嵌入资源直接读，其余先查本地缓存，再走网络并回写缓存。</summary>
@@ -281,6 +339,14 @@ public static class ArtImage
             }
         }
     }
+}
+
+public enum ArtLoadState
+{
+    Empty,
+    Loading,
+    Loaded,
+    Failed
 }
 
 /// <summary>共享一个 <see cref="HttpClient"/>，避免每张图都新建连接池。</summary>

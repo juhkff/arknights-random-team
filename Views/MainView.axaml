@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
-             xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
              d:DesignWidth="1160"
              d:DesignHeight="820"
@@ -15,28 +14,26 @@
     <UserControl.Styles>
         <Style Selector="Button.nav-item">
             <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
-            <Setter Property="Height" Value="52" />
-            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="MinHeight" Value="44" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Background" Value="{StaticResource AppSidebarItemBrush}" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{StaticResource AppSidebarTextBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
         </Style>
         <Style Selector="Button.nav-item:pointerover">
             <Setter Property="Background" Value="{StaticResource AppSidebarHoverBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppMutedTextBrush}" />
         </Style>
         <Style Selector="Button.nav-item:pressed">
             <Setter Property="Background" Value="{StaticResource AppSidebarPressedBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.nav-item.active">
             <Setter Property="Background" Value="{StaticResource AppSidebarActiveBrush}" />
@@ -45,36 +42,26 @@
         </Style>
         <Style Selector="Button.nav-item.active:pointerover">
             <Setter Property="Background" Value="{StaticResource AppSidebarActiveHoverBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.nav-item.active:pressed">
             <Setter Property="Background" Value="{StaticResource AppSidebarActivePressedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
-        <Style Selector="Button.nav-item /template/ Border#PART_FocusRing">
-            <Setter Property="BorderBrush" Value="{StaticResource AppSignalBrush}" />
         </Style>
         <Style Selector="Button.nav-item Border.nav-indicator">
             <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="Opacity" Value="0" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <DoubleTransition Property="Opacity" Duration="0:0:0.14" />
-                </Transitions>
-            </Setter>
         </Style>
         <Style Selector="Button.nav-item.active Border.nav-indicator">
             <Setter Property="Opacity" Value="1" />
         </Style>
-        <Style Selector="Button.nav-item.active:pressed Border.nav-indicator">
-            <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
+        <Style Selector="Button.nav-item Path.nav-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppSidebarMutedBrush}" />
+            <Setter Property="StrokeThickness" Value="1.6" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeJoin" Value="Round" />
+            <Setter Property="Fill" Value="Transparent" />
         </Style>
-        <Style Selector="Button.nav-item TextBlock.nav-index">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource AppSidebarMutedBrush}" />
+        <Style Selector="Button.nav-item.active Path.nav-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.nav-item TextBlock.nav-label">
             <Setter Property="FontSize" Value="14" />
@@ -84,314 +71,192 @@
         <Style Selector="Button.nav-item.active TextBlock.nav-label">
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
-        <Style Selector="Button.nav-item.active:pressed TextBlock.nav-label">
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        <Style Selector="Button.nav-item.compact TextBlock.nav-label">
+            <Setter Property="IsVisible" Value="False" />
         </Style>
-        <Style Selector="Button.nav-item TextBlock.nav-meta">
-            <Setter Property="FontSize" Value="10" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="{StaticResource AppSidebarMutedBrush}" />
-        </Style>
-        <Style Selector="Button.nav-item.active TextBlock.nav-index">
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
-        <Style Selector="Button.nav-item.active TextBlock.nav-meta">
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
-        <Style Selector="Button.nav-item.active:pressed TextBlock.nav-index">
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
-        <Style Selector="Button.nav-item.active:pressed TextBlock.nav-meta">
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
-        <Style Selector="Button.nav-item Path.nav-chevron">
-            <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="Opacity" Value="0" />
-        </Style>
-        <Style Selector="Button.nav-item:pointerover Path.nav-chevron">
-            <Setter Property="Opacity" Value="0.6" />
-        </Style>
-        <Style Selector="Button.nav-item.active Path.nav-chevron">
-            <Setter Property="Opacity" Value="1" />
-        </Style>
-        <Style Selector="Button.nav-item.active:pressed Path.nav-chevron">
-            <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
+        <Style Selector="Button.nav-item.compact">
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Height" Value="44" />
         </Style>
     </UserControl.Styles>
 
-    <!--
-        模态层与外壳叠在同一格里：对话框铺在整个界面（含侧栏与标题）之上。
-        放在 SnackbarHost 之后，保证操作提示不会被遮罩压暗。
-    -->
     <Grid>
         <controls:SnackbarHost HostName="MainSnackbar"
                                SnackbarHorizontalAlignment="Center"
                                SnackbarVerticalAlignment="Bottom">
-            <Grid RowDefinitions="3,*">
-            <Grid Grid.Row="0" ColumnDefinitions="140,*,96" IsHitTestVisible="False">
-                <Border Background="{StaticResource AppPrimaryBrush}" />
-                <Border Grid.Column="1" Background="{StaticResource AppPrimaryGlowBrush}" />
-                <Border Grid.Column="2" Background="{StaticResource AppSignalBrush}" />
-            </Grid>
-            <Grid Grid.Row="1" ColumnDefinitions="212,*">
-            <Border Grid.Column="0"
-                    Background="{StaticResource AppSidebarBrush}"
-                    BorderBrush="{StaticResource AppBorderBrush}"
-                    BorderThickness="0,0,1,0">
-                <Grid RowDefinitions="Auto,*,Auto">
-                    <StackPanel Margin="20,22,20,20" Spacing="18">
-                        <Grid ColumnDefinitions="42,12,*">
-                            <Grid Width="42" Height="42" IsHitTestVisible="False">
-                                <Border CornerRadius="4"
-                                        Background="{StaticResource AppPrimarySoftBrush}"
-                                        BoxShadow="0 0 18 0 #4065E6C4" />
-                                <Path Fill="{StaticResource AppPrimarySoftBrush}"
-                                      Stroke="{StaticResource AppPrimaryBrush}"
-                                      StrokeThickness="1.4"
-                                      Data="M 9,1 H 41 V 33 L 33,41 H 1 V 9 Z" />
+            <Grid>
+                <Grid Name="MainContent">
+                    <Grid RowDefinitions="Auto,*">
+                        <Border Name="PageHeader"
+                                Height="64"
+                                Padding="24,0"
+                                Background="{StaticResource AppSurfaceBrush}"
+                                BorderBrush="{StaticResource AppBorderBrush}"
+                                BorderThickness="0,0,0,1">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Button Name="MenuButton"
+                                        Classes="icon"
+                                        Width="40"
+                                        Height="40"
+                                        Margin="0,0,12,0"
+                                        VerticalAlignment="Center"
+                                        IsVisible="False"
+                                        AutomationProperties.Name="打开导航"
+                                        Click="MenuButton_Click">
+                                    <Path Width="16" Height="16" Stretch="Uniform"
+                                          Stroke="{StaticResource AppTextBrush}" StrokeThickness="1.6"
+                                          StrokeLineCap="Round"
+                                          Data="M 2,4 H 14 M 2,8 H 14 M 2,12 H 14" />
+                                </Button>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Name="WindowTitle"
+                                               Classes="page-title"
+                                               FontSize="24"
+                                               Text="阵容生成" />
+                                    <TextBlock Name="WindowSubtitle"
+                                               Classes="caption"
+                                               Text="从已启用的干员中生成一支阵容" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <ContentControl Name="PageHost"
+                                        Grid.Row="1"
+                                        Margin="24"
+                                        HorizontalContentAlignment="Stretch"
+                                        VerticalContentAlignment="Stretch"
+                                        ClipToBounds="False" />
+                    </Grid>
+                </Grid>
+
+                <Border Name="NavScrim"
+                        Background="{StaticResource AppVeilBrush}"
+                        IsVisible="False"
+                        PointerPressed="NavScrim_PointerPressed" />
+
+                <Border Name="Sidebar"
+                        Width="208"
+                        HorizontalAlignment="Left"
+                        ClipToBounds="True"
+                        Background="{StaticResource AppSidebarBrush}"
+                        BorderBrush="{StaticResource AppBorderBrush}"
+                        BorderThickness="0,0,1,0">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <Grid Name="BrandBlock" Margin="16,16,16,12">
+                            <Border Name="BrandMark"
+                                    Width="40" Height="40" CornerRadius="6"
+                                    HorizontalAlignment="Left"
+                                    Background="{StaticResource AppPrimarySoftBrush}"
+                                    BorderBrush="{StaticResource AppPrimaryBrush}"
+                                    BorderThickness="1">
                                 <TextBlock HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
-                                           FontSize="15"
+                                           FontSize="14"
                                            FontWeight="Bold"
                                            Foreground="{StaticResource AppPrimaryBrush}"
                                            Text="RT" />
-                                <Path Stroke="{StaticResource AppPrimaryBrush}"
-                                      StrokeThickness="2"
-                                      Data="M 30,41 L 41,30" />
-                            </Grid>
-                            <StackPanel Grid.Column="2"
-                                        VerticalAlignment="Center"
-                                        Spacing="4">
-                                <TextBlock FontSize="17"
-                                           FontWeight="Bold"
-                                           Foreground="{StaticResource AppTextBrush}"
-                                           Text="明日方舟" />
-                                <TextBlock FontSize="9"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                           Text="RANDOM TEAM" />
-                            </StackPanel>
+                            </Border>
+                            <Border Name="BrandCopy" Margin="52,0,0,0" VerticalAlignment="Center">
+                                <StackPanel Spacing="2">
+                                    <TextBlock FontSize="16" FontWeight="Bold" Text="明日方舟" />
+                                    <TextBlock FontSize="11"
+                                               FontFamily="{StaticResource AppMonoFont}"
+                                               Foreground="{StaticResource AppMutedTextBrush}"
+                                               Text="RANDOM TEAM" />
+                                </StackPanel>
+                            </Border>
                         </Grid>
-                        <Grid ColumnDefinitions="24,6,*" Height="2" IsHitTestVisible="False">
-                            <Border Background="{StaticResource AppPrimaryBrush}" />
-                            <Border Grid.Column="2" Background="{StaticResource AppBorderBrush}" />
-                        </Grid>
-                    </StackPanel>
 
-                    <Grid Grid.Row="1">
-                        <Path Width="106"
-                              Height="112"
-                              Margin="0,0,16,8"
-                              HorizontalAlignment="Right"
-                              VerticalAlignment="Bottom"
-                              IsHitTestVisible="False"
-                              Stroke="{StaticResource AppBorderBrush}"
-                              StrokeThickness="1"
-                              Opacity="0.45"
-                              Data="M 0,112 L 106,6 M 32,112 L 106,38 M 64,112 L 106,70 M 92,4 H 106 V 18" />
-                        <StackPanel Margin="12,0,12,0" Spacing="8">
-                            <Grid Margin="8,0,8,6" ColumnDefinitions="*,Auto">
-                                <TextBlock FontSize="11"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                           Text="功能导航" />
-                                <TextBlock Grid.Column="1"
-                                           VerticalAlignment="Center"
-                                           FontSize="9"
-                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                           Text="OPERATIONS" />
-                            </Grid>
+                        <StackPanel Grid.Row="1" Margin="8,0" Spacing="4">
                             <Button Name="GenerateNavButton"
                                     Classes="nav-item"
                                     AutomationProperties.Name="阵容生成"
+                                    ToolTip.Tip="阵容生成"
                                     Click="ChangeToGenerate">
-                                <Grid ColumnDefinitions="4,34,*,20" IsHitTestVisible="False">
+                                <Grid ColumnDefinitions="4,40,*">
                                     <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
-                                    <TextBlock Grid.Column="1"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Classes="nav-index"
-                                               Text="01" />
-                                    <StackPanel Grid.Column="2" Margin="4,0,0,0" VerticalAlignment="Center" Spacing="4">
-                                        <TextBlock Classes="nav-label" Text="阵容生成" />
-                                        <TextBlock Classes="nav-meta" Text="SQUAD GENERATOR" />
-                                    </StackPanel>
-                                    <Path Grid.Column="3" Classes="nav-chevron" Width="5" Height="10" VerticalAlignment="Center"
-                                          StrokeThickness="1.5" Data="M 0,0 L 5,5 L 0,10" />
+                                    <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Data="M 2,6 H 10 M 7,3 L 10,6 7,9 M 6,10 H 14 M 9,7 L 6,10 9,13" />
+                                    <TextBlock Grid.Column="2" Classes="nav-label" VerticalAlignment="Center" Text="阵容生成" />
                                 </Grid>
                             </Button>
                             <Button Name="InputNavButton"
                                     Classes="nav-item"
                                     AutomationProperties.Name="干员录入"
+                                    ToolTip.Tip="干员录入"
                                     Click="ChangeToInput">
-                                <Grid ColumnDefinitions="4,34,*,20" IsHitTestVisible="False">
+                                <Grid ColumnDefinitions="4,40,*">
                                     <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
-                                    <TextBlock Grid.Column="1"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Classes="nav-index"
-                                               Text="02" />
-                                    <StackPanel Grid.Column="2" Margin="4,0,0,0" VerticalAlignment="Center" Spacing="4">
-                                        <TextBlock Classes="nav-label" Text="干员录入" />
-                                        <TextBlock Classes="nav-meta" Text="OPERATOR INTAKE" />
-                                    </StackPanel>
-                                    <Path Grid.Column="3" Classes="nav-chevron" Width="5" Height="10" VerticalAlignment="Center"
-                                          StrokeThickness="1.5" Data="M 0,0 L 5,5 L 0,10" />
+                                    <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Data="M 8,3 V 13 M 3,8 H 13" />
+                                    <TextBlock Grid.Column="2" Classes="nav-label" VerticalAlignment="Center" Text="干员录入" />
                                 </Grid>
                             </Button>
                             <Button Name="ListNavButton"
                                     Classes="nav-item"
                                     AutomationProperties.Name="干员列表"
+                                    ToolTip.Tip="干员列表"
                                     Click="ChangeToList">
-                                <Grid ColumnDefinitions="4,34,*,20" IsHitTestVisible="False">
+                                <Grid ColumnDefinitions="4,40,*">
                                     <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
-                                    <TextBlock Grid.Column="1"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Classes="nav-index"
-                                               Text="03" />
-                                    <StackPanel Grid.Column="2" Margin="4,0,0,0" VerticalAlignment="Center" Spacing="4">
-                                        <TextBlock Classes="nav-label" Text="干员列表" />
-                                        <TextBlock Classes="nav-meta" Text="OPERATOR ROSTER" />
-                                    </StackPanel>
-                                    <Path Grid.Column="3" Classes="nav-chevron" Width="5" Height="10" VerticalAlignment="Center"
-                                          StrokeThickness="1.5" Data="M 0,0 L 5,5 L 0,10" />
+                                    <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Data="M 3,3 H 7 V 7 H 3 Z M 9,3 H 13 V 7 H 9 Z M 3,9 H 7 V 13 H 3 Z M 9,9 H 13 V 13 H 9 Z" />
+                                    <TextBlock Grid.Column="2" Classes="nav-label" VerticalAlignment="Center" Text="干员列表" />
                                 </Grid>
                             </Button>
                             <Button Name="StrategyNavButton"
                                     Classes="nav-item"
                                     AutomationProperties.Name="随机策略"
+                                    ToolTip.Tip="随机策略"
                                     Click="ChangeToRandomStrategy">
-                                <Grid ColumnDefinitions="4,34,*,20" IsHitTestVisible="False">
+                                <Grid ColumnDefinitions="4,40,*">
                                     <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
-                                    <TextBlock Grid.Column="1"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Classes="nav-index"
-                                               Text="04" />
-                                    <StackPanel Grid.Column="2" Margin="4,0,0,0" VerticalAlignment="Center" Spacing="4">
-                                        <TextBlock Classes="nav-label" Text="随机策略" />
-                                        <TextBlock Classes="nav-meta" Text="RANDOM STRATEGY" />
-                                    </StackPanel>
-                                    <Path Grid.Column="3" Classes="nav-chevron" Width="5" Height="10" VerticalAlignment="Center"
-                                          StrokeThickness="1.5" Data="M 0,0 L 5,5 L 0,10" />
+                                    <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Data="M 2,4 H 14 M 2,8 H 14 M 2,12 H 14 M 6,2 V 6 M 11,6 V 10 M 5,10 V 14" />
+                                    <TextBlock Grid.Column="2" Classes="nav-label" VerticalAlignment="Center" Text="随机策略" />
                                 </Grid>
                             </Button>
                         </StackPanel>
-                    </Grid>
 
-                    <Border Grid.Row="2"
-                            Margin="16,20,16,20"
-                            Padding="12,13"
-                            Background="{StaticResource AppPrimarySoftBrush}"
-                            BorderBrush="{StaticResource AppBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6">
-                        <Grid ColumnDefinitions="3,10,*">
-                            <Border Background="{StaticResource AppPrimaryBrush}" CornerRadius="1" />
-                            <StackPanel Grid.Column="2" Spacing="4">
-                                <TextBlock FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource AppPrimaryBrush}"
-                                           Text="本地数据" />
-                                <TextBlock FontSize="9"
-                                           FontWeight="Medium"
-                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                           Text="LOCAL STORAGE" />
-                                <TextBlock Margin="0,4,0,0"
-                                           FontSize="11"
-                                           Foreground="{StaticResource AppTextBrush}"
-                                           Text="退出时自动保存" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </Border>
-
-            <Grid Grid.Column="1" RowDefinitions="96,*">
-                <Border Grid.Row="0"
-                        Padding="24,0"
-                        Background="{StaticResource AppSurfaceBrush}"
-                        BorderBrush="{StaticResource AppBorderBrush}"
-                        BorderThickness="0,0,0,1"
-                        ClipToBounds="True">
-                    <Grid>
-                        <Path Width="220"
-                              Height="96"
-                              HorizontalAlignment="Right"
-                              IsHitTestVisible="False"
-                              Stroke="{StaticResource AppPrimaryBrush}"
-                              StrokeThickness="1"
-                              Opacity="0.22"
-                              Data="M 0,96 L 72,24 H 220 M 36,96 L 108,24 M 72,96 L 144,24 M 180,24 V 0" />
-                        <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel VerticalAlignment="Center" Spacing="3">
-                                <StackPanel Orientation="Horizontal" Spacing="7">
-                                    <Border Width="6" Height="6" VerticalAlignment="Center"
-                                            Background="{StaticResource AppPrimaryBrush}"
-                                            BoxShadow="0 0 8 0 #8065E6C4" />
-                                    <TextBlock FontSize="9"
-                                               FontWeight="SemiBold"
-                                               LetterSpacing="1.2"
-                                               Foreground="{StaticResource AppPrimaryBrush}"
-                                               Text="OPERATIONS / 作战准备" />
-                                </StackPanel>
-                                <TextBlock Name="WindowTitle"
-                                           FontSize="24"
-                                           FontWeight="Bold"
-                                           Foreground="{StaticResource AppTextBrush}"
-                                           Text="阵容生成" />
-                                <TextBlock Name="WindowSubtitle"
-                                           FontSize="12"
-                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                           Text="从已启用的干员中生成一支阵容" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1"
-                                        Margin="20,0,0,0"
+                        <Border Name="StoragePanel"
+                                Grid.Row="2"
+                                Margin="12,12,12,16"
+                                Padding="12"
+                                Background="{StaticResource AppPrimarySoftBrush}"
+                                BorderBrush="{StaticResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <Grid>
+                                <Border Name="StorageDot"
+                                        Width="8" Height="8"
+                                        HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Spacing="9"
-                                        IsHitTestVisible="False">
-                                <TextBlock HorizontalAlignment="Right"
-                                           FontSize="10"
-                                           FontWeight="SemiBold"
-                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                           Text="ARKNIGHTS / RT" />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
-                                    <Border Width="28" Height="3" Background="{StaticResource AppBorderBrush}" />
-                                    <Border Width="14" Height="3" Background="{StaticResource AppBorderBrush}" />
-                                    <Border Width="6" Height="3" Background="{StaticResource AppSignalBrush}" />
+                                        CornerRadius="4"
+                                        Background="{StaticResource AppPrimaryBrush}"
+                                        IsVisible="False" />
+                                <StackPanel Name="StorageCopy" Spacing="4">
+                                    <TextBlock Name="StorageTitle"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource AppPrimaryBrush}"
+                                               Text="本地数据" />
+                                    <TextBlock Name="StorageDetail"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               Foreground="{StaticResource AppTextBrush}"
+                                               Text="退出时自动保存" />
                                 </StackPanel>
-                            </StackPanel>
-                        </Grid>
+                            </Grid>
+                        </Border>
                     </Grid>
                 </Border>
-
-                <Grid Grid.Row="1">
-                    <Path Width="280"
-                          Height="220"
-                          Margin="0,0,12,8"
-                          HorizontalAlignment="Right"
-                          VerticalAlignment="Bottom"
-                          IsHitTestVisible="False"
-                          Stroke="{StaticResource AppPrimaryBrush}"
-                          StrokeThickness="1"
-                          Opacity="0.08"
-                          Data="M 0,220 L 90,40 H 280 M 48,220 L 140,40 M 110,220 L 200,40 M 240,40 V 0" />
-                    <ContentControl Name="PageHost"
-                                    Margin="24"
-                                    HorizontalContentAlignment="Stretch"
-                                    VerticalContentAlignment="Stretch"
-                                    ClipToBounds="False" />
-                </Grid>
-            </Grid>
-            </Grid>
             </Grid>
         </controls:SnackbarHost>
 
-        <!--
-            对话框宿主位：浏览器端挂叠加层（没有窗口系统），桌面端为空
-            （桌面端用原生窗口，见 WindowPresenter）。由 MainView 构造函数填充。
-        -->
         <ContentControl Name="DialogHost"
                         HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Stretch" />

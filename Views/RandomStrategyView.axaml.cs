@@ -23,7 +23,7 @@ public partial class RandomStrategyView : UserControl
 
     private void UpdateStrategyState()
     {
-        StrategyCountText.Text = $"{AppState.Strategies.Count} 个";
+        StrategyCountText.Text = $"{AppState.Strategies.Count} 个方案";
         StrategyEmptyState.IsVisible = AppState.Strategies.Count == 0;
     }
 
@@ -37,7 +37,7 @@ public partial class RandomStrategyView : UserControl
 
     private async void EditStrategy_Click(object? sender, RoutedEventArgs e)
     {
-        if ((sender as Control)?.Tag is not RandomStrategyDefinition def)
+        if (ResolveStrategy(sender) is not { } def)
             return;
 
         await AppHost.ShowAsync<bool>(new StrategyEditorDialog(def));
@@ -46,13 +46,22 @@ public partial class RandomStrategyView : UserControl
 
     private async void DeleteStrategy_Click(object? sender, RoutedEventArgs e)
     {
-        if ((sender as Control)?.Tag is not RandomStrategyDefinition def)
+        if (ResolveStrategy(sender) is not { } def)
             return;
 
         if (!await AppHost.ConfirmAsync($"确定删除策略「{def.Name}」？"))
             return;
 
         AppState.Strategies.Remove(def);
+    }
+
+    private static RandomStrategyDefinition? ResolveStrategy(object? sender)
+    {
+        if (sender is not Control control)
+            return null;
+        if (control.Tag is RandomStrategyDefinition tagged)
+            return tagged;
+        return control.DataContext as RandomStrategyDefinition;
     }
 
     private void RefreshList()

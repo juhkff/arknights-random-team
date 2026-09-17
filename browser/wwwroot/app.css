@@ -5,10 +5,7 @@ html, body {
     overflow: hidden;
     color: #EDF4FA;
     font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif;
-    background:
-        radial-gradient(1200px 640px at 8% -12%, rgba(101, 230, 196, 0.12), transparent 52%),
-        radial-gradient(900px 520px at 100% 0%, rgba(243, 201, 105, 0.08), transparent 46%),
-        #0B1118;
+    background: #101418;
 }
 
 #out {
@@ -17,7 +14,6 @@ html, body {
     display: block;
 }
 
-/* Avalonia 把自己挂到 #out 下；这里让外壳视图填满视口 */
 #out > * {
     width: 100%;
     height: 100%;
@@ -25,15 +21,4 @@ html, body {
 
 canvas {
     outline: none;
-}
-
-/* WebAssembly 版是演示用途：窗口尺寸由浏览器决定，这里给出一个最小可读宽度 */
-@media (max-width: 900px) {
-    #out {
-        overflow: auto;
-    }
-    #out > * {
-        min-width: 900px;
-        min-height: 640px;
-    }
 }

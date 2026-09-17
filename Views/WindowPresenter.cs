@@ -102,10 +102,24 @@ internal sealed class ModalWindow : Window
     {
         Content = content;
 
-        // 内容默认的对齐方式是 Stretch，会被窗口高度撑开；
-        // 确认框/提示框依赖 SizeToContent.Height 按内容定高，必须居中而不是拉伸。
-        content.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
-        content.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        var contentWidth = content.Width;
+        var contentHeight = content.Height;
+        var fixedHeight = !double.IsNaN(contentHeight);
+
+        // 固定高度的对话框铺满窗口客户区，让内部 * 行和滚动区拿到剩余高度。
+        // 确认框/提示框只有宽度、高度按内容自适应，必须居中而不是拉伸。
+        if (fixedHeight)
+        {
+            content.Width = double.NaN;
+            content.Height = double.NaN;
+            content.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+            content.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+        }
+        else
+        {
+            content.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+            content.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+        }
 
         var shell = Shells.TryGetValue(content.GetType(), out var known) ? known : ShellSpec.Unknown;
         Title = shell.Title;
@@ -122,9 +136,15 @@ internal sealed class ModalWindow : Window
         // 尺寸就是内容在 XAML 里声明的那套，与改造前逐个对话框的设置一一对应：
         // 策略编辑器 960×740 可缩放；确认框/提示框只有宽度、高度按内容自适应；
         // 选择干员与同步干员为固定尺寸。
-        Width = content.Width;
-        Height = content.Height;
-        if (double.IsNaN(content.Height))
+        Width = !double.IsNaN(contentWidth)
+            ? contentWidth
+            : content.MaxWidth is > 0 and < double.PositiveInfinity
+                ? content.MaxWidth
+                : double.NaN;
+        Height = contentHeight;
+        if (double.IsNaN(contentWidth) && double.IsNaN(contentHeight))
+            SizeToContent = SizeToContent.WidthAndHeight;
+        else if (double.IsNaN(contentHeight))
             SizeToContent = SizeToContent.Height;
 
         content.CloseRequested += OnContentCloseRequested;

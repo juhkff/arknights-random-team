@@ -1,13 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using Avalonia;
-using Avalonia.Animation;
-using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
-using Avalonia.Threading;
 using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
@@ -33,6 +29,8 @@ public partial class GenerateView : UserControl
         RefreshStrategyCombo();
         UpdateTeamSizeControls();
         UpdateResultState();
+        AppLayout.Changed += ApplyGenerateLayout;
+        Loaded += (_, _) => ApplyGenerateLayout();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
@@ -101,62 +99,31 @@ public partial class GenerateView : UserControl
 
         ResultEmptyState.IsVisible = ResultList.Count == 0;
         ResultCountText.Text = $"{ResultList.Count} 名干员";
-
-        if (ResultList.Count > 0)
-            QueueRosterReveal();
     }
 
-    /// <summary>
-    /// 编队卡片逐张浮现：容器生成后再统一播放，避免和 ItemsControl 的布局打架。
-    /// </summary>
-    private void QueueRosterReveal()
+    private void ApplyGenerateLayout()
     {
-        Dispatcher.UIThread.Post(PlayRosterReveal, DispatcherPriority.Background);
-    }
-
-    private void PlayRosterReveal()
-    {
-        if (RosterItems == null)
+        if (ConfigGrid == null || StrategyConfig == null || CountConfig == null)
             return;
 
-        // 用定时器逐张揭示：比 Animation.RunAsync 更好预测，动画结束后不会残留中间值。
-        var cards = RosterItems.GetRealizedContainers().OfType<Control>().ToList();
-        foreach (var card in cards)
+        if (AppLayout.IsNarrow)
         {
-            card.Opacity = 0;
-            card.RenderTransform = new TranslateTransform(0, 14);
+            ConfigGrid.ColumnDefinitions = new ColumnDefinitions("*");
+            ConfigGrid.RowDefinitions = new RowDefinitions("Auto,16,Auto");
+            Grid.SetColumn(StrategyConfig, 0);
+            Grid.SetRow(StrategyConfig, 0);
+            Grid.SetColumn(CountConfig, 0);
+            Grid.SetRow(CountConfig, 2);
         }
-
-        var step = 0;
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(45) };
-        timer.Tick += (_, _) =>
+        else
         {
-            if (step >= cards.Count)
-            {
-                timer.Stop();
-                return;
-            }
-
-            Reveal(cards[step]);
-            step++;
-
-            if (step >= cards.Count)
-                timer.Stop();
-        };
-        timer.Start();
-    }
-
-    /// <summary>把一张卡片从「隐藏上浮」推到最终位置，随后清掉临时属性。</summary>
-    private static void Reveal(Control card)
-    {
-        card.Transitions = new Transitions
-        {
-            new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(240), Easing = new CubicEaseOut() },
-            new TransformOperationsTransition { Property = RenderTransformProperty, Duration = TimeSpan.FromMilliseconds(280), Easing = new CubicEaseOut() }
-        };
-
-        card.Opacity = 1;
-        card.RenderTransform = new TranslateTransform(0, 0);
+            ConfigGrid.ColumnDefinitions = new ColumnDefinitions("*,16,*");
+            ConfigGrid.RowDefinitions = new RowDefinitions("Auto");
+            Grid.SetColumn(StrategyConfig, 0);
+            Grid.SetRow(StrategyConfig, 0);
+            Grid.SetColumn(CountConfig, 2);
+            Grid.SetRow(CountConfig, 0);
+        }
     }
 
     private async void Generate_Click(object? sender, RoutedEventArgs e)

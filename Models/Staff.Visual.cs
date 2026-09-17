@@ -95,7 +95,7 @@ public partial class Staff
     /// <summary>稀有度符号，例如 6 星显示为 ★★★★★★。</summary>
     public string StarGlyphs => new string('★', Math.Clamp(Star, 0, 6));
 
-    /// <summary>精英阶段与等级的数字读数，例如 2-80。</summary>
+    /// <summary>精英阶段与等级的数字读数，例如 2-80。表格编辑仍走 <see cref="Level.Description"/>。</summary>
     public string LevelDigits => $"{Level.EliteLevel}-{Level.Rank:00}";
 
     /// <summary>精英阶段短标签，用于卡片角标。</summary>
@@ -106,8 +106,17 @@ public partial class Staff
         _ => "精零"
     };
 
+    /// <summary>信息区用的易读等级，避免「精二」和「2-90」同时出现。</summary>
+    public string LevelLine => $"{EliteLabel} · Lv.{Level.Rank}";
+
+    /// <summary>稀有度短标记，例如 6★。</summary>
+    public string RarityMark => $"{Math.Clamp(Star, 0, 6)}★";
+
     /// <summary>是否编入随机池的短状态。</summary>
-    public string RosterStatus => IsSelected ? "编入" : "待命";
+    public string RosterStatus => IsSelected ? "入池" : "待命";
+
+    /// <summary>卡片勾选旁的固定文案，入池状态不只靠颜色区分。</summary>
+    public string PoolCheckLabel => "入池";
 
     // ---- 卡片视图用的立绘 ----
 
@@ -117,17 +126,24 @@ public partial class Staff
     private IReadOnlyList<Uri>? _portraitUris;
     private bool _portraitUrisElite2;
 
-    /// <summary>精英二才换精二立绘；与卡片「头像 / 半身像」裁切无关。</summary>
+    /// <summary>精英二才换精二立绘；与卡片「头像 / 半身像」选用哪张图无关。</summary>
     private bool UseElite2Art => Level.EliteLevel >= 2;
 
     /// <summary>
-    /// 卡片是否按半身像区域显示。只改裁切，不换图：
-    /// 图源始终是 <see cref="PortraitUris"/>，精二与否看精英等级。
+    /// 卡片是否按半身像模式显示。为真时用全身立绘缩小后装入加高卡片；
+    /// 否则用 <see cref="AvatarUris"/> 方形头像。
     /// </summary>
     public bool UsePortrait
     {
         get => _usePortrait;
-        set => SetProperty(ref _usePortrait, value);
+        set
+        {
+            if (!SetProperty(ref _usePortrait, value))
+                return;
+
+            OnPropertyChanged(nameof(DisplayArtUris));
+            OnPropertyChanged(nameof(AlternateArtUris));
+        }
     }
 
     /// <summary>
@@ -149,8 +165,7 @@ public partial class Staff
     }
 
     /// <summary>
-    /// 半身立绘（180×360）。精二用 <c>_2</c>，否则 <c>_1</c>；取不到再回退。
-    /// 卡片头像模式裁切上半，半身像模式铺满，共用这一组地址。
+    /// 半身像模式图源：优先全身立绘，缺失时回退抽卡半身像。
     /// </summary>
     public IReadOnlyList<Uri> PortraitUris
     {
@@ -160,17 +175,17 @@ public partial class Staff
             if (_portraitUris is { } cached && _portraitUrisElite2 == elite2)
                 return cached;
 
-            _portraitUris = Domain.OperatorArt.Portrait(SourceId, elite2);
+            _portraitUris = Domain.OperatorArt.Illustration(SourceId, elite2);
             _portraitUrisElite2 = elite2;
             return _portraitUris;
         }
     }
 
-    /// <summary>卡片图源：始终用半身立绘，头像/半身像只改显示区域。</summary>
-    public IReadOnlyList<Uri> DisplayArtUris => PortraitUris;
+    /// <summary>卡片图源：半身像用立绘，头像用方形头像图。</summary>
+    public IReadOnlyList<Uri> DisplayArtUris => UsePortrait ? PortraitUris : AvatarUris;
 
-    /// <summary>头像小图，给表格等需要方图的地方预载。</summary>
-    public IReadOnlyList<Uri> AlternateArtUris => AvatarUris;
+    /// <summary>另一规格，切「头像 / 半身像」时预载，避免切换时整表重下。</summary>
+    public IReadOnlyList<Uri> AlternateArtUris => UsePortrait ? AvatarUris : PortraitUris;
 
     /// <summary>清掉已缓存的候选列表（SourceId 变更后地址会变）。</summary>
     private void InvalidateArtCache()

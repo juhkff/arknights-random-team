@@ -7,14 +7,12 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Material.Styles.Controls;
 using Material.Styles.Models;
-using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
 namespace arknights_random_team.Views;
 
 public partial class InputView : UserControl
 {
-    private readonly OperatorSyncService _operatorSyncService = new();
     private readonly List<ToggleButton> _starChoices = [];
     private int _star = 1;
     private bool _updatingLevelText;
@@ -27,46 +25,30 @@ public partial class InputView : UserControl
         SetStar(1);
         CareerCombo.SelectedIndex = -1;
         UpdateSyncStatus();
+        AppLayout.Changed += ApplyInputLayout;
+        Loaded += (_, _) => ApplyInputLayout();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
     private async void OpenSyncButton_Click(object? sender, RoutedEventArgs e)
     {
-        var dialog = new OperatorSyncDialog();
-        var accepted = await AppHost.ShowAsync<bool>(dialog);
-        if (!accepted || dialog.Selection is not { } selection)
-            return;
-
-        AppState.OperatorSyncSettings.SelectedStars = selection.SelectedStars.ToHashSet();
-        AppState.SaveOperatorSyncSettings();
-        await SyncOperatorsAsync(selection.SelectedStars);
-    }
-
-    private async Task SyncOperatorsAsync(IReadOnlySet<int> selectedStars)
-    {
         if (_syncInProgress)
             return;
 
         _syncInProgress = true;
         OpenSyncButton.IsEnabled = false;
-        SetSyncStatus("正在同步所选稀有度...");
 
         try
         {
-            var result = await _operatorSyncService.SyncAsync(
-                AppState.StaffList,
-                AppState.OperatorSyncSettings,
-                selectedStars);
-            AppState.SaveOperatorData();
+            var result = await OperatorSyncFlow.RunAsync(() => SetSyncStatus("正在同步所选稀有度..."));
+            if (!result.Ran)
+            {
+                UpdateSyncStatus();
+                return;
+            }
 
-            SetSyncStatus(
-                $"新增 {result.Added} 名，校正 {result.Updated} 名，跳过 {result.Unchanged} 名。",
-                isSuccess: true);
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException or TaskCanceledException)
-        {
-            SetSyncStatus($"同步失败：{ex.Message}", isError: true);
+            SetSyncStatus(result.Message, isSuccess: !result.IsError, isError: result.IsError);
         }
         finally
         {
@@ -118,19 +100,28 @@ public partial class InputView : UserControl
 
     private void Input_Click(object? sender, RoutedEventArgs e)
     {
+        NameError.IsVisible = false;
+        CareerError.IsVisible = false;
+
         var name = NameTextBox.Text?.Trim() ?? "";
         if (name.Length <= 0)
+        {
+            NameError.Text = "请输入干员名称";
+            NameError.IsVisible = true;
             return;
+        }
 
         if (CareerCombo.SelectedItem is not Career career)
         {
-            PostSnack("请选择职阶");
+            CareerError.Text = "请选择职阶";
+            CareerError.IsVisible = true;
             return;
         }
 
         if (AppState.GetNameSet().Contains(name))
         {
-            PostSnack("列表中已有该干员");
+            NameError.Text = "列表中已有该干员";
+            NameError.IsVisible = true;
             return;
         }
 
@@ -143,6 +134,31 @@ public partial class InputView : UserControl
             Level = new Level(ParseElite(EliteTextBox.Text), ParseRank(RankTextBox.Text))
         });
         PostSnack("添加成功");
+    }
+
+    private void ApplyInputLayout()
+    {
+        if (InputColumns == null || ManualPanel == null || SyncPanel == null)
+            return;
+
+        if (AppLayout.IsNarrow)
+        {
+            InputColumns.ColumnDefinitions = new ColumnDefinitions("*");
+            InputColumns.RowDefinitions = new RowDefinitions("Auto,16,Auto");
+            Grid.SetColumn(ManualPanel, 0);
+            Grid.SetRow(ManualPanel, 0);
+            Grid.SetColumn(SyncPanel, 0);
+            Grid.SetRow(SyncPanel, 2);
+        }
+        else
+        {
+            InputColumns.ColumnDefinitions = new ColumnDefinitions("3*,20,2*");
+            InputColumns.RowDefinitions = new RowDefinitions("*");
+            Grid.SetColumn(ManualPanel, 0);
+            Grid.SetRow(ManualPanel, 0);
+            Grid.SetColumn(SyncPanel, 2);
+            Grid.SetRow(SyncPanel, 0);
+        }
     }
 
     private static void PostSnack(string message)

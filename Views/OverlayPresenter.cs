@@ -20,7 +20,7 @@ namespace arknights_random_team.Views;
 public sealed class OverlayPresenter : IModalPresenter
 {
     /// <summary>卡片外壳的描边色。对话框内容本身不含描边——桌面端那条描边由窗口提供。</summary>
-    private static readonly IBrush CardBorderBrush = new SolidColorBrush(Color.Parse("#2B3E50"));
+    private static readonly IBrush CardBorderBrush = new SolidColorBrush(Color.Parse("#303A45"));
 
     private readonly List<Entry> _stack = [];
     private bool _repositionPending;
@@ -51,10 +51,22 @@ public sealed class OverlayPresenter : IModalPresenter
 
         // 对话框内容只描述自己（根是 Grid，背景与描边由窗口提供，桌面端即如此）。
         // 叠加层没有窗口，所以这里补一层卡片外壳：圆角、描边，并接住本该由窗口提供的背景。
-        // 同时把内容对齐方式设为居中：默认的 Stretch 会让内容被撑满可用高度，
-        // 确认框这类「高度自适应」的对话框就会变成整屏高。
-        dialog.HorizontalAlignment = HorizontalAlignment.Center;
-        dialog.VerticalAlignment = VerticalAlignment.Center;
+        var contentWidth = dialog.Width;
+        var contentHeight = dialog.Height;
+        var fixedHeight = !double.IsNaN(contentHeight);
+
+        if (fixedHeight)
+        {
+            dialog.Width = double.NaN;
+            dialog.Height = double.NaN;
+            dialog.HorizontalAlignment = HorizontalAlignment.Stretch;
+            dialog.VerticalAlignment = VerticalAlignment.Stretch;
+        }
+        else
+        {
+            dialog.HorizontalAlignment = HorizontalAlignment.Center;
+            dialog.VerticalAlignment = VerticalAlignment.Center;
+        }
 
         var card = new Border
         {
@@ -62,8 +74,10 @@ public sealed class OverlayPresenter : IModalPresenter
             Background = dialog.Background ?? Brushes.Transparent,
             BorderBrush = CardBorderBrush,
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(14),
-            ClipToBounds = true
+            CornerRadius = new CornerRadius(12),
+            ClipToBounds = true,
+            Width = contentWidth,
+            Height = contentHeight
         };
 
         return ShowCoreAsync<T>(dialog, card, cancellationToken);
@@ -216,8 +230,12 @@ public sealed class OverlayPresenter : IModalPresenter
 
         foreach (var entry in _stack)
         {
-            entry.Visual.MaxWidth = Math.Max(160, hostWidth - 32);
-            entry.Visual.MaxHeight = Math.Max(160, hostHeight - 32);
+            var maxW = Math.Max(160, hostWidth - 32);
+            var maxH = Math.Max(160, hostHeight - 32);
+            entry.Visual.MaxWidth = maxW;
+            entry.Visual.MaxHeight = maxH;
+            entry.Dialog.MaxWidth = maxW;
+            entry.Dialog.MaxHeight = maxH;
             entry.Visual.InvalidateMeasure();
         }
 

@@ -18,7 +18,12 @@ namespace arknights_random_team.Domain;
 /// </summary>
 public static class OperatorArt
 {
-    private const string Repo = "gh/yuanyan3060/ArknightsGameResource@master";
+    private const string GameRepo = "gh/yuanyan3060/ArknightsGameResource@master";
+
+    /// <summary>
+    /// 持续更新的全身 AVG 图源（Aceship 原仓库已停更，新干员 404）。
+    /// </summary>
+    private const string FullArtRepo = "gh/PuppiizSunniiz/Arknight-Images@main";
 
     /// <summary>职业图标所在的资源仓库（与立绘不是同一个仓库）。</summary>
     private const string IconRepo = "gh/Aceship/Arknight-Images@master";
@@ -34,23 +39,45 @@ public static class OperatorArt
     /// 头像小图（180×180），表格与编队名牌用。
     /// 精二优先 <c>_2</c>，没有专属头像时回退默认文件（无后缀）。
     /// </summary>
-    public static IReadOnlyList<Uri> Avatar(string? sourceId, bool elite2 = false) =>
-        elite2
-            ? [.. Build("avatar", sourceId, "_2"), .. Build("avatar", sourceId, "")]
-            : Build("avatar", sourceId, "");
+    public static IReadOnlyList<Uri> Avatar(string? sourceId, bool elite2 = false)
+    {
+        IReadOnlyList<Uri> game = elite2
+            ? [.. Build(GameRepo, "avatar", sourceId, "_2"), .. Build(GameRepo, "avatar", sourceId, "")]
+            : Build(GameRepo, "avatar", sourceId, "");
+        IReadOnlyList<Uri> mirror = elite2
+            ? [.. Build(FullArtRepo, "avatars", sourceId, "_2"), .. Build(FullArtRepo, "avatars", sourceId, "")]
+            : Build(FullArtRepo, "avatars", sourceId, "");
+
+        return [.. Primary(game), .. Primary(mirror), .. Rest(game), .. Rest(mirror)];
+    }
 
     /// <summary>
-    /// 半身立绘（180×360）。卡片「头像 / 半身像」共用这一张，只改裁切区域：
-    /// 头像露出上半截（与 180×180 头像同一范围），半身像铺满卡片。
-    ///
-    /// 立绘分精英阶段：<c>_1</c> 是默认立绘，<c>_2</c> 是精英二专属立绘。
-    /// 精二优先 <c>_2</c>，取不到回退 <c>_1</c>
-    /// （不是所有干员都有精二立绘，回退由展示层按顺序尝试完成）。
+    /// 抽卡半身像（约 180×360）。全身立绘缺失时作为「立绘」模式的回退。
     /// </summary>
     public static IReadOnlyList<Uri> Portrait(string? sourceId, bool elite2 = false) =>
         elite2
-            ? [.. Build("portrait", sourceId, "_2"), .. Build("portrait", sourceId, "_1")]
-            : Build("portrait", sourceId, "_1");
+            ? [.. Build(GameRepo, "portrait", sourceId, "_2"), .. Build(GameRepo, "portrait", sourceId, "_1")]
+            : Build(GameRepo, "portrait", sourceId, "_1");
+
+    /// <summary>
+    /// 全身立绘。卡片「立绘」模式优先用这一张。
+    /// 精二优先 <c>_2</c>，没有再回退 <c>_1</c>，再没有才用抽卡半身像。
+    /// 全身图只先试首选镜像，没有就改用半身像，避免连打多个 404。
+    /// </summary>
+    public static IReadOnlyList<Uri> Illustration(string? sourceId, bool elite2 = false)
+    {
+        IReadOnlyList<Uri> full = elite2
+            ? [.. Build(FullArtRepo, "characters", sourceId, "_2"),
+               .. Build(FullArtRepo, "characters", sourceId, "_1")]
+            : Build(FullArtRepo, "characters", sourceId, "_1");
+
+        return
+        [
+            .. Primary(full),
+            .. Portrait(sourceId, elite2),
+            .. Rest(full)
+        ];
+    }
 
     /// <summary>
     /// 官方职业图标的嵌入资源地址。
@@ -69,7 +96,6 @@ public static class OperatorArt
             return [];
         }
 
-        // 嵌入资源优先；远端地址只作为兜底（万一资源缺失也能显示）
         var embedded = new Uri(
             $"avares://arknights-random-team.Core/Assets/ClassIcons/class_{careerSlug}.png");
 
@@ -77,17 +103,47 @@ public static class OperatorArt
         return [embedded, .. Mirrors.Select(m => new Uri($"{m}/{path}"))];
     }
 
-    private static IReadOnlyList<Uri> Build(string folder, string? sourceId, string suffix)
+    private static IReadOnlyList<Uri> Build(string repo, string folder, string? sourceId, string suffix)
     {
         if (string.IsNullOrWhiteSpace(sourceId))
             return [];
 
-        // charId 来自外部数据，只允许字母数字下划线，避免拼出意外路径
         var id = sourceId.Trim();
         if (!id.All(ch => char.IsAsciiLetterOrDigit(ch) || ch == '_'))
             return [];
 
-        var path = $"{Repo}/{folder}/{id}{suffix}.png";
+        var path = $"{repo}/{folder}/{id}{suffix}.png";
         return Mirrors.Select(m => new Uri($"{m}/{path}")).ToArray();
+    }
+
+    private static IReadOnlyList<Uri> Primary(IReadOnlyList<Uri> uris)
+    {
+        if (uris.Count == 0)
+            return uris;
+
+        var taken = new List<Uri>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var uri in uris)
+        {
+            var file = uri.AbsolutePath;
+            var slash = file.LastIndexOf('/');
+            var name = slash >= 0 ? file[(slash + 1)..] : file;
+            if (!seen.Add(name))
+                continue;
+
+            taken.Add(uri);
+        }
+
+        return taken;
+    }
+
+    private static IReadOnlyList<Uri> Rest(IReadOnlyList<Uri> uris)
+    {
+        var primary = Primary(uris);
+        if (primary.Count == 0)
+            return [];
+
+        var skip = new HashSet<Uri>(primary);
+        return uris.Where(uri => !skip.Contains(uri)).ToArray();
     }
 }

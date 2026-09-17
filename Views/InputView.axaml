@@ -53,23 +53,10 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
-        <Grid ColumnDefinitions="3*,20,2*" Margin="0,0,0,4">
-            <Border Grid.Column="0" Classes="surface" Padding="0" ClipToBounds="True">
-                <Grid>
-                    <Path Width="160" Height="90" HorizontalAlignment="Right" VerticalAlignment="Top"
-                          IsHitTestVisible="False" Opacity="0.14"
-                          Stroke="{StaticResource AppSignalBrush}" StrokeThickness="1" Stretch="Fill"
-                          Data="M 0,0 L 54,0 160,90 M 36,0 L 160,70" />
-                    <Grid Margin="22" RowDefinitions="Auto,24,Auto,18,Auto,18,Auto,20,Auto,22,Auto">
-                    <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
-                        <Border Width="4"
-                                Background="{StaticResource AppSignalBrush}"
-                                CornerRadius="2" />
-                        <StackPanel Grid.Column="2" Spacing="5">
-                            <TextBlock Classes="eyebrow" Text="01 / MANUAL ENTRY" />
-                            <TextBlock Classes="section-title" Text="手动录入" />
-                        </StackPanel>
-                    </Grid>
+        <Grid Name="InputColumns" ColumnDefinitions="3*,20,2*" Margin="0,0,0,4">
+            <Border Name="ManualPanel" Grid.Column="0" Classes="surface" Padding="22" ClipToBounds="True">
+                <Grid RowDefinitions="Auto,24,Auto,8,Auto,18,Auto,8,Auto,18,Auto,*,Auto">
+                    <TextBlock Classes="section-title" Text="手动录入" />
 
                     <StackPanel Grid.Row="2" Spacing="8">
                         <TextBlock Classes="field-label" Text="干员名称" />
@@ -78,8 +65,13 @@
                                  HorizontalAlignment="Stretch"
                                  PlaceholderText="输入名称" />
                     </StackPanel>
+                    <TextBlock Name="NameError"
+                               Grid.Row="4"
+                               Classes="caption"
+                               Foreground="{StaticResource AppDangerBrush}"
+                               IsVisible="False" />
 
-                    <Grid Grid.Row="4" ColumnDefinitions="*,16,*">
+                    <Grid Grid.Row="6" ColumnDefinitions="*,16,*">
                         <StackPanel Grid.Column="0" Spacing="8">
                             <TextBlock Classes="field-label" Text="职业" />
                             <ComboBox Name="CareerCombo"
@@ -114,8 +106,13 @@
                             </StackPanel>
                         </Grid>
                     </Grid>
+                    <TextBlock Name="CareerError"
+                               Grid.Row="8"
+                               Classes="caption"
+                               Foreground="{StaticResource AppDangerBrush}"
+                               IsVisible="False" />
 
-                    <StackPanel Grid.Row="6" Spacing="8">
+                    <StackPanel Grid.Row="10" Spacing="8">
                         <TextBlock Classes="field-label" Text="稀有度" />
                         <UniformGrid Columns="6" Rows="1">
                             <ToggleButton Name="Star1Button" Classes="star-choice" Tag="1" Content="1★" Click="StarChoice_Click" />
@@ -127,44 +124,29 @@
                         </UniformGrid>
                     </StackPanel>
 
-                    <Border Grid.Row="8"
-                            Height="1"
-                            Background="{StaticResource AppBorderBrush}" />
-
-                    <Button Grid.Row="10"
+                    <Button Grid.Row="12"
                             MinWidth="144"
+                            Margin="0,16,0,0"
                             HorizontalAlignment="Stretch"
                             Classes="primary"
                             Content="添加到列表"
                             Click="Input_Click" />
-                    </Grid>
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Classes="surface" Padding="0" ClipToBounds="True">
-                <Grid>
-                    <Path Width="130" Height="80" HorizontalAlignment="Right" VerticalAlignment="Top"
-                          IsHitTestVisible="False" Opacity="0.14"
-                          Stroke="{StaticResource AppPrimaryBrush}" StrokeThickness="1" Stretch="Fill"
-                          Data="M 0,0 L 40,0 130,80 M 24,0 L 130,56" />
-                    <Grid Margin="22" RowDefinitions="Auto,24,Auto,20,Auto,*,Auto">
-                    <Grid Grid.Row="0" ColumnDefinitions="4,12,*">
-                        <Border Width="4"
-                                Background="{StaticResource AppAccentBrush}"
-                                CornerRadius="2" />
-                        <StackPanel Grid.Column="2" Spacing="5">
-                            <TextBlock Classes="eyebrow" Text="02 / DATABASE SYNC" />
-                            <TextBlock Classes="section-title" Text="数据库同步" />
-                            <TextBlock Classes="caption"
-                                       Text="ArknightsGameData · 国服"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                    </Grid>
+            <Border Name="SyncPanel" Grid.Column="2" Classes="surface" Padding="22" ClipToBounds="True">
+                <Grid RowDefinitions="Auto,24,Auto,20,Auto,*,Auto">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="section-title" Text="数据库同步" />
+                        <TextBlock Classes="caption"
+                                   Text="ArknightsGameData · 国服"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
 
                     <StackPanel Grid.Row="2" Spacing="8">
                         <TextBlock Classes="field-label" Text="同步范围" />
                         <TextBlock Classes="muted"
-                                   Text="按稀有度选择正式干员"
+                                   Text="按稀有度选择正式干员。新同步的干员默认不加入随机池。"
                                    TextWrapping="Wrap" />
                     </StackPanel>
 
@@ -186,7 +168,6 @@
                             Classes="secondary"
                             Content="选择并同步"
                             Click="OpenSyncButton_Click" />
-                    </Grid>
                 </Grid>
             </Border>
         </Grid>

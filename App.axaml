@@ -10,13 +10,13 @@
         <FontFamily x:Key="AppFont">Microsoft YaHei, PingFang SC, Noto Sans CJK SC, Source Han Sans SC, Inter, sans-serif</FontFamily>
         <FontFamily x:Key="AppMonoFont">Cascadia Code, Consolas, Menlo, monospace</FontFamily>
 
-        <!-- One palette for the workspace, popups and every editor. -->
-        <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0B1118" />
-        <SolidColorBrush x:Key="AppSurfaceBrush" Color="#141E2A" />
-        <SolidColorBrush x:Key="AppSurfaceSubtleBrush" Color="#192636" />
-        <SolidColorBrush x:Key="AppBorderBrush" Color="#2B3E50" />
+        <!-- 罗德岛作战终端：中性灰层次 + 薄荷主色，普通面板最多一层细描边。 -->
+        <SolidColorBrush x:Key="AppBackgroundBrush" Color="#101418" />
+        <SolidColorBrush x:Key="AppSurfaceBrush" Color="#181E24" />
+        <SolidColorBrush x:Key="AppSurfaceSubtleBrush" Color="#1C242C" />
+        <SolidColorBrush x:Key="AppBorderBrush" Color="#303A45" />
         <SolidColorBrush x:Key="AppTextBrush" Color="#EDF4FA" />
-        <SolidColorBrush x:Key="AppMutedTextBrush" Color="#94A7B9" />
+        <SolidColorBrush x:Key="AppMutedTextBrush" Color="#A5B2BF" />
         <SolidColorBrush x:Key="AppPrimaryBrush" Color="#65E6C4" />
         <SolidColorBrush x:Key="AppPrimaryHoverBrush" Color="#91F2D8" />
         <SolidColorBrush x:Key="AppPrimaryPressedBrush" Color="#3BBF9F" />
@@ -34,31 +34,30 @@
         <SolidColorBrush x:Key="AppDangerPressedBrush" Color="#6B3040" />
         <SolidColorBrush x:Key="AppDangerBorderBrush" Color="#7F4352" />
         <SolidColorBrush x:Key="AppSignalBrush" Color="#F3C969" />
-        <SolidColorBrush x:Key="AppInputBrush" Color="#0F1822" />
-        <SolidColorBrush x:Key="AppInputHoverBrush" Color="#1C2C3C" />
-        <SolidColorBrush x:Key="AppTableHeaderBrush" Color="#1A2A38" />
-        <SolidColorBrush x:Key="AppTableAlternateBrush" Color="#172330" />
-        <SolidColorBrush x:Key="AppTableHoverBrush" Color="#223B46" />
-        <SolidColorBrush x:Key="AppSidebarBrush" Color="#0B121B" />
-        <SolidColorBrush x:Key="AppSidebarItemBrush" Color="#101C28" />
-        <SolidColorBrush x:Key="AppSidebarHoverBrush" Color="#1B2D3C" />
-        <SolidColorBrush x:Key="AppSidebarPressedBrush" Color="#263F4C" />
+        <SolidColorBrush x:Key="AppInputBrush" Color="#141A20" />
+        <SolidColorBrush x:Key="AppInputHoverBrush" Color="#202831" />
+        <SolidColorBrush x:Key="AppTableHeaderBrush" Color="#1A2128" />
+        <SolidColorBrush x:Key="AppTableAlternateBrush" Color="#161C22" />
+        <SolidColorBrush x:Key="AppTableHoverBrush" Color="#202831" />
+        <SolidColorBrush x:Key="AppSidebarBrush" Color="#0E1318" />
+        <SolidColorBrush x:Key="AppSidebarItemBrush" Color="#141A20" />
+        <SolidColorBrush x:Key="AppSidebarHoverBrush" Color="#1B242D" />
+        <SolidColorBrush x:Key="AppSidebarPressedBrush" Color="#24303A" />
         <SolidColorBrush x:Key="AppSidebarActiveBrush" Color="#183A38" />
         <SolidColorBrush x:Key="AppSidebarActiveHoverBrush" Color="#234C47" />
         <SolidColorBrush x:Key="AppSidebarActivePressedBrush" Color="#2C5B53" />
         <SolidColorBrush x:Key="AppSidebarTextBrush" Color="#C0CEDB" />
-        <SolidColorBrush x:Key="AppSidebarMutedBrush" Color="#91A5B8" />
+        <SolidColorBrush x:Key="AppSidebarMutedBrush" Color="#A5B2BF" />
 
-        <!-- Second pass tokens: recessed wells, panel highlights and the roster card. -->
-        <SolidColorBrush x:Key="AppWellBrush" Color="#0C141D" />
-        <SolidColorBrush x:Key="AppPanelTopBrush" Color="#1A2938" />
-        <SolidColorBrush x:Key="AppCardBrush" Color="#121E29" />
-        <SolidColorBrush x:Key="AppCardHoverBrush" Color="#1A2C3A" />
-        <SolidColorBrush x:Key="AppGridLineBrush" Color="#1B2A38" />
+        <SolidColorBrush x:Key="AppWellBrush" Color="#141A20" />
+        <SolidColorBrush x:Key="AppPanelTopBrush" Color="#1C242C" />
+        <SolidColorBrush x:Key="AppCardBrush" Color="#181E24" />
+        <SolidColorBrush x:Key="AppCardHoverBrush" Color="#202831" />
+        <SolidColorBrush x:Key="AppGridLineBrush" Color="#24303A" />
         <SolidColorBrush x:Key="AppSignalSoftBrush" Color="#3A2F17" />
         <SolidColorBrush x:Key="AppPrimaryGlowBrush" Color="#2E7E6C" />
-        <SolidColorBrush x:Key="AppVeilBrush" Color="#A00B1118" />
-        <SolidColorBrush x:Key="AppHudLineBrush" Color="#1E3344" />
+        <SolidColorBrush x:Key="AppVeilBrush" Color="#A0101418" />
+        <SolidColorBrush x:Key="AppHudLineBrush" Color="#24303A" />
         <SolidColorBrush x:Key="AppRarity6Brush" Color="#FFB45A" />
         <SolidColorBrush x:Key="AppRarity5Brush" Color="#F3C969" />
         <SolidColorBrush x:Key="AppRarity4Brush" Color="#C48AE8" />
@@ -124,7 +123,6 @@
             </Style>
         </ControlTheme>
 
-        <!-- Roster card: class rail, monogram badge, name, rarity pips and level readout. -->
         <ControlTheme x:Key="AppRosterCardTheme" TargetType="ContentControl">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Template">
@@ -133,7 +131,7 @@
                             Background="{StaticResource AppCardBrush}"
                             BorderBrush="{StaticResource AppBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="10"
+                            CornerRadius="8"
                             ClipToBounds="True">
                         <Border.Transitions>
                             <Transitions>
@@ -141,23 +139,15 @@
                                 <BrushTransition Property="BorderBrush" Duration="0:0:0.16" />
                             </Transitions>
                         </Border.Transitions>
-                        <Grid ColumnDefinitions="3,*">
-                            <!-- class rail -->
-                            <Border Name="PART_ClassRail"
-                                    Grid.Column="0"
-                                    Background="{TemplateBinding Foreground}"
-                                    Opacity="0.85" />
-                            <ContentPresenter Grid.Column="1"
-                                              Content="{TemplateBinding Content}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              Margin="15,13,15,13" />
-                        </Grid>
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Margin="12" />
                     </Border>
                 </ControlTemplate>
             </Setter>
             <Style Selector="^:pointerover /template/ Border#PART_CardSurface">
                 <Setter Property="Background" Value="{StaticResource AppCardHoverBrush}" />
-                <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryGlowBrush}" />
+                <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
             </Style>
         </ControlTheme>
 
@@ -170,7 +160,7 @@
                             <ContentPresenter Content="{TemplateBinding Content}"
                                               ContentTemplate="{TemplateBinding ContentTemplate}"
                                               Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="Center" />
                             <Path Name="SortIcon"
                                   Width="8" Height="8" Margin="0,0,8,0"
@@ -223,8 +213,7 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BoxShadow" Value="0 8 24 0 #28000000" />
+            <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="Border.surface-subtle">
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
@@ -254,6 +243,11 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="LetterSpacing" Value="1.5" />
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="TextBlock.page-title">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="TextBlock.section-title">
             <Setter Property="FontSize" Value="18" />
@@ -294,8 +288,7 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BoxShadow" Value="0 10 26 0 #30000000" />
+            <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="Border.well">
             <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
@@ -346,12 +339,18 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Border.command-bar">
-            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Padding" Value="16,12" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BoxShadow" Value="0 8 24 0 #28000000" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Border.filter-chip">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="8,4" />
         </Style>
         <Style Selector="Border.tactical-strip">
             <Setter Property="Height" Value="3" />
@@ -372,7 +371,7 @@
         <!-- Stable hit areas; only the artwork shifts by one pixel on press. -->
         <Style Selector="Button">
             <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
-            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="MinHeight" Value="40" />
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
@@ -400,22 +399,13 @@
             <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
-        <Style Selector="Button.primary /template/ Border#PART_RootBorder">
-            <Setter Property="BoxShadow" Value="0 4 18 0 #2265E6C4" />
-        </Style>
         <Style Selector="Button.primary:pointerover">
             <Setter Property="Background" Value="{StaticResource AppPrimaryHoverBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryHoverBrush}" />
         </Style>
-        <Style Selector="Button.primary:pointerover /template/ Border#PART_RootBorder">
-            <Setter Property="BoxShadow" Value="0 4 24 0 #4465E6C4" />
-        </Style>
         <Style Selector="Button.primary:pressed">
             <Setter Property="Background" Value="{StaticResource AppPrimaryPressedBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryPressedBrush}" />
-        </Style>
-        <Style Selector="Button.primary:pressed /template/ Border#PART_RootBorder">
-            <Setter Property="BoxShadow" Value="0 1 5 0 #2265E6C4" />
         </Style>
         <Style Selector="Button.secondary">
             <Setter Property="Background" Value="{StaticResource AppSecondaryBrush}" />
@@ -461,7 +451,15 @@
             <Setter Property="MinHeight" Value="32" />
             <Setter Property="Height" Value="32" />
             <Setter Property="Padding" Value="10,0" />
-            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="Button.icon">
+            <Setter Property="MinWidth" Value="40" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
         </Style>
 
         <Style Selector="CheckBox">
@@ -614,8 +612,8 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
-            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="VerticalGridLinesBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource AppGridLineBrush}" />
+            <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="CanUserResizeColumns" Value="False" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
@@ -638,7 +636,7 @@
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="DataGridRow">
-            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="MinHeight" Value="56" />
         </Style>
         <Style Selector="DataGridRow:nth-child(even)">
             <Setter Property="Background" Value="{StaticResource AppTableAlternateBrush}" />

@@ -1,12 +1,15 @@
-using System.Collections.Specialized;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Material.Styles.Controls;
+using Material.Styles.Models;
 using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
@@ -15,59 +18,147 @@ namespace arknights_random_team.Views;
 public partial class StaffListView : UserControl
 {
     private bool _suppressRowSelection;
+    private DispatcherTimer? _searchDebounce;
 
     public StaffListView()
     {
         DataContext = new ListModel();
         InitializeComponent();
-        UpdateClearButton();
-        AppState.StaffList.CollectionChanged += StaffList_CollectionChanged;
         AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel);
-        Loaded += (_, _) => ClearGridSelection();
+        Loaded += (_, _) =>
+        {
+            ClearGridSelection();
+            UpdateCardPanel();
+            ApplyListLayout();
+            SyncViewButtons();
+        };
+        AppLayout.Changed += ApplyListLayout;
+        if (DataContext is ListModel model)
+            model.PropertyChanged += OnModelPropertyChanged;
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
-    private void GridView_Click(object? sender, RoutedEventArgs e)
+    private ListModel? Model => DataContext as ListModel;
+
+    private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (DataContext is ListModel model)
-            model.IsCardView = false;
+        if (e.PropertyName is nameof(ListModel.UsePortrait) or nameof(ListModel.IsCardView))
+            UpdateCardPanel();
+        if (e.PropertyName is nameof(ListModel.ShowBatchBar) or nameof(ListModel.HasActiveFilters))
+            ApplyListLayout();
     }
 
-    private void CardView_Click(object? sender, RoutedEventArgs e)
+    private void GridView_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not ListModel model)
+        if (Model is { } model)
+            model.IsCardView = false;
+        Dispatcher.UIThread.Post(SyncViewButtons);
+    }
+
+    private void AvatarMode_Click(object? sender, RoutedEventArgs e) => ShowCardView(portrait: false);
+
+    private void PortraitMode_Click(object? sender, RoutedEventArgs e) => ShowCardView(portrait: true);
+
+    private void ShowCardView(bool portrait)
+    {
+        if (Model is not { } model)
             return;
 
+        var enteringCards = !model.IsCardView;
+        model.UsePortrait = portrait;
         model.IsCardView = true;
+        UpdateCardPanel();
+        Dispatcher.UIThread.Post(SyncViewButtons);
 
-        // 卡片第一次显示时才需要立绘，切过去顺手把每张卡的图源刷一遍，
-        // 让滚动到可视区的那些卡片按需发起下载。
+        if (!enteringCards)
+            return;
+
         foreach (var staff in model.StaffList)
             staff.RaiseArtChanged();
     }
 
-    private void AvatarMode_Click(object? sender, RoutedEventArgs e)
+    private void SyncViewButtons()
     {
-        if (DataContext is ListModel model)
-            model.UsePortrait = false;
+        if (Model is not { } model)
+            return;
+
+        GridViewButton.IsChecked = model.IsGridView;
+        AvatarModeButton.IsChecked = model.IsAvatarView;
+        PortraitModeButton.IsChecked = model.IsPortraitView;
     }
 
-    private void PortraitMode_Click(object? sender, RoutedEventArgs e)
+    private void UpdateCardPanel()
     {
-        if (DataContext is ListModel model)
-            model.UsePortrait = true;
+        if (StaffCards.ItemsPanelRoot is AdaptiveWrapPanel panel && Model is { } model)
+            panel.PortraitMode = model.UsePortrait;
     }
 
-    private void StaffList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
-        UpdateClearButton();
-
-    private void UpdateClearButton()
+    private void ApplyListLayout()
     {
-        var hasStaff = AppState.StaffList.Count > 0;
-        ClearAllButton.IsEnabled = hasStaff;
-        StaffEmptyState.IsVisible = !hasStaff;
+        if (BatchFooter == null || BatchRow == null || BatchBar == null || BatchMenuButton == null || Model is not { } model)
+            return;
+
+        var narrow = AppLayout.IsNarrow;
+        BatchFooter.IsVisible = model.ShowBatchBar;
+        BatchRow.IsVisible = model.ShowBatchBar;
+        BatchBar.IsVisible = model.ShowBatchBar && !narrow;
+        BatchMenuButton.IsVisible = model.ShowBatchBar && narrow;
+        SyncViewButtons();
     }
+
+    private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        _searchDebounce ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+        _searchDebounce.Tick -= SearchDebounce_Tick;
+        _searchDebounce.Tick += SearchDebounce_Tick;
+        _searchDebounce.Stop();
+        _searchDebounce.Start();
+    }
+
+    private void SearchDebounce_Tick(object? sender, EventArgs e)
+    {
+        _searchDebounce?.Stop();
+        if (Model is { } model)
+            model.SearchText = SearchBox.Text ?? "";
+    }
+
+    private void PoolAll_Click(object? sender, RoutedEventArgs e) => Model?.SetPoolFilter(PoolFilterKind.All);
+
+    private void PoolIn_Click(object? sender, RoutedEventArgs e) => Model?.SetPoolFilter(PoolFilterKind.InPool);
+
+    private void PoolOut_Click(object? sender, RoutedEventArgs e) => Model?.SetPoolFilter(PoolFilterKind.OutPool);
+
+    private void ClearFilters_Click(object? sender, RoutedEventArgs e)
+    {
+        if (Model is not { } model)
+            return;
+        model.ClearFilters();
+        SearchBox.Text = "";
+    }
+
+    private void RemoveChip_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control { Tag: FilterChip chip })
+            chip.Remove();
+        if (Model is { } model)
+            SearchBox.Text = model.SearchText;
+    }
+
+    private void AddManual_Click(object? sender, RoutedEventArgs e) => AppNavigation.Go(AppPage.Input);
+
+    private async void AddSync_Click(object? sender, RoutedEventArgs e)
+    {
+        var result = await OperatorSyncFlow.RunAsync();
+        if (!result.Ran)
+            return;
+        Model?.RefreshVisible();
+        PostSnack(result.Message);
+    }
+
+    private void BatchAdd_Click(object? sender, RoutedEventArgs e) => Model?.ApplyBatchPool(true);
+
+    private void BatchRemove_Click(object? sender, RoutedEventArgs e) => Model?.ApplyBatchPool(false);
 
     private async void ClearAll_Click(object? sender, RoutedEventArgs e)
     {
@@ -75,7 +166,7 @@ public partial class StaffListView : UserControl
         if (count == 0)
             return;
 
-        if (!await AppHost.ConfirmAsync($"确定清空全部 {count} 名干员？此操作无法撤销。"))
+        if (!await AppHost.ConfirmAsync($"确定清空全部 {count} 名干员？此操作无法撤销，且不受当前筛选限制。"))
             return;
 
         AppState.StaffList.Clear();
@@ -83,20 +174,35 @@ public partial class StaffListView : UserControl
         ClearGridSelection();
     }
 
+    private async void ArtStats_Click(object? sender, RoutedEventArgs e)
+    {
+        if (Model is { } model)
+            await AppHost.AlertAsync(model.ArtLoadInfo, "图片加载统计");
+    }
+
+    private void OperatorCard_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { DataContext: Staff staff })
+            return;
+        if (e.Source is Visual visual)
+        {
+            if (visual is CheckBox || visual.FindAncestorOfType<CheckBox>() is not null)
+                return;
+            if (visual.FindAncestorOfType<Button>(true) is { } inner && inner != sender)
+                return;
+            if (visual.FindAncestorOfType<MenuItem>() is not null)
+                return;
+        }
+
+        staff.IsSelected = !staff.IsSelected;
+    }
+
+    private void CardPoolCheck_Click(object? sender, RoutedEventArgs e) => e.Handled = true;
+
     private void OnPreviewPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (e.Source is not Visual visual)
             return;
-
-        // 整张干员卡可点击切换「是否参与随机」。
-        // 卡片里套了职业徽记、名牌等 Border，不能只取最近的祖先。
-        // 删除按钮要单独处理，点到按钮上时直接放行。
-        if (visual.FindAncestorOfType<Button>(true) is null &&
-            TryFindOperatorCard(visual) is { } cardStaff)
-        {
-            cardStaff.IsSelected = !cardStaff.IsSelected;
-            return;
-        }
 
         if (visual.FindAncestorOfType<DataGridColumnHeader>(true) is not null)
         {
@@ -108,31 +214,16 @@ public partial class StaffListView : UserControl
             _suppressRowSelection = false;
     }
 
-    private static Staff? TryFindOperatorCard(Visual visual)
-    {
-        for (Visual? current = visual; current is not null; current = current.GetVisualParent())
-        {
-            if (current is Border border &&
-                (border.Classes.Contains("operator-card-host") || border.Classes.Contains("operator-card")) &&
-                border.DataContext is Staff staff)
-                return staff;
-        }
-
-        return null;
-    }
-
     private void SelectAll_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is ListModel model)
-            model.ToggleSelectAll();
+        Model?.ToggleSelectAll();
     }
 
     private void SelectAllHeader_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (e.Source is CheckBox)
             return;
-        if (DataContext is ListModel model)
-            model.ToggleSelectAll();
+        Model?.ToggleSelectAll();
     }
 
     private void SelectCell_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -145,6 +236,7 @@ public partial class StaffListView : UserControl
 
     private void StaffGrid_PreparingCellForEdit(object? sender, DataGridPreparingCellForEditEventArgs e)
     {
+        Model?.BeginEdit();
         if (e.EditingElement is not Control editor)
             return;
 
@@ -160,12 +252,15 @@ public partial class StaffListView : UserControl
     private void StaffGrid_CellEditEnded(object? sender, DataGridCellEditEndedEventArgs e)
     {
         ClearRowHighlight(e.Row);
+        Model?.EndEdit();
     }
 
     private void StaffGrid_Sorting(object? sender, DataGridColumnEventArgs e)
     {
         _suppressRowSelection = true;
-        DataGridMultiSort.Apply(StaffGrid, e);
+        if (Model is { } model)
+            model.CycleSort(e.Column.SortMemberPath);
+        e.Handled = true;
 
         void ClearIfSuppressed()
         {
@@ -204,12 +299,35 @@ public partial class StaffListView : UserControl
 
     private async void Delete_Click(object? sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: Staff staff })
+        if (ResolveStaff(sender) is not { } staff)
             return;
 
         if (!await AppHost.ConfirmAsync($"确定删除「{staff.Name}」？"))
             return;
 
         AppState.StaffList.Remove(staff);
+    }
+
+    private static Staff? ResolveStaff(object? sender)
+    {
+        if (sender is not Control control)
+            return null;
+        if (control.Tag is Staff tagged)
+            return tagged;
+        return control.DataContext as Staff;
+    }
+
+    private static void PostSnack(string message)
+    {
+        var text = new TextBlock
+        {
+            Text = message,
+            FontSize = 16,
+            FontWeight = FontWeight.Bold,
+            Foreground = Brushes.White,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        SnackbarHost.Post(new SnackbarModel(text, TimeSpan.FromSeconds(2.5)), "MainSnackbar", DispatcherPriority.Normal);
     }
 }

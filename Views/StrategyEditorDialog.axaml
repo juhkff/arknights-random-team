@@ -8,7 +8,7 @@
              x:Class="arknights_random_team.Views.StrategyEditorDialog"
              Width="960"
              Height="740"
-             MinWidth="600"
+             MinWidth="280"
              MinHeight="440"
              FontFamily="{StaticResource AppFont}"
              FontSize="14"
@@ -59,7 +59,6 @@
         <Style Selector="ListBox#RulesList ListBoxItem:selected Border.rule-row">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="BorderThickness" Value="2" />
         </Style>
         <Style Selector="ListBox#RulesList ListBoxItem:selected TextBlock.rule-text">
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
@@ -88,7 +87,6 @@
         <Style Selector="Border.form-section.editing">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="BorderThickness" Value="2" />
         </Style>
         <Style Selector="Border.staff-chip">
             <Setter Property="MinHeight" Value="40" />
@@ -105,14 +103,13 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="92,*,80">
+    <Grid RowDefinitions="72,*,80" ClipToBounds="True">
         <Border Grid.Row="0"
                 Padding="24,0"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
                 BorderThickness="0,0,0,1">
             <StackPanel VerticalAlignment="Center" Spacing="4">
-                <TextBlock Classes="eyebrow" Text="STRATEGY / RULE BUILDER" />
                 <TextBlock FontSize="22" FontWeight="Bold" Text="随机策略编辑器" />
                 <TextBlock Classes="caption" Text="配置阵容生成时需要满足的规则" />
             </StackPanel>

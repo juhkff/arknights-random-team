@@ -1,5 +1,8 @@
+using Avalonia;
 using Avalonia.Data.Converters;
+using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 
 namespace arknights_random_team.Views;
 
@@ -9,24 +12,32 @@ namespace arknights_random_team.Views;
 /// </summary>
 public static class StaffCardVisual
 {
-    /// <summary>
-    /// 立绘透明度：未被选中参与随机的干员压暗一些，
-    /// 让「已启用」的卡片在整片网格里自然凸显，不必依赖勾选框。
-    /// </summary>
-    public static readonly IValueConverter ArtOpacity =
-        new FuncValueConverter<bool, double>(selected => selected ? 1.0 : 0.82);
+    public const double MinCardWidth = 156;
+    public const double MaxCardWidth = 196;
+    public const double CardSpacing = 12;
+    public const double NameplateHeight = 68;
 
-    /// <summary>启用状态文字。</summary>
-    public static readonly IValueConverter StatusText =
-        new FuncValueConverter<bool, string>(selected => selected ? "编入" : "待命");
+    public static readonly IValueConverter ArtStretch =
+        new FuncValueConverter<bool, Stretch>(portrait =>
+            portrait ? Stretch.Uniform : Stretch.UniformToFill);
 
-    /// <summary>
-    /// 立绘是 180×360：半身像原尺寸铺满；头像放大 1.5 倍，只露出上半截
-    /// （与 180×180 头像同一显示区域）。
-    /// </summary>
-    public static readonly IValueConverter ArtViewportTransform =
-        new FuncValueConverter<bool, Transform>(portrait =>
-            portrait
-                ? new ScaleTransform(1, 1)
-                : new ScaleTransform(1.5, 1.5));
+    public static readonly IValueConverter ArtAlignment =
+        new FuncValueConverter<bool, VerticalAlignment>(portrait =>
+            portrait ? VerticalAlignment.Center : VerticalAlignment.Top);
+
+    public static readonly IValueConverter PoolBorder =
+        new FuncValueConverter<bool, IBrush>(selected =>
+            Brush(selected ? "AppPrimaryBrush" : "AppBorderBrush"));
+
+    public static readonly IValueConverter IsArtPlaceholder =
+        new FuncValueConverter<ArtLoadState, bool>(state => state != ArtLoadState.Loaded);
+
+    private static IBrush Brush(string key)
+    {
+        if (Application.Current?.TryGetResource(key, Application.Current.ActualThemeVariant, out var value) == true &&
+            value is IBrush brush)
+            return brush;
+
+        return Brushes.Gray;
+    }
 }

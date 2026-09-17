@@ -1,5 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 
 namespace arknights_random_team.Views;
@@ -14,15 +17,31 @@ public partial class MainView : UserControl
     private readonly InputView _input = new();
     private readonly StaffListView _list = new();
     private readonly RandomStrategyView _randomStrategy = new();
+    private bool _drawerOpen;
 
     public MainView()
     {
         InitializeComponent();
 
-        // 浏览器端把叠加层挂进「对话框宿主位」；桌面端 Presenter 是 WindowPresenter，
-        // Overlay 为 null，这里什么也不加——桌面端的对话框是独立原生窗口。
         if (AppHost.Presenter?.Overlay is { } overlay)
             DialogHost.Content = overlay;
+
+        if (AppState.UseFileStorage)
+        {
+            StorageTitle.Text = "本地数据";
+            StorageDetail.Text = "退出时自动保存";
+            ToolTip.SetTip(StoragePanel, "干员与策略会写入本地文件，退出时自动保存。");
+        }
+        else
+        {
+            StorageTitle.Text = "体验模式";
+            StorageDetail.Text = "刷新后数据重置";
+            ToolTip.SetTip(StoragePanel, "网页端仅保存在内存中，刷新或关闭页面后数据会重置。");
+        }
+
+        AppNavigation.Requested += OnNavigationRequested;
+        PropertyChanged += OnViewPropertyChanged;
+        Loaded += (_, _) => ApplyShellLayout();
 
         SwitchPage(
             _generate,
@@ -45,6 +64,25 @@ public partial class MainView : UserControl
     private void ChangeToRandomStrategy(object? sender, RoutedEventArgs e) =>
         SwitchPage(_randomStrategy, "随机策略", "组合稀有度、职业与指定干员规则", StrategyNavButton);
 
+    private void OnNavigationRequested(AppPage page)
+    {
+        switch (page)
+        {
+            case AppPage.Generate:
+                ChangeToGenerate(null, new RoutedEventArgs());
+                break;
+            case AppPage.Input:
+                ChangeToInput(null, new RoutedEventArgs());
+                break;
+            case AppPage.List:
+                ChangeToList(null, new RoutedEventArgs());
+                break;
+            case AppPage.Strategy:
+                ChangeToRandomStrategy(null, new RoutedEventArgs());
+                break;
+        }
+    }
+
     private void SwitchPage(Control page, string title, string subtitle, Button activeButton)
     {
         PageHost.Content = page;
@@ -53,5 +91,127 @@ public partial class MainView : UserControl
 
         foreach (var button in new[] { GenerateNavButton, InputNavButton, ListNavButton, StrategyNavButton })
             button.Classes.Set("active", button == activeButton);
+
+        CloseDrawer();
+    }
+
+    private void MenuButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_drawerOpen)
+            CloseDrawer();
+        else
+            OpenDrawer();
+    }
+
+    private void NavScrim_PointerPressed(object? sender, PointerPressedEventArgs e) => CloseDrawer();
+
+    private void OnViewPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (e.Property == BoundsProperty)
+            ApplyShellLayout();
+    }
+
+    private void ApplyShellLayout()
+    {
+        AppLayout.Update(Bounds.Width);
+        var drawer = AppLayout.UseDrawerNav;
+        var compact = AppLayout.UseIconNav;
+        var pad = AppLayout.PagePadding;
+
+        Classes.Set("nav-compact", compact);
+        Classes.Set("layout-phone", AppLayout.IsPhone);
+        WindowSubtitle.IsVisible = !AppLayout.IsPhone;
+        WindowTitle.FontSize = AppLayout.IsPhone ? 20 : 24;
+
+        BrandCopy.IsVisible = !compact;
+        BrandMark.HorizontalAlignment = compact ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+        StorageCopy.IsVisible = !compact;
+        StorageDot.IsVisible = compact;
+        if (compact)
+        {
+            StoragePanel.Width = 40;
+            StoragePanel.Height = 40;
+            StoragePanel.Padding = new Thickness(0);
+            StoragePanel.Margin = new Thickness(16, 12, 16, 16);
+            StoragePanel.HorizontalAlignment = HorizontalAlignment.Center;
+        }
+        else
+        {
+            StoragePanel.ClearValue(WidthProperty);
+            StoragePanel.ClearValue(HeightProperty);
+            StoragePanel.Padding = new Thickness(12);
+            StoragePanel.Margin = new Thickness(12, 12, 12, 16);
+            StoragePanel.HorizontalAlignment = HorizontalAlignment.Stretch;
+        }
+
+        foreach (var button in new[] { GenerateNavButton, InputNavButton, ListNavButton, StrategyNavButton })
+        {
+            button.Classes.Set("compact", compact);
+            if (button.Content is Grid grid)
+            {
+                grid.ColumnDefinitions = compact
+                    ? new ColumnDefinitions("*")
+                    : new ColumnDefinitions("4,40,*");
+                foreach (var child in grid.Children)
+                {
+                    switch (child)
+                    {
+                        case TextBlock label:
+                            label.IsVisible = !compact;
+                            break;
+                        case Avalonia.Controls.Shapes.Path icon:
+                            Grid.SetColumn(icon, compact ? 0 : 1);
+                            break;
+                        case Border indicator:
+                            indicator.IsVisible = !compact;
+                            break;
+                    }
+                }
+            }
+        }
+
+        PageHeader.Height = AppLayout.HeaderHeight;
+        PageHeader.Padding = new Thickness(pad, 0);
+        PageHost.Margin = new Thickness(pad);
+
+        MenuButton.IsVisible = drawer;
+        NavScrim.IsVisible = drawer && _drawerOpen;
+
+        if (drawer)
+        {
+            Sidebar.Width = 208;
+            Sidebar.IsVisible = _drawerOpen;
+            MainContent.Margin = new Thickness(0);
+        }
+        else
+        {
+            _drawerOpen = false;
+            Sidebar.IsVisible = true;
+            Sidebar.Width = compact ? 72 : 208;
+            MainContent.Margin = new Thickness(Sidebar.Width, 0, 0, 0);
+            NavScrim.IsVisible = false;
+        }
+    }
+
+    private void OpenDrawer()
+    {
+        if (!AppLayout.UseDrawerNav)
+            return;
+
+        _drawerOpen = true;
+        Sidebar.IsVisible = true;
+        Sidebar.Width = 208;
+        NavScrim.IsVisible = true;
+    }
+
+    private void CloseDrawer()
+    {
+        if (!_drawerOpen)
+            return;
+
+        _drawerOpen = false;
+        NavScrim.IsVisible = false;
+        if (AppLayout.UseDrawerNav)
+            Sidebar.IsVisible = false;
     }
 }

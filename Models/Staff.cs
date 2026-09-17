@@ -33,6 +33,7 @@ public partial class Staff : AutomaticNotify
                 return;
 
             OnPropertyChanged(nameof(StarGlyphs));
+            OnPropertyChanged(nameof(RarityMark));
             OnPropertyChanged(nameof(RarityBrush));
             OnPropertyChanged(nameof(RaritySoftBrush));
         }
@@ -85,6 +86,7 @@ public partial class Staff : AutomaticNotify
             RaiseArtChanged();
             OnPropertyChanged(nameof(LevelDigits));
             OnPropertyChanged(nameof(EliteLabel));
+            OnPropertyChanged(nameof(LevelLine));
         }
     }
 
@@ -96,6 +98,7 @@ public partial class Staff : AutomaticNotify
     {
         OnPropertyChanged(nameof(LevelDigits));
         OnPropertyChanged(nameof(EliteLabel));
+        OnPropertyChanged(nameof(LevelLine));
         if (e.PropertyName == nameof(Models.Level.EliteLevel))
             RaiseArtChanged();
     }

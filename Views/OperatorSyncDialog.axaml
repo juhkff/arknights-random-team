@@ -8,8 +8,8 @@
              x:Class="arknights_random_team.Views.OperatorSyncDialog"
              Width="544"
              Height="588"
-             MinWidth="440"
-             MinHeight="440"
+             MinWidth="280"
+             MinHeight="400"
              FontFamily="{StaticResource AppFont}"
              FontSize="14"
              Background="Transparent">
@@ -64,30 +64,30 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Background" Value="#0F1924" />
-            <Setter Property="BorderBrush" Value="#1D2D3B" />
+            <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="CheckBox.sync-star:pointerover">
-            <Setter Property="Background" Value="#15232F" />
-            <Setter Property="BorderBrush" Value="#31485C" />
+            <Setter Property="Background" Value="{StaticResource AppInputHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
         </Style>
         <Style Selector="CheckBox.sync-star:checked">
-            <Setter Property="Background" Value="#132C2E" />
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="CheckBox.sync-star:checked:pointerover">
-            <Setter Property="Background" Value="#183739" />
+            <Setter Property="Background" Value="{StaticResource AppSidebarActiveHoverBrush}" />
         </Style>
         <Style Selector="CheckBox.sync-star:checked:pressed">
-            <Setter Property="Background" Value="#0D2124" />
+            <Setter Property="Background" Value="{StaticResource AppSidebarActivePressedBrush}" />
         </Style>
 
         <Style Selector="CheckBox.sync-star TextBlock.star-glyph">
             <Setter Property="FontSize" Value="22" />
             <Setter Property="Margin" Value="0,2,0,0" />
-            <Setter Property="Foreground" Value="#7C93A8" />
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
         </Style>
         <Style Selector="CheckBox.sync-star:checked TextBlock.star-glyph">
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
@@ -104,7 +104,7 @@
 
         <!-- 选中指示器：空心圆环 → 实心薄荷圆 + 矢量对勾。 -->
         <Style Selector="CheckBox.sync-star Border.select-dot">
-            <Setter Property="BorderBrush" Value="#3B5468" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
             <Setter Property="Background" Value="Transparent" />
         </Style>
         <Style Selector="CheckBox.sync-star:pointerover Border.select-dot">
@@ -172,43 +172,22 @@
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <!-- 标题区 -->
         <Border Grid.Row="0"
-                Padding="28,24,28,22"
+                Padding="28,22,28,18"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
-                BorderThickness="0,0,0,1"
-                ClipToBounds="True">
-            <Grid>
-                <Path Width="150"
-                      Height="92"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Bottom"
-                      IsHitTestVisible="False"
-                      Stroke="{StaticResource AppBorderBrush}"
-                      StrokeThickness="1"
-                      Opacity="0.55"
-                      Data="M 0,92 L 58,26 H 150 M 30,92 L 88,26 M 60,92 L 118,26" />
-                <StackPanel Spacing="7">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Border Width="16"
-                                Height="2"
-                                VerticalAlignment="Center"
-                                Background="{StaticResource AppSignalBrush}" />
-                        <TextBlock FontSize="9"
-                                   FontWeight="SemiBold"
-                                   LetterSpacing="2.4"
-                                   Foreground="{StaticResource AppSignalBrush}"
-                                   Text="DATABASE LINK" />
-                    </StackPanel>
-                    <TextBlock FontSize="23" FontWeight="Bold" Text="同步干员" />
-                    <TextBlock Classes="caption"
-                               Text="按稀有度从 ArknightsGameData 国服数据追加正式干员" />
-                </StackPanel>
-            </Grid>
+                BorderThickness="0,0,0,1">
+            <StackPanel Spacing="6">
+                <TextBlock FontSize="20" FontWeight="Bold" Text="同步干员" />
+                <TextBlock Classes="caption"
+                           TextWrapping="Wrap"
+                           Text="按稀有度从 ArknightsGameData 国服数据追加正式干员" />
+            </StackPanel>
         </Border>
 
-        <!-- 已选进度条：把「选了几档」变成一眼可见的仪表。 -->
-        <Grid Grid.Row="1" Margin="28,20,28,0" Height="4">
-            <Border Name="SelectionTrack" Background="#16232F" CornerRadius="2" />
+        <Grid Grid.Row="1" Margin="28,16,28,0" Height="4">
+            <Border Name="SelectionTrack"
+                    Background="{StaticResource AppWellBrush}"
+                    CornerRadius="2" />
             <Border Name="SelectionMeter"
                     Width="0"
                     HorizontalAlignment="Left"

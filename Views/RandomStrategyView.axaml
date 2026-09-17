@@ -10,64 +10,34 @@
              FontFamily="{StaticResource AppFont}">
     <UserControl.Styles>
         <Style Selector="Border.strategy-card">
-            <Setter Property="Margin" Value="0,0,0,16" />
-            <Setter Property="Padding" Value="20" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Padding" Value="16" />
         </Style>
         <Style Selector="Border.strategy-card:pointerover">
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="BoxShadow" Value="0 4 14 0 #24000000" />
         </Style>
         <Style Selector="Border.rule-summary">
-            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="MinHeight" Value="40" />
             <Setter Property="Margin" Value="0,6,0,0" />
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
         </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,16,*">
-        <Border Grid.Row="0" Classes="command-bar">
-            <Grid>
-                <Path Width="180" Height="72" HorizontalAlignment="Right" VerticalAlignment="Top"
-                      IsHitTestVisible="False" Opacity="0.16"
-                      Stroke="{StaticResource AppPrimaryBrush}" StrokeThickness="1" Stretch="Fill"
-                      Data="M 0,72 L 60,0 H 180 M 36,72 L 110,0" />
-                <Grid ColumnDefinitions="*,16,Auto">
-            <StackPanel VerticalAlignment="Center" Spacing="6">
-                <TextBlock Classes="eyebrow" Text="STRATEGY LIBRARY" />
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Border Width="4"
-                            Height="28"
-                            Background="{StaticResource AppSignalBrush}"
-                            CornerRadius="2" />
-                    <TextBlock Classes="section-title"
-                               VerticalAlignment="Center"
-                               Text="策略方案" />
-                    <Border Padding="10,5"
-                            Background="{StaticResource AppPrimarySoftBrush}"
-                            BorderBrush="{StaticResource AppPrimaryBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6">
-                        <TextBlock Name="StrategyCountText"
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource AppPrimaryBrush}"
-                                   Text="0 个" />
-                    </Border>
-                </StackPanel>
-            </StackPanel>
+        <Grid ColumnDefinitions="*,16,Auto">
+            <TextBlock Name="StrategyCountText"
+                       VerticalAlignment="Center"
+                       Classes="caption"
+                       Text="0 个方案" />
             <Button Grid.Column="2"
                     MinWidth="128"
                     VerticalAlignment="Center"
                     Classes="primary"
                     Content="新建策略"
                     Click="AddStrategy_Click" />
-                </Grid>
-            </Grid>
-        </Border>
+        </Grid>
 
         <Grid Grid.Row="2">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -76,33 +46,35 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="domain:RandomStrategyDefinition">
                             <Border Classes="surface strategy-card">
-                                <Grid RowDefinitions="Auto,12,Auto">
-                                    <Grid Grid.Row="0" ColumnDefinitions="4,12,*,Auto">
-                                        <Border Grid.Column="0"
-                                                Width="4"
-                                                VerticalAlignment="Stretch"
-                                                Background="{StaticResource AppSignalBrush}"
-                                                CornerRadius="2" />
-                                        <TextBlock Grid.Column="2"
-                                                   Margin="0,0,16,0"
+                                <Grid RowDefinitions="Auto,8,Auto">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Margin="0,0,16,0"
                                                    VerticalAlignment="Center"
-                                                   FontSize="18"
+                                                   FontSize="16"
                                                    FontWeight="SemiBold"
                                                    Text="{Binding Name}"
                                                    TextTrimming="CharacterEllipsis" />
-                                        <StackPanel Grid.Column="3"
+                                        <StackPanel Grid.Column="1"
                                                     Orientation="Horizontal"
-                                                    Spacing="8">
-                                            <Button Classes="secondary"
-                                                    MinWidth="72"
+                                                    Spacing="4">
+                                            <Button Classes="text"
+                                                    MinWidth="64"
                                                     Content="编辑"
                                                     Tag="{Binding}"
                                                     Click="EditStrategy_Click" />
-                                            <Button Classes="danger"
-                                                    MinWidth="72"
-                                                    Content="删除"
+                                            <Button Classes="icon compact"
+                                                    Width="32" Height="32" MinWidth="32"
+                                                    Content="⋯"
                                                     Tag="{Binding}"
-                                                    Click="DeleteStrategy_Click" />
+                                                    AutomationProperties.Name="更多">
+                                                <Button.Flyout>
+                                                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                        <MenuItem Header="删除策略"
+                                                                  Tag="{Binding}"
+                                                                  Click="DeleteStrategy_Click" />
+                                                    </MenuFlyout>
+                                                </Button.Flyout>
+                                            </Button>
                                         </StackPanel>
                                     </Grid>
 
@@ -110,16 +82,9 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="domain:StrategyRule">
                                                 <Border Classes="rule-summary">
-                                                    <Grid ColumnDefinitions="3,10,*">
-                                                        <Border Width="3"
-                                                                Margin="0,2"
-                                                                Background="{StaticResource AppPrimaryBrush}"
-                                                                CornerRadius="2" />
-                                                        <TextBlock Grid.Column="2"
-                                                                   VerticalAlignment="Center"
-                                                                   Text="{Binding SummaryLine}"
-                                                                   TextWrapping="Wrap" />
-                                                    </Grid>
+                                                    <TextBlock VerticalAlignment="Center"
+                                                               Text="{Binding SummaryLine}"
+                                                               TextWrapping="Wrap" />
                                                 </Border>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -136,14 +101,6 @@
                         VerticalAlignment="Center"
                         IsHitTestVisible="False"
                         Spacing="12">
-                <Path Width="42"
-                      Height="42"
-                      HorizontalAlignment="Center"
-                      Stretch="Uniform"
-                      Stroke="{StaticResource AppPrimaryBrush}"
-                      StrokeThickness="1.4"
-                      Opacity="0.8"
-                      Data="M 0,12 L 0,0 12,0 M 30,0 L 42,0 42,12 M 42,30 L 42,42 30,42 M 12,42 L 0,42 0,30 M 14,21 H 28 M 21,14 V 28" />
                 <TextBlock Classes="muted"
                            HorizontalAlignment="Center"
                            FontSize="18"

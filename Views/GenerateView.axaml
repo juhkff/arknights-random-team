@@ -161,7 +161,7 @@
             <Setter Property="Cursor" Value="Hand" />
             <!-- Foreground = 已填充段（圆点左侧）；Background = 卡槽（圆点右侧） -->
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="Background" Value="#18222F" />
+            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
             <Setter Property="Template">
                 <ControlTemplate>
                     <Grid Margin="10,14" VerticalAlignment="Center">
@@ -182,7 +182,7 @@
                                 <RepeatButton Name="PART_IncreaseButton"
                                               Theme="{StaticResource AppCountSliderTrackPart}"
                                               Background="{TemplateBinding Background}"
-                                              BorderBrush="#3B5468"
+                                              BorderBrush="{StaticResource AppBorderBrush}"
                                               BorderThickness="1" />
                             </Track.IncreaseButton>
                             <Track.Thumb>
@@ -195,124 +195,88 @@
         </ControlTheme>
     </UserControl.Resources>
 
-    <Grid RowDefinitions="Auto,22,*">
-        <Border Grid.Row="0" Classes="surface">
-            <Grid>
-                <!-- Decorative geometry never intercepts clicks. -->
-                <Path Width="140" Height="86" Margin="0,0,0,0"
-                      HorizontalAlignment="Right" VerticalAlignment="Top"
-                      IsHitTestVisible="False" Opacity="0.12"
-                      Stroke="{StaticResource AppPrimaryBrush}" StrokeThickness="1"
-                      Stretch="Fill" Data="M 0,0 L 54,0 140,86 M 32,0 L 86,0 140,54 M 82,0 L 140,58" />
-                <Border Width="54" Height="3" Margin="22,0,0,0"
-                        HorizontalAlignment="Left" VerticalAlignment="Top"
-                        Background="{StaticResource AppPrimaryBrush}" />
-                <Grid Margin="22,20" RowDefinitions="Auto,18,Auto,18,Auto">
-                    <StackPanel Spacing="5">
-                        <TextBlock Classes="eyebrow" Text="SQUAD / CONFIGURATION" />
-                        <TextBlock FontSize="23" FontWeight="Bold" Text="随机编队，准备出击。" />
-                    </StackPanel>
-
-                    <Grid Grid.Row="2" ColumnDefinitions="*,24,*">
-                        <Grid Grid.Column="0" RowDefinitions="28,6,40,6,32">
-                            <TextBlock Classes="field-label" Text="01 / 选择作战策略" />
-                            <ComboBox Name="StrategyCombo" Grid.Row="2"
-                                      Classes="form-control dense"
-                                      HorizontalAlignment="Stretch"
-                                      AutomationProperties.Name="作战策略"
-                                      PlaceholderText="选择策略">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate x:DataType="views:StrategyComboItem">
-                                        <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding DisplayName}" />
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <TextBlock Grid.Row="4" Classes="caption" VerticalAlignment="Center"
-                                       TextWrapping="Wrap" Text="不选策略，自由随机；自定义规则前往「随机策略」。" />
-                        </Grid>
-
-                        <Grid Grid.Column="2" RowDefinitions="28,6,40,6,32">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Classes="field-label" Text="02 / 阵容人数" />
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5"
-                                            VerticalAlignment="Center">
-                                    <TextBlock Name="RandomNumText" FontFamily="{StaticResource AppMonoFont}"
-                                               FontSize="24" FontWeight="Bold"
-                                               Foreground="{StaticResource AppPrimaryBrush}" Text="1" />
-                                    <TextBlock Name="TeamSizeLimitText" Classes="caption"
-                                               VerticalAlignment="Center" Text="/ 12" />
-                                </StackPanel>
-                            </Grid>
-                            <!--
-                                滑动条与两侧按钮之间必须留出足够间距：
-                                滑块圆点在两端时会向外探出，悬停还有一圈阴影/光环，
-                                间距太小就会压到「−」「＋」两个按钮上。
-                            -->
-                            <Grid Grid.Row="2" ColumnDefinitions="32,16,*,16,32">
-                                <Button Name="DecreaseCountButton" Classes="count-step"
-                                        AutomationProperties.Name="减少一名干员" ToolTip.Tip="减少一名干员"
-                                        Click="DecreaseCount_Click">
-                                    <Path Width="12" Height="2" Stretch="None" Data="M 0,1 H 12" />
-                                </Button>
-                                <!-- Keep the slider free of any input-shell or outer border. -->
-                                <Slider Name="CountSlider" Grid.Column="2" Height="40"
-                                        VerticalAlignment="Center" ZIndex="10" ClipToBounds="False"
-                                        Minimum="1" Maximum="12" TickFrequency="1" TickPlacement="None"
-                                        IsSnapToTickEnabled="True"
-                                        SmallChange="1" LargeChange="1"
-                                        AutomationProperties.Name="阵容人数"
-                                        Theme="{StaticResource AppCountSlider}" Value="1"
-                                        PropertyChanged="CountSlider_OnPropertyChanged" />
-                                <Button Name="IncreaseCountButton" Grid.Column="4" Classes="count-step"
-                                        AutomationProperties.Name="增加一名干员" ToolTip.Tip="增加一名干员"
-                                        Click="IncreaseCount_Click">
-                                    <Path Width="12" Height="12" Stretch="None" Data="M 0,6 H 12 M 6,0 V 12" />
-                                </Button>
-                            </Grid>
-                            <Grid Grid.Row="4" ColumnDefinitions="*,8,*,8,*,8,*">
-                                <Button Name="SoloPresetButton" Classes="compact count-preset" Content="1 人" Tag="1"
-                                        AutomationProperties.Name="选择一人阵容" Click="CountPreset_Click" />
-                                <Button Name="FourPresetButton" Grid.Column="2" Classes="compact count-preset" Content="4 人" Tag="4"
-                                        AutomationProperties.Name="选择四人阵容" Click="CountPreset_Click" />
-                                <Button Name="SixPresetButton" Grid.Column="4" Classes="compact count-preset" Content="6 人" Tag="6"
-                                        AutomationProperties.Name="选择六人阵容" Click="CountPreset_Click" />
-                                <Button Name="FullPresetButton" Grid.Column="6" Classes="compact count-preset" Content="满编"
-                                        Tag="{x:Static models:AppOptions.MaxTeamSize}"
-                                        AutomationProperties.Name="选择满编阵容" Click="CountPreset_Click" />
-                            </Grid>
-                        </Grid>
+    <Grid RowDefinitions="Auto,16,*">
+        <Border Grid.Row="0" Classes="surface" Padding="20,16">
+            <Grid RowDefinitions="Auto,16,Auto">
+                <Grid Name="ConfigGrid" ColumnDefinitions="*,16,*">
+                    <Grid Name="StrategyConfig" RowDefinitions="28,6,40,6,Auto">
+                        <TextBlock Classes="field-label" Text="作战策略" />
+                        <ComboBox Name="StrategyCombo" Grid.Row="2"
+                                  Classes="form-control dense"
+                                  HorizontalAlignment="Stretch"
+                                  AutomationProperties.Name="作战策略"
+                                  PlaceholderText="选择策略">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="views:StrategyComboItem">
+                                    <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               Text="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Grid.Row="4" Classes="caption" VerticalAlignment="Center"
+                                   TextWrapping="Wrap" Text="不选策略则自由随机；自定义规则前往「随机策略」。" />
                     </Grid>
 
-                    <Button Name="GenerateButton" Grid.Row="4" Classes="primary" Height="44"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                            AutomationProperties.Name="生成随机阵容" Click="Generate_Click">
+                    <Grid Name="CountConfig" Grid.Column="2" RowDefinitions="28,6,40,6,32">
                         <Grid ColumnDefinitions="*,Auto">
-                            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <Path Width="16" Height="16" Stretch="Uniform"
-                                      Stroke="{StaticResource AppOnPrimaryBrush}" StrokeThickness="2"
-                                      Data="M 2,5 L 6,5 14,15 20,15 M 16,11 L 20,15 16,19 M 2,15 L 6,15 14,5 20,5 M 16,1 L 20,5 16,9" />
-                                <TextBlock FontSize="15" FontWeight="Bold" VerticalAlignment="Center" Text="生成阵容" />
+                            <TextBlock Classes="field-label" Text="阵容人数" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5"
+                                        VerticalAlignment="Center">
+                                <TextBlock Name="RandomNumText" FontFamily="{StaticResource AppMonoFont}"
+                                           FontSize="20" FontWeight="Bold"
+                                           Foreground="{StaticResource AppPrimaryBrush}" Text="1" />
+                                <TextBlock Name="TeamSizeLimitText" Classes="caption"
+                                           VerticalAlignment="Center" Text="/ 12" />
                             </StackPanel>
-                            <TextBlock Grid.Column="1" FontFamily="{StaticResource AppMonoFont}" FontSize="12"
-                                       VerticalAlignment="Center" Text="DEPLOY  →" />
                         </Grid>
-                    </Button>
+                        <Grid Grid.Row="2" ColumnDefinitions="32,16,*,16,32">
+                            <Button Name="DecreaseCountButton" Classes="count-step"
+                                    AutomationProperties.Name="减少一名干员" ToolTip.Tip="减少一名干员"
+                                    Click="DecreaseCount_Click">
+                                <Path Width="12" Height="2" Stretch="None" Data="M 0,1 H 12" />
+                            </Button>
+                            <Slider Name="CountSlider" Grid.Column="2" Height="40"
+                                    VerticalAlignment="Center" ZIndex="10" ClipToBounds="False"
+                                    Minimum="1" Maximum="12" TickFrequency="1" TickPlacement="None"
+                                    IsSnapToTickEnabled="True"
+                                    SmallChange="1" LargeChange="1"
+                                    AutomationProperties.Name="阵容人数"
+                                    Theme="{StaticResource AppCountSlider}" Value="1"
+                                    PropertyChanged="CountSlider_OnPropertyChanged" />
+                            <Button Name="IncreaseCountButton" Grid.Column="4" Classes="count-step"
+                                    AutomationProperties.Name="增加一名干员" ToolTip.Tip="增加一名干员"
+                                    Click="IncreaseCount_Click">
+                                <Path Width="12" Height="12" Stretch="None" Data="M 0,6 H 12 M 6,0 V 12" />
+                            </Button>
+                        </Grid>
+                        <Grid Grid.Row="4" ColumnDefinitions="*,8,*,8,*,8,*">
+                            <Button Name="SoloPresetButton" Classes="compact count-preset" Content="1 人" Tag="1"
+                                    AutomationProperties.Name="选择一人阵容" Click="CountPreset_Click" />
+                            <Button Name="FourPresetButton" Grid.Column="2" Classes="compact count-preset" Content="4 人" Tag="4"
+                                    AutomationProperties.Name="选择四人阵容" Click="CountPreset_Click" />
+                            <Button Name="SixPresetButton" Grid.Column="4" Classes="compact count-preset" Content="6 人" Tag="6"
+                                    AutomationProperties.Name="选择六人阵容" Click="CountPreset_Click" />
+                            <Button Name="FullPresetButton" Grid.Column="6" Classes="compact count-preset" Content="满编"
+                                    Tag="{x:Static models:AppOptions.MaxTeamSize}"
+                                    AutomationProperties.Name="选择满编阵容" Click="CountPreset_Click" />
+                        </Grid>
+                    </Grid>
                 </Grid>
+
+                <Button Name="GenerateButton" Grid.Row="2" Classes="primary" Height="44"
+                        HorizontalAlignment="Stretch"
+                        AutomationProperties.Name="生成随机阵容"
+                        Content="生成阵容"
+                        Click="Generate_Click" />
             </Grid>
         </Border>
 
         <Grid Grid.Row="2" RowDefinitions="Auto,12,*">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
-                    <Border Width="4" Height="22" Background="{StaticResource AppSignalBrush}" CornerRadius="2" />
-                    <TextBlock Classes="section-title" VerticalAlignment="Center" Text="出战名单" />
-                    <TextBlock Classes="eyebrow" VerticalAlignment="Center" Foreground="{StaticResource AppMutedTextBrush}"
-                               Text="/ ROSTER" />
-                </StackPanel>
+                <TextBlock Classes="section-title" VerticalAlignment="Center" Text="出战名单" />
                 <Border Grid.Column="1" Classes="chip" VerticalAlignment="Center"
                         Background="{StaticResource AppPrimarySoftBrush}"
-                        BorderBrush="{StaticResource AppPrimaryGlowBrush}">
+                        BorderBrush="{StaticResource AppSecondaryBorderBrush}">
                     <TextBlock Name="ResultCountText" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"
                                Foreground="{StaticResource AppPrimaryBrush}" Text="0 名干员" />
                 </Border>
@@ -320,41 +284,37 @@
 
             <Border Grid.Row="2" Classes="surface" Padding="0" ClipToBounds="True">
                 <Grid>
-                    <!-- 顶部战术压线 -->
-                    <Grid RowDefinitions="3,*">
-                        <Grid Grid.Row="0" ColumnDefinitions="76,*,0.55*">
-                            <Border Background="{StaticResource AppSignalBrush}" />
-                            <Border Grid.Column="1" Background="{StaticResource AppPrimaryGlowBrush}" />
-                            <Border Grid.Column="2" Background="{StaticResource AppBorderBrush}" />
-                        </Grid>
-
-                        <ScrollViewer Grid.Row="1"
-                                      HorizontalScrollBarVisibility="Disabled"
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                       VerticalScrollBarVisibility="Auto">
                             <ItemsControl Name="RosterItems" Margin="16,16,16,8" ItemsSource="{Binding ResultList}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" />
+                                        <views:AdaptiveWrapPanel MinItemWidth="248"
+                                                                 MaxItemWidth="320"
+                                                                 Spacing="12"
+                                                                 FixedItemHeight="96" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerTheme>
+                                    <ControlTheme TargetType="ContentPresenter">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                                    </ControlTheme>
+                                </ItemsControl.ItemContainerTheme>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="models:Staff">
                                         <ContentControl Theme="{StaticResource AppRosterCardTheme}"
-                                                        Width="272"
-                                                        Height="100"
-                                                        Margin="0,0,12,12"
-                                                        Foreground="{Binding CareerBrush}"
-                                                        ToolTip.Tip="{Binding Level.Description}">
+                                                        ToolTip.Tip="{Binding LevelLine}">
                                             <Grid ColumnDefinitions="64,12,*">
                                                 <Border Classes="avatar-frame"
                                                         Width="64"
                                                         Height="64"
                                                         CornerRadius="8"
-                                                        BorderBrush="{Binding CareerBrush}"
-                                                        Background="{Binding CareerSoftBrush}">
+                                                        BorderBrush="{StaticResource AppBorderBrush}"
+                                                        Background="{StaticResource AppWellBrush}">
                                                     <Panel>
-                                                        <Image Stretch="UniformToFill"
-                                                               IsVisible="{Binding HasArt}"
+                                                        <Image Name="RosterArt"
+                                                               Stretch="UniformToFill"
                                                                views:ArtImage.Sources="{Binding AvatarUris}" />
                                                         <Image Width="28"
                                                                Height="28"
@@ -362,7 +322,7 @@
                                                                Stretch="Uniform"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"
-                                                               IsVisible="{Binding !HasArt}"
+                                                               IsVisible="{Binding (views:ArtImage.LoadState), ElementName=RosterArt, Converter={x:Static views:StaffCardVisual.IsArtPlaceholder}}"
                                                                views:ArtImage.Sources="{Binding CareerIconUris}" />
                                                     </Panel>
                                                 </Border>
@@ -371,19 +331,12 @@
                                                         <TextBlock Classes="roster-name"
                                                                    VerticalAlignment="Center"
                                                                    Text="{Binding Name}" />
-                                                        <Border Grid.Column="2"
-                                                                Classes="class-badge"
-                                                                Width="26"
-                                                                Height="26"
-                                                                BorderBrush="{Binding CareerBrush}"
-                                                                Background="{Binding CareerSoftBrush}">
-                                                            <Image Width="15"
-                                                                   Height="15"
-                                                                   Stretch="Uniform"
-                                                                   HorizontalAlignment="Center"
-                                                                   VerticalAlignment="Center"
-                                                                   views:ArtImage.Sources="{Binding CareerIconUris}" />
-                                                        </Border>
+                                                        <Image Grid.Column="2"
+                                                               Width="16"
+                                                               Height="16"
+                                                               Stretch="Uniform"
+                                                               VerticalAlignment="Center"
+                                                               views:ArtImage.Sources="{Binding CareerIconUris}" />
                                                     </Grid>
                                                     <StackPanel Grid.Row="2"
                                                                 Orientation="Horizontal"
@@ -392,13 +345,10 @@
                                                         <TextBlock Classes="roster-pips"
                                                                    VerticalAlignment="Center"
                                                                    Foreground="{Binding RarityBrush}"
-                                                                   Text="{Binding StarGlyphs}" />
-                                                        <TextBlock Classes="mono"
+                                                                   Text="{Binding RarityMark}" />
+                                                        <TextBlock Classes="caption"
                                                                    VerticalAlignment="Center"
-                                                                   Text="{Binding EliteLabel}" />
-                                                        <TextBlock Classes="mono"
-                                                                   VerticalAlignment="Center"
-                                                                   Text="{Binding LevelDigits}" />
+                                                                   Text="{Binding LevelLine}" />
                                                     </StackPanel>
                                                 </Grid>
                                             </Grid>
@@ -407,7 +357,6 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-                    </Grid>
 
                     <StackPanel Name="ResultEmptyState" Margin="16,48,16,0"
                                 HorizontalAlignment="Center" VerticalAlignment="Center"
