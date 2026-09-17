@@ -156,9 +156,10 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,18,*">
-        <Grid Grid.Row="0" ColumnDefinitions="*,16,Auto">
-            <StackPanel VerticalAlignment="Center" Spacing="6">
+    <Grid RowDefinitions="Auto,18,Auto,18,*">
+        <!-- 两侧共用同一套行定义，保证标题区与右侧按钮组在视觉上对齐 -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,16,Auto" RowDefinitions="Auto,6,Auto">
+            <StackPanel Grid.Row="0" Spacing="6">
                 <TextBlock Classes="eyebrow" Text="OPERATOR ROSTER" />
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Border Width="4"
@@ -189,18 +190,19 @@
                                    Text="{Binding SelectedStaffCount, StringFormat='已启用 {0} 名'}" />
                     </Border>
                 </StackPanel>
+
+                <!-- 立绘加载统计：放在标题徽标下方这一行，作为列表的附属说明 -->
+                <TextBlock Classes="caption"
+                           Margin="14,0,0,0"
+                           IsVisible="{Binding IsCardView}"
+                           Text="{Binding ArtLoadInfo}" />
             </StackPanel>
 
-            <StackPanel Grid.Column="2"
+            <StackPanel Grid.Row="2"
+                        Grid.Column="2"
                         Orientation="Horizontal"
                         VerticalAlignment="Center"
                         Spacing="10">
-                <!-- 立绘加载统计：直观看出缓存命中程度 -->
-                <TextBlock Classes="caption"
-                           VerticalAlignment="Center"
-                           IsVisible="{Binding IsCardView}"
-                           Text="{Binding ArtLoadInfo}" />
-
                 <!-- 视图切换：表格（可编辑排序）/ 卡片（看立绘） -->
                 <Border Padding="3"
                         Background="{StaticResource AppWellBrush}"
@@ -255,7 +257,7 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="2" Classes="surface data-frame" ClipToBounds="True">
+        <Border Grid.Row="4" Grid.ColumnSpan="3" Classes="surface data-frame" ClipToBounds="True">
             <Grid>
                 <DataGrid Name="StaffGrid"
                           IsVisible="{Binding IsGridView}"
