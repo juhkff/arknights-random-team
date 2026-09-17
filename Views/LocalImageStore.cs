@@ -10,6 +10,7 @@ namespace arknights_random_team.Views;
 /// 因此清掉浏览器缓存、换网络环境、或 CDN 临时不可达时也仍然有图。
 ///
 /// 浏览器端（WebAssembly）没有文件系统，一律不落盘，只靠内存缓存；
+/// 网页里另用 Cache API 缓存 CDN 立绘（见 browser/wwwroot/main.js），不缓存干员名单。
 /// 这是平台限制，不是开关。
 ///
 /// 缓存的是下载到的**原始字节**：解码必须重新做（位图无法可靠序列化），

@@ -26,14 +26,3 @@ html, body {
 canvas {
     outline: none;
 }
-
-/* WebAssembly 版是演示用途：窗口尺寸由浏览器决定，这里给出一个最小可读宽度 */
-@media (max-width: 900px) {
-    #out {
-        overflow: auto;
-    }
-    #out > * {
-        min-width: 900px;
-        min-height: 640px;
-    }
-}

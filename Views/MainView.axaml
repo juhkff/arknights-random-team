@@ -117,6 +117,33 @@
         <Style Selector="Button.nav-item.active:pressed Path.nav-chevron">
             <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
+        <Style Selector="Button.compact-nav">
+            <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Margin" Value="3,0" />
+            <Setter Property="Padding" Value="4,0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="{StaticResource AppSidebarItemBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppSidebarTextBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.compact-nav:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppSidebarHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="Button.compact-nav.active">
+            <Setter Property="Background" Value="{StaticResource AppSidebarActiveBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
     </UserControl.Styles>
 
     <!--
@@ -127,14 +154,65 @@
         <controls:SnackbarHost HostName="MainSnackbar"
                                SnackbarHorizontalAlignment="Center"
                                SnackbarVerticalAlignment="Bottom">
-            <Grid RowDefinitions="3,*">
+            <Grid RowDefinitions="3,Auto,*">
             <Grid Grid.Row="0" ColumnDefinitions="140,*,96" IsHitTestVisible="False">
                 <Border Background="{StaticResource AppPrimaryBrush}" />
                 <Border Grid.Column="1" Background="{StaticResource AppPrimaryGlowBrush}" />
                 <Border Grid.Column="2" Background="{StaticResource AppSignalBrush}" />
             </Grid>
-            <Grid Grid.Row="1" ColumnDefinitions="212,*">
-            <Border Grid.Column="0"
+
+            <!-- 窄屏：用顶栏标签替换固定 212px 侧栏 -->
+            <Border Name="CompactBar"
+                    Grid.Row="1"
+                    IsVisible="False"
+                    Background="{StaticResource AppSidebarBrush}"
+                    BorderBrush="{StaticResource AppBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <StackPanel>
+                    <UniformGrid Columns="4" Margin="6,6,6,4">
+                        <Button Name="CompactGenerateButton"
+                                Classes="compact-nav"
+                                Content="阵容"
+                                AutomationProperties.Name="阵容生成"
+                                Click="ChangeToGenerate" />
+                        <Button Name="CompactInputButton"
+                                Classes="compact-nav"
+                                Content="录入"
+                                AutomationProperties.Name="干员录入"
+                                Click="ChangeToInput" />
+                        <Button Name="CompactListButton"
+                                Classes="compact-nav"
+                                Content="列表"
+                                AutomationProperties.Name="干员列表"
+                                Click="ChangeToList" />
+                        <Button Name="CompactStrategyButton"
+                                Classes="compact-nav"
+                                Content="策略"
+                                AutomationProperties.Name="随机策略"
+                                Click="ChangeToRandomStrategy" />
+                    </UniformGrid>
+                    <Grid Name="CompactSessionStrip"
+                          Margin="10,0,10,8"
+                          ColumnDefinitions="*,Auto"
+                          IsVisible="False">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="11"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   Text="会话内存 · 刷新清空" />
+                        <Button Grid.Column="1"
+                                Classes="text compact"
+                                Content="下载桌面版"
+                                ToolTip.Tip="打开 GitHub Releases 最新版"
+                                Click="OpenDesktop_Click" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Grid Name="Workspace" Grid.Row="2">
+            <Border Name="Sidebar"
+                    Width="212"
+                    HorizontalAlignment="Left"
+                    ZIndex="4"
                     Background="{StaticResource AppSidebarBrush}"
                     BorderBrush="{StaticResource AppBorderBrush}"
                     BorderThickness="0,0,1,0">
@@ -290,26 +368,40 @@
                         <Grid ColumnDefinitions="3,10,*">
                             <Border Background="{StaticResource AppPrimaryBrush}" CornerRadius="1" />
                             <StackPanel Grid.Column="2" Spacing="4">
-                                <TextBlock FontSize="12"
+                                <TextBlock Name="StorageTitleText"
+                                           FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="{StaticResource AppPrimaryBrush}"
                                            Text="本地数据" />
-                                <TextBlock FontSize="9"
+                                <TextBlock Name="StorageKickerText"
+                                           FontSize="9"
                                            FontWeight="Medium"
                                            Foreground="{StaticResource AppMutedTextBrush}"
                                            Text="LOCAL STORAGE" />
-                                <TextBlock Margin="0,4,0,0"
+                                <TextBlock Name="StorageHintText"
+                                           Margin="0,4,0,0"
                                            FontSize="11"
                                            Foreground="{StaticResource AppTextBrush}"
                                            Text="退出时自动保存" />
+                                <Button Name="DesktopDownloadButton"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Left"
+                                        Classes="text compact"
+                                        Content="下载桌面版"
+                                        ToolTip.Tip="打开 GitHub Releases 最新版"
+                                        IsVisible="False"
+                                        Click="OpenDesktop_Click" />
                             </StackPanel>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
 
-            <Grid Grid.Column="1" RowDefinitions="96,*">
-                <Border Grid.Row="0"
+            <Grid Name="ContentPane"
+                  Margin="212,0,0,0"
+                  RowDefinitions="96,*">
+                <Border Name="PageHeader"
+                        Grid.Row="0"
                         Padding="24,0"
                         Background="{StaticResource AppSurfaceBrush}"
                         BorderBrush="{StaticResource AppBorderBrush}"
@@ -346,7 +438,8 @@
                                            Foreground="{StaticResource AppMutedTextBrush}"
                                            Text="从已启用的干员中生成一支阵容" />
                             </StackPanel>
-                            <StackPanel Grid.Column="1"
+                            <StackPanel Name="HeaderMark"
+                                        Grid.Column="1"
                                         Margin="20,0,0,0"
                                         VerticalAlignment="Center"
                                         Spacing="9"
