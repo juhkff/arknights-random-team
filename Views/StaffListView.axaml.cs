@@ -89,11 +89,10 @@ public partial class StaffListView : UserControl
             return;
 
         // 整张干员卡可点击切换「是否参与随机」。
-        // 卡片上的删除按钮要单独处理，所以点到按钮上时直接放行。
+        // 卡片里套了职业徽记、名牌等 Border，不能只取最近的祖先。
+        // 删除按钮要单独处理，点到按钮上时直接放行。
         if (visual.FindAncestorOfType<Button>(true) is null &&
-            visual.FindAncestorOfType<Border>(true) is { } border &&
-            border.Classes.Contains("operator-card") &&
-            border.DataContext is Staff cardStaff)
+            TryFindOperatorCard(visual) is { } cardStaff)
         {
             cardStaff.IsSelected = !cardStaff.IsSelected;
             return;
@@ -107,6 +106,19 @@ public partial class StaffListView : UserControl
 
         if (visual.FindAncestorOfType<DataGridRow>(true) is not null)
             _suppressRowSelection = false;
+    }
+
+    private static Staff? TryFindOperatorCard(Visual visual)
+    {
+        for (Visual? current = visual; current is not null; current = current.GetVisualParent())
+        {
+            if (current is Border border &&
+                (border.Classes.Contains("operator-card-host") || border.Classes.Contains("operator-card")) &&
+                border.DataContext is Staff staff)
+                return staff;
+        }
+
+        return null;
     }
 
     private void SelectAll_Click(object? sender, RoutedEventArgs e)

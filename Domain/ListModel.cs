@@ -13,13 +13,18 @@ public class ListModel : AutomaticNotify
 
     public int SelectedStaffCount => StaffList.Count(staff => staff.IsSelected);
 
+    public int UnselectedStaffCount => StaffCount - SelectedStaffCount;
+
     public ListModel()
     {
         StaffList = AppState.StaffList;
         StaffList.CollectionChanged += OnCollectionChanged;
         Views.ArtImage.StatsChanged += (_, _) => OnPropertyChanged(nameof(ArtLoadInfo));
         foreach (var staff in StaffList)
+        {
             staff.PropertyChanged += OnStaffPropertyChanged;
+            staff.UsePortrait = _usePortrait;
+        }
     }
 
     public bool? IsAllStaffSelected
@@ -54,12 +59,16 @@ public class ListModel : AutomaticNotify
         if (e.NewItems != null)
         {
             foreach (Staff staff in e.NewItems)
+            {
                 staff.PropertyChanged += OnStaffPropertyChanged;
+                staff.UsePortrait = _usePortrait;
+            }
         }
 
         OnPropertyChanged(nameof(IsAllStaffSelected));
         OnPropertyChanged(nameof(StaffCount));
         OnPropertyChanged(nameof(SelectedStaffCount));
+        OnPropertyChanged(nameof(UnselectedStaffCount));
     }
 
     private void OnStaffPropertyChanged(object? sender, PropertyChangedEventArgs args)
@@ -68,6 +77,7 @@ public class ListModel : AutomaticNotify
         {
             OnPropertyChanged(nameof(IsAllStaffSelected));
             OnPropertyChanged(nameof(SelectedStaffCount));
+            OnPropertyChanged(nameof(UnselectedStaffCount));
         }
     }
 
@@ -104,7 +114,7 @@ public class ListModel : AutomaticNotify
             ? "立绘：尚未加载"
             : $"立绘：网络 {Views.ArtImage.NetworkLoads} 张 · 内存命中 {Views.ArtImage.CacheHits} · 本地缓存 {Views.ArtImage.DiskHits}";
 
-    /// <summary>卡片用半身立绘大图，而不是头像小图。</summary>
+    /// <summary>卡片按半身像区域显示（否则裁切为头像区域）。不换立绘文件。</summary>
     public bool UsePortrait
     {
         get => _usePortrait;
@@ -113,11 +123,8 @@ public class ListModel : AutomaticNotify
             if (!SetProperty(ref _usePortrait, value))
                 return;
 
-            // 头像与半身像都已预载，这里只需让卡片重建一次以套用新的图源；
-            // 不要在这里逐张 RaiseArtChanged —— 那会对所有卡片重新发起下载，人一多就卡。
-            // 头像与半身像都已预载，这里只需让卡片重取值即可，不必重新下载
             foreach (var staff in StaffList)
-                staff.RaiseArtChanged();
+                staff.UsePortrait = value;
         }
     }
 }

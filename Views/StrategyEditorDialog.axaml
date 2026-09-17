@@ -16,17 +16,17 @@
     <UserControl.Styles>
         <Style Selector="TextBox.inline">
             <Setter Property="MinWidth" Value="72" />
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Height" Value="44" />
-            <Setter Property="MaxHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
             <Setter Property="Padding" Value="10,3" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
         <Style Selector="Button.inline">
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Height" Value="44" />
-            <Setter Property="MaxHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
             <Setter Property="Padding" Value="14,0" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
         </Style>
@@ -91,7 +91,7 @@
             <Setter Property="BorderThickness" Value="2" />
         </Style>
         <Style Selector="Border.staff-chip">
-            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="MinHeight" Value="40" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>

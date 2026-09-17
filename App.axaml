@@ -57,6 +57,14 @@
         <SolidColorBrush x:Key="AppGridLineBrush" Color="#1B2A38" />
         <SolidColorBrush x:Key="AppSignalSoftBrush" Color="#3A2F17" />
         <SolidColorBrush x:Key="AppPrimaryGlowBrush" Color="#2E7E6C" />
+        <SolidColorBrush x:Key="AppVeilBrush" Color="#A00B1118" />
+        <SolidColorBrush x:Key="AppHudLineBrush" Color="#1E3344" />
+        <SolidColorBrush x:Key="AppRarity6Brush" Color="#FFB45A" />
+        <SolidColorBrush x:Key="AppRarity5Brush" Color="#F3C969" />
+        <SolidColorBrush x:Key="AppRarity4Brush" Color="#C48AE8" />
+        <SolidColorBrush x:Key="AppRarity3Brush" Color="#5EB0F0" />
+        <SolidColorBrush x:Key="AppRarity2Brush" Color="#7DCF8A" />
+        <SolidColorBrush x:Key="AppRarity1Brush" Color="#8A9AAB" />
 
         <Color x:Key="MaterialSnackbarBackgroundColor">#243C46</Color>
         <SolidColorBrush x:Key="MaterialSnackbarBackgroundBrush" Color="#243C46" />
@@ -225,7 +233,7 @@
             <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="Border.input-shell">
-            <Setter Property="Height" Value="48" />
+            <Setter Property="Height" Value="40" />
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -307,19 +315,72 @@
             <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="CornerRadius" Value="2" />
         </Style>
+        <Style Selector="Border.stat-hud">
+            <Setter Property="MinWidth" Value="86" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+        <Style Selector="Border.avatar-frame">
+            <Setter Property="Width" Value="48" />
+            <Setter Property="Height" Value="48" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
+        </Style>
+        <Style Selector="Border.class-badge">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="#CC0B1118" />
+        </Style>
+        <Style Selector="Border.elite-chip">
+            <Setter Property="Padding" Value="6,2" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Background" Value="#CC0B1118" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.command-bar">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BoxShadow" Value="0 8 24 0 #28000000" />
+        </Style>
+        <Style Selector="Border.tactical-strip">
+            <Setter Property="Height" Value="3" />
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+        <Style Selector="TextBlock.stat-value">
+            <Setter Property="FontFamily" Value="{StaticResource AppMonoFont}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="TextBlock.stat-label">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+        </Style>
 
         <!-- Stable hit areas; only the artwork shifts by one pixel on press. -->
         <Style Selector="Button">
             <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
-            <Setter Property="MinHeight" Value="48" />
-            <Setter Property="Padding" Value="18,0" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="12,0" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontSize" Value="13" />
             <Setter Property="TextBlock.FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Button:pointerover">
@@ -397,36 +458,36 @@
             <Setter Property="Background" Value="{StaticResource AppSecondaryPressedBrush}" />
         </Style>
         <Style Selector="Button.compact">
-            <Setter Property="MinHeight" Value="40" />
-            <Setter Property="Height" Value="40" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="CornerRadius" Value="5" />
         </Style>
 
         <Style Selector="CheckBox">
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Padding" Value="8" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="6" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
-            <Setter Property="assists:SelectionControlAssist.Size" Value="22" />
+            <Setter Property="assists:SelectionControlAssist.Size" Value="18" />
         </Style>
         <Style Selector="Slider">
             <Setter Property="Focusable" Value="True" />
-            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="MinHeight" Value="40" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
             <Setter Property="CaretBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="TextBox.form-control">
             <Setter Property="Theme" Value="{StaticResource SoloTextBox}" />
-            <Setter Property="MinHeight" Value="48" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="MaxHeight" Value="48" />
-            <Setter Property="Padding" Value="14,4" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MaxHeight" Value="40" />
+            <Setter Property="Padding" Value="12,2" />
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="PlaceholderForeground" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
@@ -448,17 +509,17 @@
             <Setter Property="Margin" Value="14,0" />
         </Style>
         <Style Selector="ComboBox">
-            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
             <Setter Property="MaxDropDownHeight" Value="360" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="ComboBox.form-control">
             <Setter Property="Theme" Value="{StaticResource MaterialComboBox}" />
-            <Setter Property="MinHeight" Value="48" />
-            <Setter Property="Height" Value="48" />
-            <Setter Property="MaxHeight" Value="48" />
-            <Setter Property="Padding" Value="14,4" />
+            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="MaxHeight" Value="40" />
+            <Setter Property="Padding" Value="12,2" />
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="PlaceholderForeground" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
@@ -476,7 +537,7 @@
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="ComboBox.form-control /template/ Panel#PART_RootPanel">
-            <Setter Property="Height" Value="48" />
+            <Setter Property="Height" Value="40" />
         </Style>
         <Style Selector="ComboBox.form-control /template/ TextBlock#PART_PlaceholderText">
             <Setter Property="Margin" Value="14,0,36,0" />
@@ -486,14 +547,14 @@
             <Setter Property="IsVisible" Value="False" />
         </Style>
         <Style Selector="ComboBoxItem">
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Padding" Value="14,10" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Padding" Value="12,8" />
             <Setter Property="FontWeight" Value="Regular" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="TextBox.inline">
             <Setter Property="Theme" Value="{StaticResource SoloTextBox}" />
-            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -514,9 +575,9 @@
         </Style>
         <Style Selector="ComboBox.inline">
             <Setter Property="Theme" Value="{StaticResource MaterialComboBox}" />
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Height" Value="44" />
-            <Setter Property="MaxHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
             <Setter Property="Padding" Value="10,3" />
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
@@ -534,7 +595,7 @@
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="ComboBox.inline /template/ Panel#PART_RootPanel">
-            <Setter Property="Height" Value="44" />
+            <Setter Property="Height" Value="36" />
         </Style>
         <Style Selector="ComboBox.inline /template/ TextBlock#PART_PlaceholderText">
             <Setter Property="Margin" Value="10,0,30,0" />
@@ -544,7 +605,7 @@
             <Setter Property="IsVisible" Value="False" />
         </Style>
         <Style Selector="ComboBox.staff-choice /template/ Panel#PART_RootPanel">
-            <Setter Property="Height" Value="44" />
+            <Setter Property="Height" Value="36" />
         </Style>
         <Style Selector="ComboBox.staff-choice /template/ controls|MaterialUnderline#PART_Underline">
             <Setter Property="IsVisible" Value="False" />
@@ -567,7 +628,7 @@
             <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="Background" Value="{StaticResource AppTableHeaderBrush}" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="MinHeight" Value="48" />
+            <Setter Property="MinHeight" Value="40" />
             <Setter Property="Padding" Value="8,0" />
             <Setter Property="ClipToBounds" Value="False" />
             <Setter Property="SeparatorBrush" Value="{StaticResource AppBorderBrush}" />
@@ -577,7 +638,7 @@
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="DataGridRow">
-            <Setter Property="MinHeight" Value="56" />
+            <Setter Property="MinHeight" Value="52" />
         </Style>
         <Style Selector="DataGridRow:nth-child(even)">
             <Setter Property="Background" Value="{StaticResource AppTableAlternateBrush}" />

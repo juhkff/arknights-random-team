@@ -286,10 +286,10 @@ public partial class StrategyEditorDialog : ModalContent
             var remove = new Button
             {
                 Content = "×",
-                MinWidth = 40,
-                Width = 40,
-                MinHeight = 40,
-                Height = 40,
+                MinWidth = 28,
+                Width = 28,
+                MinHeight = 28,
+                Height = 28,
                 Padding = new Thickness(0),
                 Tag = name,
                 VerticalAlignment = VerticalAlignment.Center

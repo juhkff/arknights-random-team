@@ -1,5 +1,5 @@
-using System.Globalization;
 using Avalonia.Data.Converters;
+using Avalonia.Media;
 
 namespace arknights_random_team.Views;
 
@@ -14,9 +14,19 @@ public static class StaffCardVisual
     /// 让「已启用」的卡片在整片网格里自然凸显，不必依赖勾选框。
     /// </summary>
     public static readonly IValueConverter ArtOpacity =
-        new FuncValueConverter<bool, double>(selected => selected ? 1.0 : 0.45);
+        new FuncValueConverter<bool, double>(selected => selected ? 1.0 : 0.82);
 
     /// <summary>启用状态文字。</summary>
     public static readonly IValueConverter StatusText =
-        new FuncValueConverter<bool, string>(selected => selected ? "已启用" : "未启用");
+        new FuncValueConverter<bool, string>(selected => selected ? "编入" : "待命");
+
+    /// <summary>
+    /// 立绘是 180×360：半身像原尺寸铺满；头像放大 1.5 倍，只露出上半截
+    /// （与 180×180 头像同一显示区域）。
+    /// </summary>
+    public static readonly IValueConverter ArtViewportTransform =
+        new FuncValueConverter<bool, Transform>(portrait =>
+            portrait
+                ? new ScaleTransform(1, 1)
+                : new ScaleTransform(1.5, 1.5));
 }

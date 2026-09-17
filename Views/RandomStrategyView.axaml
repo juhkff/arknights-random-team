@@ -28,8 +28,14 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,18,*">
-        <Grid Grid.Row="0" ColumnDefinitions="*,16,Auto">
+    <Grid RowDefinitions="Auto,16,*">
+        <Border Grid.Row="0" Classes="command-bar">
+            <Grid>
+                <Path Width="180" Height="72" HorizontalAlignment="Right" VerticalAlignment="Top"
+                      IsHitTestVisible="False" Opacity="0.16"
+                      Stroke="{StaticResource AppPrimaryBrush}" StrokeThickness="1" Stretch="Fill"
+                      Data="M 0,72 L 60,0 H 180 M 36,72 L 110,0" />
+                <Grid ColumnDefinitions="*,16,Auto">
             <StackPanel VerticalAlignment="Center" Spacing="6">
                 <TextBlock Classes="eyebrow" Text="STRATEGY LIBRARY" />
                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -59,7 +65,9 @@
                     Classes="primary"
                     Content="新建策略"
                     Click="AddStrategy_Click" />
-        </Grid>
+                </Grid>
+            </Grid>
+        </Border>
 
         <Grid Grid.Row="2">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -127,12 +135,15 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         IsHitTestVisible="False"
-                        Spacing="10">
-                <Border Width="32"
-                        Height="3"
-                        HorizontalAlignment="Center"
-                        Background="{StaticResource AppPrimaryBrush}"
-                        CornerRadius="2" />
+                        Spacing="12">
+                <Path Width="42"
+                      Height="42"
+                      HorizontalAlignment="Center"
+                      Stretch="Uniform"
+                      Stroke="{StaticResource AppPrimaryBrush}"
+                      StrokeThickness="1.4"
+                      Opacity="0.8"
+                      Data="M 0,12 L 0,0 12,0 M 30,0 L 42,0 42,12 M 42,30 L 42,42 30,42 M 12,42 L 0,42 0,30 M 14,21 H 28 M 21,14 V 28" />
                 <TextBlock Classes="muted"
                            HorizontalAlignment="Center"
                            FontSize="18"

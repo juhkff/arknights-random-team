@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="clr-namespace:arknights_random_team.Models"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
              x:Class="arknights_random_team.Views.StaffPickDialog"
              Width="520"
@@ -19,9 +20,9 @@
             <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style Selector="ListBox#StaffList ListBoxItem">
-            <Setter Property="MinHeight" Value="60" />
-            <Setter Property="Margin" Value="0,2" />
-            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="MinHeight" Value="64" />
+            <Setter Property="Margin" Value="0,3" />
+            <Setter Property="Padding" Value="10,6" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="3,0,0,0" />
@@ -97,24 +98,48 @@
                              KeyDown="StaffList_KeyDown">
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="models:Staff">
-                                <Border BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="0,0,0,1">
-                                    <Grid ColumnDefinitions="*,Auto,Auto">
-                                        <TextBlock VerticalAlignment="Center"
-                                                   FontWeight="SemiBold"
+                                <Grid ColumnDefinitions="40,12,*,Auto,Auto" MinHeight="52">
+                                    <Border Classes="avatar-frame"
+                                            Width="40"
+                                            Height="40"
+                                            CornerRadius="7"
+                                            BorderBrush="{Binding CareerBrush}"
+                                            Background="{Binding CareerSoftBrush}">
+                                        <Panel>
+                                            <Image Stretch="UniformToFill"
+                                                   IsVisible="{Binding HasArt}"
+                                                   views:ArtImage.Sources="{Binding AvatarUris}" />
+                                            <Image Width="18"
+                                                   Height="18"
+                                                   Opacity="0.7"
+                                                   Stretch="Uniform"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   IsVisible="{Binding !HasArt}"
+                                                   views:ArtImage.Sources="{Binding CareerIconUris}" />
+                                        </Panel>
+                                    </Border>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock FontWeight="SemiBold"
                                                    Text="{Binding Name}"
                                                    TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1"
-                                                   Margin="12,0"
-                                                   VerticalAlignment="Center"
-                                                   Classes="caption"
-                                                   Text="{Binding Star, StringFormat='{}{0} 星'}" />
-                                        <TextBlock Grid.Column="2"
-                                                   MinWidth="44"
-                                                   VerticalAlignment="Center"
-                                                   Classes="caption"
-                                                   Text="{Binding Career}" />
-                                    </Grid>
-                                </Border>
+                                        <TextBlock FontSize="11"
+                                                   Foreground="{Binding CareerBrush}"
+                                                   Text="{Binding CareerName}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="3"
+                                               Margin="12,0"
+                                               VerticalAlignment="Center"
+                                               FontSize="11"
+                                               FontWeight="Bold"
+                                               Foreground="{Binding RarityBrush}"
+                                               Text="{Binding StarGlyphs}" />
+                                    <TextBlock Grid.Column="4"
+                                               MinWidth="36"
+                                               VerticalAlignment="Center"
+                                               Classes="caption"
+                                               Text="{Binding EliteLabel}" />
+                                </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

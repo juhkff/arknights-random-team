@@ -18,10 +18,19 @@
         }
         #app-loading.hidden { opacity: 0; pointer-events: none; }
         #app-loading .mark {
-            width: 64px; height: 64px; border: 2px solid #65E6C4; border-radius: 14px;
+            position: relative;
+            width: 72px; height: 72px; border: 1.5px solid #65E6C4; border-radius: 4px;
             display: flex; align-items: center; justify-content: center;
             font-weight: 700; font-size: 22px; color: #65E6C4; letter-spacing: 1px;
+            box-shadow: 0 0 24px rgba(101, 230, 196, 0.25);
         }
+        #app-loading .mark::before,
+        #app-loading .mark::after {
+            content: ""; position: absolute; width: 12px; height: 12px;
+            border: 1.5px solid #F3C969;
+        }
+        #app-loading .mark::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+        #app-loading .mark::after { right: -1px; bottom: -1px; border-left: 0; border-top: 0; }
         #app-loading .title { font-size: 15px; color: #EDF4FA; letter-spacing: .5px; }
         #app-loading .hint { font-size: 12px; }
         #app-loading .bar { width: 180px; height: 3px; background: #1E2E3C; border-radius: 2px; overflow: hidden; }

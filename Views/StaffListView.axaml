@@ -17,11 +17,11 @@
         <!-- 视图切换按钮（表格 / 卡片、头像 / 半身像） -->
         <Style Selector="ToggleButton.view-switch">
             <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
-            <Setter Property="MinWidth" Value="60" />
-            <Setter Property="MinHeight" Value="36" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="Padding" Value="12,0" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="MinWidth" Value="56" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
@@ -42,56 +42,89 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
-        <!-- 仿游戏干员卡 -->
-        <Style Selector="Border.operator-card">
-            <!-- 竖版，接近官方干员卡 2:3 的比例 -->
-            <Setter Property="Width" Value="146" />
-            <Setter Property="Height" Value="214" />
-            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="ClipToBounds" Value="True" />
+        <Style Selector="Border.operator-card-host">
+            <Setter Property="Margin" Value="0,0,14,14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BoxShadow" Value="0 6 18 0 #24000000" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.14" />
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.16" />
                 </Transitions>
             </Setter>
         </Style>
-        <!-- 职业色描边：悬停时加粗并配一圈同色外发光，让所选职业更醒目 -->
-        <Style Selector="Border.operator-card:pointerover">
-            <Setter Property="BorderThickness" Value="2" />
+        <Style Selector="Border.operator-card-host:pointerover">
+            <Setter Property="BoxShadow" Value="0 14 32 0 #66000000" />
+        </Style>
+
+        <!-- 仿游戏干员卡：竖版，接近官方 2:3 -->
+        <Style Selector="Border.operator-card">
+            <Setter Property="Width" Value="158" />
+            <Setter Property="Height" Value="236" />
+            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.14" />
+                    <ThicknessTransition Property="BorderThickness" Duration="0:0:0.14" />
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.operator-card-host:pointerover Border.operator-card">
+            <Setter Property="BorderThickness" Value="1.5" />
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
         </Style>
         <Style Selector="TextBlock.operator-card-stars">
-            <Setter Property="FontSize" Value="10" />
-            <Setter Property="LetterSpacing" Value="0.5" />
-            <Setter Property="Foreground" Value="{StaticResource AppSignalBrush}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="LetterSpacing" Value="0.6" />
+            <Setter Property="FontWeight" Value="Bold" />
         </Style>
         <Style Selector="TextBlock.operator-card-name">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="Button.card-delete">
-            <Setter Property="MinWidth" Value="52" />
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Width" Value="32" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="FontSize" Value="16" />
             <Setter Property="Opacity" Value="0" />
+            <Setter Property="IsHitTestVisible" Value="False" />
         </Style>
-        <!-- 删除按钮平时隐藏，悬停卡片或它本身时才显现，避免卡片上堆满控件 -->
-        <Style Selector="Border.operator-card:pointerover Button.card-delete">
+        <!-- 删除按钮平时不接收点击，避免挡住「点卡片切换编入」 -->
+        <Style Selector="Border.operator-card-host:pointerover Button.card-delete">
             <Setter Property="Opacity" Value="1" />
+            <Setter Property="IsHitTestVisible" Value="True" />
         </Style>
         <Style Selector="Button.card-delete:pointerover">
             <Setter Property="Opacity" Value="1" />
+            <Setter Property="IsHitTestVisible" Value="True" />
+        </Style>
+
+        <Style Selector="Border.operator-card-ring">
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="CornerRadius" Value="4" />
         </Style>
 
         <Style Selector="DataGridRow">
-            <Setter Property="MinHeight" Value="64" />
+            <Setter Property="MinHeight" Value="60" />
+        </Style>
+        <Style Selector="DataGridCell TextBlock.cell-start">
+            <Setter Property="TextAlignment" Value="Left" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="CheckBox.staff-select">
-            <Setter Property="assists:SelectionControlAssist.Size" Value="22" />
+            <Setter Property="assists:SelectionControlAssist.Size" Value="18" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="MinWidth" Value="40" />
-            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
@@ -104,9 +137,9 @@
         <Style Selector="ComboBox.staff-choice">
             <Setter Property="Theme" Value="{StaticResource MaterialComboBox}" />
             <Setter Property="MinWidth" Value="0" />
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Height" Value="44" />
-            <Setter Property="MaxHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
             <Setter Property="Padding" Value="6,2" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -121,9 +154,9 @@
         <Style Selector="DataGridCell TextBox.staff-editor">
             <Setter Property="Theme" Value="{StaticResource SoloTextBox}" />
             <Setter Property="MinWidth" Value="0" />
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Height" Value="44" />
-            <Setter Property="MaxHeight" Value="44" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MaxHeight" Value="36" />
             <Setter Property="Padding" Value="8,2" />
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
@@ -145,120 +178,147 @@
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.delete-staff">
-            <Setter Property="MinWidth" Value="48" />
-            <Setter Property="Width" Value="48" />
-            <Setter Property="MinHeight" Value="48" />
-            <Setter Property="Height" Value="48" />
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Width" Value="32" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Height" Value="32" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="HorizontalAlignment" Value="Center" />
             <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontSize" Value="16" />
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,18,Auto,18,*">
-        <!-- 两侧共用同一套行定义，保证标题区与右侧按钮组在视觉上对齐 -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,16,Auto" RowDefinitions="Auto,6,Auto">
-            <StackPanel Grid.Row="0" Spacing="6">
-                <TextBlock Classes="eyebrow" Text="OPERATOR ROSTER" />
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Border Width="4"
-                            Height="28"
-                            Background="{StaticResource AppSignalBrush}"
-                            CornerRadius="2" />
-                    <TextBlock Classes="section-title"
-                               VerticalAlignment="Center"
-                               Text="干员名单" />
-                    <Border Padding="10,5"
-                            Background="{StaticResource AppSurfaceSubtleBrush}"
-                            BorderBrush="{StaticResource AppBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6">
-                        <TextBlock FontSize="12"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource AppMutedTextBrush}"
-                                   Text="{Binding StaffCount, StringFormat='共 {0} 名'}" />
-                    </Border>
-                    <Border Padding="10,5"
-                            Background="{StaticResource AppAccentSoftBrush}"
-                            BorderBrush="{StaticResource AppAccentBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6">
-                        <TextBlock FontSize="12"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource AppAccentBrush}"
-                                   Text="{Binding SelectedStaffCount, StringFormat='已启用 {0} 名'}" />
-                    </Border>
-                </StackPanel>
-
-                <!-- 立绘加载统计：放在标题徽标下方这一行，作为列表的附属说明 -->
-                <TextBlock Classes="caption"
-                           Margin="14,0,0,0"
-                           IsVisible="{Binding IsCardView}"
-                           Text="{Binding ArtLoadInfo}" />
-            </StackPanel>
-
-            <StackPanel Grid.Row="2"
-                        Grid.Column="2"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        Spacing="10">
-                <!-- 视图切换：表格（可编辑排序）/ 卡片（看立绘） -->
-                <Border Padding="3"
-                        Background="{StaticResource AppWellBrush}"
-                        BorderBrush="{StaticResource AppBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8">
-                    <StackPanel Orientation="Horizontal" Spacing="3">
-                        <ToggleButton Name="GridViewButton"
-                                      Classes="view-switch"
-                                      Content="表格"
-                                      AutomationProperties.Name="切换到表格视图"
-                                      IsChecked="{Binding IsGridView, Mode=OneWay}"
-                                      Click="GridView_Click" />
-                        <ToggleButton Name="CardViewButton"
-                                      Classes="view-switch"
-                                      Content="卡片"
-                                      AutomationProperties.Name="切换到卡片视图"
-                                      IsChecked="{Binding IsCardView, Mode=OneWay}"
-                                      Click="CardView_Click" />
-                    </StackPanel>
-                </Border>
-
-                <!-- 卡片立绘规格：头像 / 半身像 -->
-                <Border Name="GalleryToggle"
-                        Padding="3"
-                        Background="{StaticResource AppWellBrush}"
-                        BorderBrush="{StaticResource AppBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        IsVisible="{Binding IsCardView}">
-                    <StackPanel Orientation="Horizontal" Spacing="3">
-                        <ToggleButton Name="AvatarModeButton"
-                                      Classes="view-switch"
-                                      Content="头像"
-                                      AutomationProperties.Name="卡片显示头像"
-                                      IsChecked="{Binding !UsePortrait, Mode=OneWay}"
-                                      Click="AvatarMode_Click" />
-                        <ToggleButton Name="PortraitModeButton"
-                                      Classes="view-switch"
-                                      Content="半身像"
-                                      AutomationProperties.Name="卡片显示半身立绘"
-                                      IsChecked="{Binding UsePortrait, Mode=OneWay}"
-                                      Click="PortraitMode_Click" />
-                    </StackPanel>
-                </Border>
-
-                <Button Name="ClearAllButton"
-                        MinWidth="112"
-                        Classes="danger"
-                        Content="清空列表"
-                        Click="ClearAll_Click" />
-            </StackPanel>
-        </Grid>
-
-        <Border Grid.Row="4" Grid.ColumnSpan="3" Classes="surface data-frame" ClipToBounds="True">
+    <Grid RowDefinitions="Auto,16,*">
+        <Border Grid.Row="0" Classes="command-bar">
             <Grid>
+                <Path Width="220"
+                      Height="86"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      IsHitTestVisible="False"
+                      Opacity="0.18"
+                      Stroke="{StaticResource AppPrimaryBrush}"
+                      StrokeThickness="1"
+                      Stretch="Fill"
+                      Data="M 0,86 L 70,0 H 220 M 40,86 L 110,0 M 90,86 L 160,0" />
+                <Grid RowDefinitions="Auto,12,Auto">
+                <Grid ColumnDefinitions="*,20,Auto">
+                    <StackPanel Spacing="8">
+                        <TextBlock Classes="eyebrow" Text="OPERATOR ROSTER" />
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Width="4"
+                                    Height="28"
+                                    Background="{StaticResource AppSignalBrush}"
+                                    CornerRadius="2" />
+                            <TextBlock Classes="section-title"
+                                       VerticalAlignment="Center"
+                                       Text="干员名单" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Spacing="10">
+                        <Border Padding="3"
+                                Background="{StaticResource AppWellBrush}"
+                                BorderBrush="{StaticResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                <ToggleButton Name="GridViewButton"
+                                              Classes="view-switch"
+                                              Content="表格"
+                                              AutomationProperties.Name="切换到表格视图"
+                                              IsChecked="{Binding IsGridView, Mode=OneWay}"
+                                              Click="GridView_Click" />
+                                <ToggleButton Name="CardViewButton"
+                                              Classes="view-switch"
+                                              Content="卡片"
+                                              AutomationProperties.Name="切换到卡片视图"
+                                              IsChecked="{Binding IsCardView, Mode=OneWay}"
+                                              Click="CardView_Click" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Name="GalleryToggle"
+                                Padding="3"
+                                Background="{StaticResource AppWellBrush}"
+                                BorderBrush="{StaticResource AppBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                IsVisible="{Binding IsCardView}">
+                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                <ToggleButton Name="AvatarModeButton"
+                                              Classes="view-switch"
+                                              Content="头像"
+                                              AutomationProperties.Name="卡片显示头像"
+                                              IsChecked="{Binding !UsePortrait, Mode=OneWay}"
+                                              Click="AvatarMode_Click" />
+                                <ToggleButton Name="PortraitModeButton"
+                                              Classes="view-switch"
+                                              Content="半身像"
+                                              AutomationProperties.Name="卡片显示半身立绘"
+                                              IsChecked="{Binding UsePortrait, Mode=OneWay}"
+                                              Click="PortraitMode_Click" />
+                            </StackPanel>
+                        </Border>
+
+                        <Button Name="ClearAllButton"
+                                MinWidth="112"
+                                Classes="danger"
+                                Content="清空列表"
+                                Click="ClearAll_Click" />
+                    </StackPanel>
+                </Grid>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                    <Border Classes="stat-hud">
+                        <StackPanel Spacing="1">
+                            <TextBlock Classes="stat-value" Text="{Binding StaffCount}" />
+                            <TextBlock Classes="stat-label" Text="在册" />
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="stat-hud"
+                            Background="{StaticResource AppAccentSoftBrush}"
+                            BorderBrush="{StaticResource AppPrimaryBrush}">
+                        <StackPanel Spacing="1">
+                            <TextBlock Classes="stat-value"
+                                       Foreground="{StaticResource AppPrimaryBrush}"
+                                       Text="{Binding SelectedStaffCount}" />
+                            <TextBlock Classes="stat-label"
+                                       Foreground="{StaticResource AppPrimaryBrush}"
+                                       Text="编入" />
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="stat-hud">
+                        <StackPanel Spacing="1">
+                            <TextBlock Classes="stat-value"
+                                       Foreground="{StaticResource AppMutedTextBrush}"
+                                       Text="{Binding UnselectedStaffCount}" />
+                            <TextBlock Classes="stat-label" Text="待命" />
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Classes="caption"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Bottom"
+                               IsVisible="{Binding IsCardView}"
+                               Text="{Binding ArtLoadInfo}" />
+                </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Classes="surface data-frame" Padding="0" ClipToBounds="True">
+            <Grid>
+                <Grid RowDefinitions="3,*">
+                    <Grid Grid.Row="0" ColumnDefinitions="88,*,0.4*">
+                        <Border Background="{StaticResource AppSignalBrush}" />
+                        <Border Grid.Column="1" Background="{StaticResource AppPrimaryGlowBrush}" />
+                        <Border Grid.Column="2" Background="{StaticResource AppBorderBrush}" />
+                    </Grid>
+
+                    <Grid Grid.Row="1">
                 <DataGrid Name="StaffGrid"
                           IsVisible="{Binding IsGridView}"
                           AutoGenerateColumns="False"
@@ -291,13 +351,42 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Width="2*"
-                                                MinWidth="140"
-                                                Header="名称"
+                        <DataGridTemplateColumn Width="2.4*"
+                                                MinWidth="188"
+                                                Header="干员"
                                                 SortMemberPath="Name">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                    <Grid ColumnDefinitions="48,12,*" Margin="4,0">
+                                        <Border Classes="avatar-frame"
+                                                BorderBrush="{Binding CareerBrush}"
+                                                Background="{Binding CareerSoftBrush}">
+                                            <Panel>
+                                                <Image Stretch="UniformToFill"
+                                                       IsVisible="{Binding HasArt}"
+                                                       views:ArtImage.Sources="{Binding AvatarUris}" />
+                                                <Image Width="22"
+                                                       Height="22"
+                                                       Opacity="0.7"
+                                                       Stretch="Uniform"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       IsVisible="{Binding !HasArt}"
+                                                       views:ArtImage.Sources="{Binding CareerIconUris}" />
+                                            </Panel>
+                                        </Border>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Classes="cell-start"
+                                                       FontWeight="SemiBold"
+                                                       FontSize="15"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Text="{Binding Name}" />
+                                            <TextBlock Classes="cell-start"
+                                                       FontSize="11"
+                                                       Foreground="{Binding CareerBrush}"
+                                                       Text="{Binding CareerName}" />
+                                        </StackPanel>
+                                    </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
@@ -308,13 +397,23 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Width="1.3*"
+                        <DataGridTemplateColumn Width="1.15*"
                                                 MinWidth="112"
                                                 Header="等级"
                                                 SortMemberPath="Level.Description">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <TextBlock Text="{Binding Level.Description}" />
+                                    <Border HorizontalAlignment="Center"
+                                            Padding="10,4"
+                                            Background="{StaticResource AppWellBrush}"
+                                            BorderBrush="{StaticResource AppBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6">
+                                        <TextBlock Classes="mono"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource AppTextBrush}"
+                                                   Text="{Binding Level.Description}" />
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
@@ -325,13 +424,24 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Width="88"
-                                                MinWidth="88"
+                        <DataGridTemplateColumn Width="108"
+                                                MinWidth="100"
                                                 Header="稀有度"
                                                 SortMemberPath="Star">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <TextBlock Text="{Binding Star}" />
+                                    <Border HorizontalAlignment="Center"
+                                            Padding="8,4"
+                                            Background="{Binding RaritySoftBrush}"
+                                            BorderBrush="{Binding RarityBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6">
+                                        <TextBlock FontSize="11"
+                                                   FontWeight="Bold"
+                                                   LetterSpacing="0.4"
+                                                   Foreground="{Binding RarityBrush}"
+                                                   Text="{Binding StarGlyphs}" />
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
@@ -343,13 +453,33 @@
                             </DataGridTemplateColumn.CellEditingTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Width="104"
-                                                MinWidth="96"
+                        <DataGridTemplateColumn Width="112"
+                                                MinWidth="104"
                                                 Header="职业"
                                                 SortMemberPath="Career">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <TextBlock Text="{Binding Career}" />
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center"
+                                                Spacing="7">
+                                        <Border Width="26"
+                                                Height="26"
+                                                CornerRadius="6"
+                                                Background="{Binding CareerSoftBrush}"
+                                                BorderBrush="{Binding CareerBrush}"
+                                                BorderThickness="1">
+                                            <Image Width="16"
+                                                   Height="16"
+                                                   Stretch="Uniform"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   views:ArtImage.Sources="{Binding CareerIconUris}" />
+                                        </Border>
+                                        <TextBlock VerticalAlignment="Center"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{Binding CareerBrush}"
+                                                   Text="{Binding CareerName}" />
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                             <DataGridTemplateColumn.CellEditingTemplate>
@@ -376,8 +506,8 @@
                 </DataGrid>
 
                 <!--
-                    卡片视图：仿游戏干员卡——立绘、职业徽记与配色描边、稀有度、精英等级，
-                    并可直接勾选参与随机 / 删除。
+                    卡片视图：仿游戏干员卡——立绘、稀有度色框、职业徽记、精英角标，
+                    点击整卡切换编入随机池。
                 -->
                 <ScrollViewer IsVisible="{Binding IsCardView}"
                               HorizontalScrollBarVisibility="Disabled"
@@ -392,139 +522,183 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="models:Staff">
-                                <Border Classes="operator-card"
-                                        BorderBrush="{Binding CareerBrush}"
-                                        Margin="0,0,12,12"
-                                        ToolTip.Tip="点击卡片切换参与随机">
+                                <Border Classes="operator-card-host"
+                                        ToolTip.Tip="点击卡片编入 / 移出随机池">
                                     <Grid>
-                                        <!--
-                                            立绘按比例缩放并顶部对齐：半身像是 1:2 的竖图，
-                                            用 UniformToFill 会放大后居中裁切，把头切掉且过度放大。
-                                            这里改为按宽铺满 + 顶部对齐：横向铺满卡片，纵向从顶部开始，
-                                            露出头部与上身，超出卡片的部分由 ClipToBounds 裁掉。
-                                            半身像是 1:2 竖图，卡片接近 2:3，保留的是上半段。
-                                        -->
-                                        <Image Stretch="UniformToFill"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Top"
-                                               Opacity="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.ArtOpacity}}"
-                                               views:ArtImage.Sources="{Binding DisplayArtUris}"
-                                               views:ArtImage.AlternateSources="{Binding AlternateArtUris}" />
+                                        <Border Classes="operator-card"
+                                                BorderBrush="{Binding RarityBrush}">
+                                            <Grid>
+                                                <!--
+                                                    图源始终是 180×360 立绘（精二用 _2）。
+                                                    半身像铺满卡片；头像放大后只露出上半截，相当于 180×180 头像那一块。
+                                                -->
+                                                <Image Stretch="UniformToFill"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Top"
+                                                       RenderTransformOrigin="0.5,0"
+                                                       RenderTransform="{Binding UsePortrait, Converter={x:Static views:StaffCardVisual.ArtViewportTransform}}"
+                                                       Opacity="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.ArtOpacity}}"
+                                                       views:ArtImage.Sources="{Binding DisplayArtUris}" />
 
-                                        <!-- 底部渐深，保证名字与数值始终读得清 -->
-                                        <Border VerticalAlignment="Bottom"
-                                                Height="74">
-                                            <Border.Background>
-                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                                    <GradientStop Offset="0" Color="#000B1118" />
-                                                    <GradientStop Offset="0.45" Color="#D90B1118" />
-                                                    <GradientStop Offset="1" Color="#F20B1118" />
-                                                </LinearGradientBrush>
-                                            </Border.Background>
+                                                <!-- 底部名牌：稀有度色软底，保证名字始终可读 -->
+                                                <Border VerticalAlignment="Bottom" Height="86">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                                            <GradientStop Offset="0" Color="#000B1118" />
+                                                            <GradientStop Offset="0.28" Color="#B30B1118" />
+                                                            <GradientStop Offset="1" Color="#F50B1118" />
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+
+                                                <!-- 顶部压深，突出职业图标与星级 -->
+                                                <Border VerticalAlignment="Top" Height="48">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                                            <GradientStop Offset="0" Color="#D90B1118" />
+                                                            <GradientStop Offset="1" Color="#000B1118" />
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+
+                                                <!-- 稀有度顶栏，对齐游戏卡框 -->
+                                                <Border Height="4"
+                                                        VerticalAlignment="Top"
+                                                        Background="{Binding RarityBrush}" />
+
+                                                <!-- 无立绘时（手动录入的干员）用官方职业图标占位 -->
+                                                <Image Width="56"
+                                                       Height="56"
+                                                       Opacity="0.35"
+                                                       Stretch="Uniform"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       IsVisible="{Binding !HasArt}"
+                                                       views:ArtImage.Sources="{Binding CareerIconUris}" />
+
+                                                <!-- 左上：职业徽记 + 精英阶段 -->
+                                                <StackPanel Margin="8,10,0,0"
+                                                            HorizontalAlignment="Left"
+                                                            VerticalAlignment="Top"
+                                                            Orientation="Horizontal"
+                                                            Spacing="6">
+                                                    <Border Classes="class-badge"
+                                                            BorderBrush="{Binding CareerBrush}"
+                                                            Background="{Binding CareerSoftBrush}">
+                                                        <Image Width="16"
+                                                               Height="16"
+                                                               Stretch="Uniform"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               views:ArtImage.Sources="{Binding CareerIconUris}" />
+                                                    </Border>
+                                                    <Border Classes="elite-chip" VerticalAlignment="Center">
+                                                        <TextBlock FontSize="10"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{StaticResource AppTextBrush}"
+                                                                   Text="{Binding EliteLabel}" />
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <!-- 右上：稀有度星 -->
+                                                <TextBlock Classes="operator-card-stars"
+                                                           Margin="0,10,8,0"
+                                                           HorizontalAlignment="Right"
+                                                           VerticalAlignment="Top"
+                                                           Foreground="{Binding RarityBrush}"
+                                                           Text="{Binding StarGlyphs}" />
+
+                                                <!-- 名称 / 职业 / 等级 / 编入状态 -->
+                                                <Grid Margin="10,0,10,8"
+                                                      VerticalAlignment="Bottom"
+                                                      RowDefinitions="Auto,6,Auto">
+                                                    <Grid ColumnDefinitions="*,8,Auto">
+                                                        <TextBlock Classes="operator-card-name"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Text="{Binding Name}" />
+                                                        <Border Grid.Column="2"
+                                                                Padding="7,2"
+                                                                CornerRadius="4"
+                                                                VerticalAlignment="Center"
+                                                                Background="{StaticResource AppPrimaryBrush}"
+                                                                IsVisible="{Binding IsSelected}">
+                                                            <TextBlock FontSize="10"
+                                                                       FontWeight="Bold"
+                                                                       Foreground="{StaticResource AppOnPrimaryBrush}"
+                                                                       Text="编入" />
+                                                        </Border>
+                                                    </Grid>
+                                                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+                                                        <StackPanel Orientation="Horizontal" Spacing="7">
+                                                            <TextBlock FontSize="11"
+                                                                       VerticalAlignment="Center"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{Binding CareerBrush}"
+                                                                       Text="{Binding CareerName}" />
+                                                            <TextBlock Classes="mono"
+                                                                       FontSize="11"
+                                                                       VerticalAlignment="Center"
+                                                                       Foreground="{StaticResource AppMutedTextBrush}"
+                                                                       Text="{Binding LevelDigits}" />
+                                                        </StackPanel>
+                                                        <Border Grid.Column="1"
+                                                                Width="36"
+                                                                Height="3"
+                                                                VerticalAlignment="Center"
+                                                                CornerRadius="2"
+                                                                Background="{Binding RarityBrush}" />
+                                                    </Grid>
+                                                </Grid>
+
+                                                <!-- 战术角标：编入时四角亮起 -->
+                                                <Path Margin="6,8,0,0"
+                                                      HorizontalAlignment="Left"
+                                                      VerticalAlignment="Top"
+                                                      IsHitTestVisible="False"
+                                                      Stroke="{StaticResource AppPrimaryBrush}"
+                                                      StrokeThickness="1.6"
+                                                      IsVisible="{Binding IsSelected}"
+                                                      Data="M 0,12 L 0,0 12,0" />
+                                                <Path Margin="0,8,6,0"
+                                                      HorizontalAlignment="Right"
+                                                      VerticalAlignment="Top"
+                                                      IsHitTestVisible="False"
+                                                      Stroke="{StaticResource AppPrimaryBrush}"
+                                                      StrokeThickness="1.6"
+                                                      IsVisible="{Binding IsSelected}"
+                                                      Data="M 0,0 L 12,0 12,12" />
+                                                <Path Margin="6,0,0,6"
+                                                      HorizontalAlignment="Left"
+                                                      VerticalAlignment="Bottom"
+                                                      IsHitTestVisible="False"
+                                                      Stroke="{StaticResource AppPrimaryBrush}"
+                                                      StrokeThickness="1.6"
+                                                      IsVisible="{Binding IsSelected}"
+                                                      Data="M 0,0 L 0,12 12,12" />
+                                                <Path Margin="0,0,6,6"
+                                                      HorizontalAlignment="Right"
+                                                      VerticalAlignment="Bottom"
+                                                      IsHitTestVisible="False"
+                                                      Stroke="{StaticResource AppPrimaryBrush}"
+                                                      StrokeThickness="1.6"
+                                                      IsVisible="{Binding IsSelected}"
+                                                      Data="M 12,0 L 12,12 0,12" />
+
+                                                <!-- 删除：平时隐藏，悬停卡片才显现 -->
+                                                <Button Classes="danger compact card-delete"
+                                                        Margin="0,0,8,78"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Bottom"
+                                                        Content="×"
+                                                        ToolTip.Tip="删除干员"
+                                                        Tag="{Binding}"
+                                                        Click="Delete_Click" />
+                                            </Grid>
                                         </Border>
 
-                                        <!-- 顶部压深，突出职业图标与勾选 -->
-                                        <Border VerticalAlignment="Top"
-                                                Height="44">
-                                            <Border.Background>
-                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                                    <GradientStop Offset="0" Color="#B30B1118" />
-                                                    <GradientStop Offset="1" Color="#000B1118" />
-                                                </LinearGradientBrush>
-                                            </Border.Background>
-                                        </Border>
-
-                                        <!-- 无立绘时（手动录入的干员）用官方职业图标占位 -->
-                                        <Image Width="56"
-                                               Height="56"
-                                               Opacity="0.3"
-                                               Stretch="Uniform"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               IsVisible="{Binding !HasArt}"
-                                               views:ArtImage.Sources="{Binding CareerIconUris}" />
-
-                                        <!-- 官方职业图标 -->
-                                        <Image Width="26"
-                                               Height="26"
-                                               Margin="7"
-                                               Stretch="Uniform"
-                                               HorizontalAlignment="Left"
-                                               VerticalAlignment="Top"
-                                               views:ArtImage.Sources="{Binding CareerIconUris}" />
-
-                                        <!-- 稀有度：官方干员卡是顶部一排星 -->
-                                        <TextBlock Classes="operator-card-stars"
-                                                   Margin="7,7,0,0"
-                                                   HorizontalAlignment="Right"
-                                                   VerticalAlignment="Top"
-                                                   Text="{Binding StarGlyphs}" />
-
-                                        <!-- 名称 / 职业 / 精英等级 -->
-                                        <StackPanel Margin="9,0,9,8"
-                                                    VerticalAlignment="Bottom"
-                                                    Spacing="3">
-                                            <TextBlock Classes="operator-card-name"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Text="{Binding Name}" />
-                                            <StackPanel Orientation="Horizontal" Spacing="7">
-                                                <TextBlock FontSize="11"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{Binding CareerBrush}"
-                                                           Text="{Binding CareerName}" />
-                                                <TextBlock Classes="mono"
-                                                           FontSize="11"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                                           Text="{Binding LevelDigits}" />
-                                            </StackPanel>
-                                        </StackPanel>
-
-                                        <!--
-                                            启用状态角标：把方块勾选框换成斜切角标，
-                                            拼成「战术标记」的语感。整张卡都可点击切换。
-                                        -->
-                                        <Border Width="26"
-                                                Height="26"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Top"
-                                                IsHitTestVisible="False"
-                                                Opacity="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.ArtOpacity}}">
-                                            <Path Stretch="None"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"
-                                                  Data="M 0,0 L 9,9 L 0,18"
-                                                  Stroke="{StaticResource AppPrimaryBrush}"
-                                                  StrokeThickness="2.5"
-                                                  StrokeLineCap="Round"
-                                                  StrokeJoin="Round" />
-                                        </Border>
-
-                                        <!-- 删除：平时隐藏，悬停卡片才显现 -->
-                                        <Button Classes="danger compact card-delete"
-                                                Margin="0,0,6,6"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Bottom"
-                                                Content="删除"
-                                                Tag="{Binding}"
-                                                Click="Delete_Click" />
-
-                                        <!-- 启用态：亮框 + 外发光，一眼区分已启用与未启用 -->
-                                        <Border IsHitTestVisible="False"
-                                                BorderBrush="{Binding CareerBrush}"
-                                                BorderThickness="2"
-                                                CornerRadius="10"
-                                                BoxShadow="0 0 14 0 #4D65E6C4"
-                                                IsVisible="{Binding IsSelected}" />
-
-                                        <!-- 启用态：左下角一道职业色细条，兼作状态提示 -->
-                                        <Border Width="28"
-                                                Height="3"
-                                                Margin="9,0,0,26"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Bottom"
-                                                IsHitTestVisible="False"
-                                                Background="{StaticResource AppPrimaryBrush}"
+                                        <Border Classes="operator-card-ring"
+                                                BorderBrush="{StaticResource AppPrimaryBrush}"
+                                                BoxShadow="0 0 16 0 #4065E6C4"
                                                 IsVisible="{Binding IsSelected}" />
                                     </Grid>
                                 </Border>
@@ -537,12 +711,15 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             IsHitTestVisible="False"
-                            Spacing="10">
-                    <Border Width="32"
-                            Height="3"
-                            HorizontalAlignment="Center"
-                            Background="{StaticResource AppPrimaryBrush}"
-                            CornerRadius="2" />
+                            Spacing="12">
+                    <Path Width="42"
+                          Height="42"
+                          HorizontalAlignment="Center"
+                          Stretch="Uniform"
+                          Stroke="{StaticResource AppPrimaryBrush}"
+                          StrokeThickness="1.4"
+                          Opacity="0.8"
+                          Data="M 0,12 L 0,0 12,0 M 30,0 L 42,0 42,12 M 42,30 L 42,42 30,42 M 12,42 L 0,42 0,30 M 12,21 H 30 M 21,12 V 30" />
                     <TextBlock Classes="muted"
                                HorizontalAlignment="Center"
                                FontSize="18"
@@ -550,8 +727,10 @@
                                Text="暂无干员" />
                     <TextBlock Classes="caption"
                                HorizontalAlignment="Center"
-                               Text="先录入或同步干员，再启用阵容候选。" />
+                               Text="先录入或同步干员，再编入随机池。" />
                 </StackPanel>
+                    </Grid>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

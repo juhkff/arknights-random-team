@@ -30,14 +30,21 @@ public static class OperatorArt
         "https://testingcf.jsdelivr.net"
     ];
 
-    /// <summary>头像小图（约 50KB，180×180），列表卡片默认用它。</summary>
-    public static IReadOnlyList<Uri> Avatar(string? sourceId) => Build("avatar", sourceId, "");
+    /// <summary>
+    /// 头像小图（180×180），表格与编队名牌用。
+    /// 精二优先 <c>_2</c>，没有专属头像时回退默认文件（无后缀）。
+    /// </summary>
+    public static IReadOnlyList<Uri> Avatar(string? sourceId, bool elite2 = false) =>
+        elite2
+            ? [.. Build("avatar", sourceId, "_2"), .. Build("avatar", sourceId, "")]
+            : Build("avatar", sourceId, "");
 
     /// <summary>
-    /// 半身立绘大图。
+    /// 半身立绘（180×360）。卡片「头像 / 半身像」共用这一张，只改裁切区域：
+    /// 头像露出上半截（与 180×180 头像同一范围），半身像铺满卡片。
     ///
     /// 立绘分精英阶段：<c>_1</c> 是默认立绘，<c>_2</c> 是精英二专属立绘。
-    /// 精二的干员优先用 <c>_2</c>，取不到会自动回退到 <c>_1</c>
+    /// 精二优先 <c>_2</c>，取不到回退 <c>_1</c>
     /// （不是所有干员都有精二立绘，回退由展示层按顺序尝试完成）。
     /// </summary>
     public static IReadOnlyList<Uri> Portrait(string? sourceId, bool elite2 = false) =>

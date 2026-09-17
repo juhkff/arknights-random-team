@@ -11,6 +11,13 @@ public partial class Staff : AutomaticNotify
     private bool _isSelected;
     private string? _sourceId;
 
+    public Staff()
+    {
+        // 字段初始化的 Level 不会走 setter，这里补订阅，
+        // 表格里改「精二」才能立刻换成精二立绘。
+        _level.PropertyChanged += Level_PropertyChanged;
+    }
+
     public string Name
     {
         get => _name;
@@ -20,19 +27,40 @@ public partial class Staff : AutomaticNotify
     public int Star
     {
         get => _star;
-        set => SetProperty(ref _star, value);
+        set
+        {
+            if (!SetProperty(ref _star, value))
+                return;
+
+            OnPropertyChanged(nameof(StarGlyphs));
+            OnPropertyChanged(nameof(RarityBrush));
+            OnPropertyChanged(nameof(RaritySoftBrush));
+        }
     }
 
     public Career Career
     {
         get => _career;
-        set => SetProperty(ref _career, value);
+        set
+        {
+            if (!SetProperty(ref _career, value))
+                return;
+
+            OnPropertyChanged(nameof(CareerBrush));
+            OnPropertyChanged(nameof(CareerSoftBrush));
+            OnPropertyChanged(nameof(CareerName));
+            OnPropertyChanged(nameof(CareerIconUris));
+        }
     }
 
     public bool IsSelected
     {
         get => _isSelected;
-        set => SetProperty(ref _isSelected, value);
+        set
+        {
+            if (SetProperty(ref _isSelected, value))
+                OnPropertyChanged(nameof(RosterStatus));
+        }
     }
 
     public Level Level
@@ -53,17 +81,21 @@ public partial class Staff : AutomaticNotify
 
             _level.PropertyChanged += Level_PropertyChanged;
 
-            // 精英阶段决定卡片用哪张立绘（精二有专属立绘），要跟着转发一次通知
+            // 精英阶段决定用默认立绘还是精二立绘
             RaiseArtChanged();
+            OnPropertyChanged(nameof(LevelDigits));
+            OnPropertyChanged(nameof(EliteLabel));
         }
     }
 
     /// <summary>
     /// 精英阶段被就地改动时（表格里直接编辑精英列就是这种情况），
-    /// 卡片立绘要跟着换，所以转发一次 <see cref="ArtUris"/> 的通知。
+    /// 精二立绘要跟着换，所以转发一次图源通知。
     /// </summary>
     private void Level_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        OnPropertyChanged(nameof(LevelDigits));
+        OnPropertyChanged(nameof(EliteLabel));
         if (e.PropertyName == nameof(Models.Level.EliteLevel))
             RaiseArtChanged();
     }
