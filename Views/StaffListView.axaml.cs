@@ -88,6 +88,17 @@ public partial class StaffListView : UserControl
         if (e.Source is not Visual visual)
             return;
 
+        // 整张干员卡可点击切换「是否参与随机」。
+        // 卡片上的删除按钮要单独处理，所以点到按钮上时直接放行。
+        if (visual.FindAncestorOfType<Button>(true) is null &&
+            visual.FindAncestorOfType<Border>(true) is { } border &&
+            border.Classes.Contains("operator-card") &&
+            border.DataContext is Staff cardStaff)
+        {
+            cardStaff.IsSelected = !cardStaff.IsSelected;
+            return;
+        }
+
         if (visual.FindAncestorOfType<DataGridColumnHeader>(true) is not null)
         {
             _suppressRowSelection = true;

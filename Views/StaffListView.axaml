@@ -396,7 +396,8 @@
                             <DataTemplate x:DataType="models:Staff">
                                 <Border Classes="operator-card"
                                         BorderBrush="{Binding CareerBrush}"
-                                        Margin="0,0,12,12">
+                                        Margin="0,0,12,12"
+                                        ToolTip.Tip="点击卡片切换参与随机">
                                     <Grid>
                                         <!--
                                             立绘按比例缩放并顶部对齐：半身像是 1:2 的竖图，
@@ -408,6 +409,7 @@
                                         <Image Stretch="UniformToFill"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Top"
+                                               Opacity="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.ArtOpacity}}"
                                                views:ArtImage.Sources="{Binding DisplayArtUris}"
                                                views:ArtImage.AlternateSources="{Binding AlternateArtUris}" />
 
@@ -480,27 +482,51 @@
                                             </StackPanel>
                                         </StackPanel>
 
-                                        <!-- 参与随机：勾选框在职业图标右侧 -->
-                                        <CheckBox Classes="staff-select card-select"
-                                                  Margin="40,4,0,0"
-                                                  HorizontalAlignment="Left"
-                                                  VerticalAlignment="Top"
-                                                  IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                        <!--
+                                            启用状态角标：把方块勾选框换成斜切角标，
+                                            拼成「战术标记」的语感。整张卡都可点击切换。
+                                        -->
+                                        <Border Width="26"
+                                                Height="26"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                IsHitTestVisible="False"
+                                                Opacity="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.ArtOpacity}}">
+                                            <Path Stretch="None"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Data="M 0,0 L 9,9 L 0,18"
+                                                  Stroke="{StaticResource AppPrimaryBrush}"
+                                                  StrokeThickness="2.5"
+                                                  StrokeLineCap="Round"
+                                                  StrokeJoin="Round" />
+                                        </Border>
 
                                         <!-- 删除：平时隐藏，悬停卡片才显现 -->
                                         <Button Classes="danger compact card-delete"
-                                                Margin="0,7,7,0"
+                                                Margin="0,0,6,6"
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Bottom"
                                                 Content="删除"
                                                 Tag="{Binding}"
                                                 Click="Delete_Click" />
 
-                                        <!-- 选中态：职业色亮框（盖在整卡之上，不挡点击） -->
+                                        <!-- 启用态：亮框 + 外发光，一眼区分已启用与未启用 -->
                                         <Border IsHitTestVisible="False"
-                                                BorderBrush="{StaticResource AppPrimaryBrush}"
+                                                BorderBrush="{Binding CareerBrush}"
                                                 BorderThickness="2"
                                                 CornerRadius="10"
+                                                BoxShadow="0 0 14 0 #4D65E6C4"
+                                                IsVisible="{Binding IsSelected}" />
+
+                                        <!-- 启用态：左下角一道职业色细条，兼作状态提示 -->
+                                        <Border Width="28"
+                                                Height="3"
+                                                Margin="9,0,0,26"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Bottom"
+                                                IsHitTestVisible="False"
+                                                Background="{StaticResource AppPrimaryBrush}"
                                                 IsVisible="{Binding IsSelected}" />
                                     </Grid>
                                 </Border>
