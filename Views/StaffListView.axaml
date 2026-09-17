@@ -72,10 +72,6 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
-        <Style Selector="CheckBox.card-select">
-            <Setter Property="MinWidth" Value="32" />
-            <Setter Property="MinHeight" Value="32" />
-        </Style>
         <Style Selector="Button.card-delete">
             <Setter Property="MinWidth" Value="52" />
             <Setter Property="Opacity" Value="0" />
