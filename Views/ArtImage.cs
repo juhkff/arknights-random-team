@@ -52,6 +52,9 @@ public static class ArtImage
     /// <summary>本次运行中真正发起网络的次数。</summary>
     public static int NetworkLoads => Volatile.Read(ref _networkLoads);
 
+    /// <summary>本次运行中从本地磁盘缓存读出的次数。</summary>
+    public static int DiskHits => LocalImageStore.Hits;
+
     /// <summary>记录哪些 Image 当前挂在可视树上（这个 Avalonia 版本没有现成的判断方法）。</summary>
     private static readonly ConditionalWeakTable<Image, object> Attached = new();
 
@@ -197,18 +200,13 @@ public static class ArtImage
     {
         try
         {
-            // 嵌入资源（avares://）不走网络：HttpClient 不认这个协议，
-            // 必须先分流，否则会先失败一次再回退，白白等一个超时。
-            await using var stream = uri.Scheme == "avares"
-                ? Avalonia.Platform.AssetLoader.Open(uri)
-                : await SharedHttp.GetStreamAsync(uri).ConfigureAwait(false);
+            var bytes = await ReadBytesAsync(uri).ConfigureAwait(false);
+            if (bytes is null || bytes.Length == 0)
+                return null;
 
-            // 必须先读进 MemoryStream：Skia 解码需要可寻址的流，
-            // 直接把响应的网络流交给 Bitmap 会抛「Unable to load bitmap from provided data」。
-            using var buffer = new MemoryStream();
-            await stream.CopyToAsync(buffer).ConfigureAwait(false);
-            buffer.Position = 0;
-
+            // 解码需要可寻址的流：Skia 对普通网络流会抛
+            // 「Unable to load bitmap from provided data」，所以统一先拿到字节。
+            using var buffer = new MemoryStream(bytes);
             return new Bitmap(buffer);
         }
         catch
@@ -216,6 +214,33 @@ public static class ArtImage
             // 网络失败、图不存在、解码失败都视作「没有立绘」，卡片显示占位即可
             return null;
         }
+    }
+
+    /// <summary>取图片字节：嵌入资源直接读，其余先查本地缓存，再走网络并回写缓存。</summary>
+    private static async Task<byte[]?> ReadBytesAsync(Uri uri)
+    {
+        // 嵌入资源（avares://）不走网络：HttpClient 不认这个协议，
+        // 必须先分流，否则会先失败一次再回退，白白等一个超时。
+        if (uri.Scheme == "avares")
+        {
+            await using var asset = Avalonia.Platform.AssetLoader.Open(uri);
+            using var assetBuffer = new MemoryStream();
+            await asset.CopyToAsync(assetBuffer).ConfigureAwait(false);
+            return assetBuffer.ToArray();
+        }
+
+        // 本地磁盘缓存：重启程序后也还在
+        if (await LocalImageStore.TryReadAsync(uri).ConfigureAwait(false) is { } cached)
+            return cached;
+
+        await using var stream = await SharedHttp.GetStreamAsync(uri).ConfigureAwait(false);
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer).ConfigureAwait(false);
+
+        var bytes = buffer.ToArray();
+        // 回写不阻塞显示
+        _ = LocalImageStore.WriteAsync(uri, bytes);
+        return bytes;
     }
 
     /// <summary>登记一次使用，并在超出上限时淘汰最久未用的位图。</summary>

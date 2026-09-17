@@ -100,9 +100,9 @@ public class ListModel : AutomaticNotify
     /// 这是一次性统计（本次运行内累计），不参与任何逻辑判断。
     /// </summary>
     public string ArtLoadInfo =>
-        Views.ArtImage.NetworkLoads == 0
+        Views.ArtImage.NetworkLoads == 0 && Views.ArtImage.DiskHits == 0
             ? "立绘：尚未加载"
-            : $"立绘：网络 {Views.ArtImage.NetworkLoads} 张 · 复用缓存 {Views.ArtImage.CacheHits} 次";
+            : $"立绘：网络 {Views.ArtImage.NetworkLoads} 张 · 内存命中 {Views.ArtImage.CacheHits} · 本地缓存 {Views.ArtImage.DiskHits}";
 
     /// <summary>卡片用半身立绘大图，而不是头像小图。</summary>
     public bool UsePortrait
