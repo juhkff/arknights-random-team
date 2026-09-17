@@ -53,8 +53,8 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto">
-        <Grid ColumnDefinitions="3*,20,2*" Margin="0,0,0,4">
-            <Border Grid.Column="0" Classes="surface" Padding="0" ClipToBounds="True">
+        <Grid Name="IntakeGrid" ColumnDefinitions="3*,20,2*" Margin="0,0,0,4">
+            <Border Name="ManualPane" Grid.Column="0" Classes="surface" Padding="0" ClipToBounds="True">
                 <Grid>
                     <Path Width="160" Height="90" HorizontalAlignment="Right" VerticalAlignment="Top"
                           IsHitTestVisible="False" Opacity="0.14"
@@ -141,7 +141,7 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" Classes="surface" Padding="0" ClipToBounds="True">
+            <Border Name="SyncPane" Grid.Column="2" Classes="surface" Padding="0" ClipToBounds="True">
                 <Grid>
                     <Path Width="130" Height="80" HorizontalAlignment="Right" VerticalAlignment="Top"
                           IsHitTestVisible="False" Opacity="0.14"

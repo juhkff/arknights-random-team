@@ -1,12 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
-using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
-using Avalonia.Threading;
-using Material.Styles.Controls;
-using Material.Styles.Models;
 using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
@@ -27,6 +23,7 @@ public partial class InputView : UserControl
         SetStar(1);
         CareerCombo.SelectedIndex = -1;
         UpdateSyncStatus();
+        SizeChanged += (_, e) => ApplyCompactLayout(e.NewSize.Width);
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
@@ -124,13 +121,13 @@ public partial class InputView : UserControl
 
         if (CareerCombo.SelectedItem is not Career career)
         {
-            PostSnack("请选择职阶");
+            AppNotice.Post("请选择职阶");
             return;
         }
 
         if (AppState.GetNameSet().Contains(name))
         {
-            PostSnack("列表中已有该干员");
+            AppNotice.Post("列表中已有该干员");
             return;
         }
 
@@ -142,21 +139,40 @@ public partial class InputView : UserControl
             IsSelected = true,
             Level = new Level(ParseElite(EliteTextBox.Text), ParseRank(RankTextBox.Text))
         });
-        PostSnack("添加成功");
+        AppNotice.Post("添加成功");
     }
 
-    private static void PostSnack(string message)
+    private const double StackBreakpoint = 640;
+    private bool _intakeStacked;
+
+    private void ApplyCompactLayout(double width)
     {
-        var text = new TextBlock
+        if (IntakeGrid is null || ManualPane is null || SyncPane is null || width <= 0)
+            return;
+
+        var stack = width < StackBreakpoint;
+        if (stack == _intakeStacked)
+            return;
+
+        _intakeStacked = stack;
+        if (stack)
         {
-            Text = message,
-            FontSize = 16,
-            FontWeight = FontWeight.Bold,
-            Foreground = Brushes.White,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        SnackbarHost.Post(new SnackbarModel(text, TimeSpan.FromSeconds(2.5)), "MainSnackbar", DispatcherPriority.Normal);
+            IntakeGrid.ColumnDefinitions = new ColumnDefinitions("*");
+            IntakeGrid.RowDefinitions = new RowDefinitions("Auto,16,Auto");
+            Grid.SetColumn(ManualPane, 0);
+            Grid.SetRow(ManualPane, 0);
+            Grid.SetColumn(SyncPane, 0);
+            Grid.SetRow(SyncPane, 2);
+        }
+        else
+        {
+            IntakeGrid.ColumnDefinitions = new ColumnDefinitions("3*,20,2*");
+            IntakeGrid.RowDefinitions = new RowDefinitions("*");
+            Grid.SetColumn(ManualPane, 0);
+            Grid.SetRow(ManualPane, 0);
+            Grid.SetColumn(SyncPane, 2);
+            Grid.SetRow(SyncPane, 0);
+        }
     }
 
     private void EliteTextBox_TextChanged(object? sender, TextChangedEventArgs e)

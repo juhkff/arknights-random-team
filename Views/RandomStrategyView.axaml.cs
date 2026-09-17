@@ -13,6 +13,8 @@ public partial class RandomStrategyView : UserControl
         InitializeComponent();
         StrategyItems.ItemsSource = AppState.Strategies;
         AppState.Strategies.CollectionChanged += Strategies_CollectionChanged;
+        StrategyEmptyWebHint.IsVisible = SessionCopy.IsWeb;
+        StrategyEmptyDownloadButton.IsVisible = SessionCopy.IsWeb;
         UpdateStrategyState();
     }
 
@@ -54,6 +56,9 @@ public partial class RandomStrategyView : UserControl
 
         AppState.Strategies.Remove(def);
     }
+
+    private async void OpenDesktop_Click(object? sender, RoutedEventArgs e) =>
+        await SessionCopy.OpenDesktopDownloadAsync(this);
 
     private void RefreshList()
     {

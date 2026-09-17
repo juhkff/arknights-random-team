@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
@@ -21,6 +22,10 @@ public class StrategyComboItem
 
 public partial class GenerateView : UserControl
 {
+    private const double StackBreakpoint = 640;
+    private bool _configStacked;
+    private bool _watchingPool;
+
     public ObservableCollection<Staff> ResultList { get; } = [];
 
     public GenerateView()
@@ -30,12 +35,94 @@ public partial class GenerateView : UserControl
         AppState.Strategies.CollectionChanged += OnStrategiesChanged;
         ResultList.CollectionChanged += (_, _) => UpdateResultState();
         CountSlider.Maximum = AppOptions.MaxTeamSize;
+        ResultEmptyWebHint.IsVisible = SessionCopy.IsWeb;
+        ResultEmptyDownloadButton.IsVisible = SessionCopy.IsWeb;
+        AttachPoolWatch();
         RefreshStrategyCombo();
         UpdateTeamSizeControls();
         UpdateResultState();
+        SizeChanged += (_, e) => ApplyCompactLayout(e.NewSize.Width);
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    private void AttachPoolWatch()
+    {
+        if (_watchingPool)
+            return;
+
+        _watchingPool = true;
+        AppState.StaffList.CollectionChanged += OnPoolCollectionChanged;
+        foreach (var staff in AppState.StaffList)
+            staff.PropertyChanged += OnPoolStaffChanged;
+        UpdatePoolUi();
+    }
+
+    private void OnPoolCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems != null)
+        {
+            foreach (Staff staff in e.OldItems)
+                staff.PropertyChanged -= OnPoolStaffChanged;
+        }
+
+        if (e.NewItems != null)
+        {
+            foreach (Staff staff in e.NewItems)
+                staff.PropertyChanged += OnPoolStaffChanged;
+        }
+
+        UpdatePoolUi();
+    }
+
+    private void OnPoolStaffChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Staff.IsSelected))
+            UpdatePoolUi();
+    }
+
+    private static int PoolCount =>
+        AppState.StaffList.Where(x => x.IsSelected).GroupBy(x => x.Name).Count();
+
+    private void UpdatePoolUi()
+    {
+        if (PoolCountText is null)
+            return;
+
+        var pool = PoolCount;
+        PoolCountText.Text = $"随机池 {pool} 名";
+        UpdateEmptyCopy();
+    }
+
+    private void ApplyCompactLayout(double width)
+    {
+        if (ConfigGrid is null || StrategyPane is null || CountPane is null || width <= 0)
+            return;
+
+        var stack = width < StackBreakpoint;
+        if (stack == _configStacked)
+            return;
+
+        _configStacked = stack;
+        if (stack)
+        {
+            ConfigGrid.ColumnDefinitions = new ColumnDefinitions("*");
+            ConfigGrid.RowDefinitions = new RowDefinitions("Auto,16,Auto");
+            Grid.SetColumn(StrategyPane, 0);
+            Grid.SetRow(StrategyPane, 0);
+            Grid.SetColumn(CountPane, 0);
+            Grid.SetRow(CountPane, 2);
+        }
+        else
+        {
+            ConfigGrid.ColumnDefinitions = new ColumnDefinitions("*,24,*");
+            ConfigGrid.RowDefinitions = new RowDefinitions("*");
+            Grid.SetColumn(StrategyPane, 0);
+            Grid.SetRow(StrategyPane, 0);
+            Grid.SetColumn(CountPane, 2);
+            Grid.SetRow(CountPane, 0);
+        }
+    }
 
     private void OnStrategiesChanged(object? sender, NotifyCollectionChangedEventArgs e) => RefreshStrategyCombo();
 
@@ -101,10 +188,48 @@ public partial class GenerateView : UserControl
 
         ResultEmptyState.IsVisible = ResultList.Count == 0;
         ResultCountText.Text = $"{ResultList.Count} 名干员";
+        UpdateEmptyCopy();
 
         if (ResultList.Count > 0)
             QueueRosterReveal();
     }
+
+    private void UpdateEmptyCopy()
+    {
+        if (ResultEmptyCaption is null || ResultEmptyAction is null || ResultList.Count > 0)
+            return;
+
+        var roster = AppState.StaffList.Count;
+        var pool = PoolCount;
+        if (roster == 0)
+        {
+            ResultEmptyCaption.Text = "还没有干员。先去录入，再回来生成阵容。";
+            ResultEmptyAction.Content = "去干员录入";
+            ResultEmptyAction.Tag = AppPage.Input;
+            ResultEmptyAction.IsVisible = true;
+        }
+        else if (pool == 0)
+        {
+            ResultEmptyCaption.Text = "随机池是空的。到干员列表把干员编入后再生成。";
+            ResultEmptyAction.Content = "去干员列表";
+            ResultEmptyAction.Tag = AppPage.List;
+            ResultEmptyAction.IsVisible = true;
+        }
+        else
+        {
+            ResultEmptyCaption.Text = "选好策略与人数，点击「生成阵容」开始。";
+            ResultEmptyAction.IsVisible = false;
+        }
+    }
+
+    private void ResultEmptyAction_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ResultEmptyAction.Tag is AppPage page)
+            AppNavigation.GoTo(page);
+    }
+
+    private async void OpenDesktop_Click(object? sender, RoutedEventArgs e) =>
+        await SessionCopy.OpenDesktopDownloadAsync(this);
 
     /// <summary>
     /// 编队卡片逐张浮现：容器生成后再统一播放，避免和 ItemsControl 的布局打架。
@@ -159,7 +284,7 @@ public partial class GenerateView : UserControl
         card.RenderTransform = new TranslateTransform(0, 0);
     }
 
-    private async void Generate_Click(object? sender, RoutedEventArgs e)
+    private void Generate_Click(object? sender, RoutedEventArgs e)
     {
         var resultNum = (int)CountSlider.Value;
         var pool = AppState.StaffList
@@ -170,13 +295,13 @@ public partial class GenerateView : UserControl
 
         if (pool.Count <= 0)
         {
-            await AppHost.AlertAsync("请先在干员列表中勾选参与随机的干员。");
+            AppNotice.Post("请先在干员列表中把干员编入随机池。");
             return;
         }
 
         if (resultNum > pool.Count)
         {
-            await AppHost.AlertAsync("随机数量不能大于已选干员人数。");
+            AppNotice.Post($"随机数量不能大于随机池人数（当前 {pool.Count} 名）。");
             return;
         }
 
@@ -194,7 +319,7 @@ public partial class GenerateView : UserControl
 
         if (!StrategyRules.TryMerge(strategy.Rules, out var merged, out var mergeError))
         {
-            await AppHost.AlertAsync(mergeError, "无法满足策略");
+            AppNotice.Post(mergeError);
             return;
         }
 
@@ -211,13 +336,13 @@ public partial class GenerateView : UserControl
 
         if (rarityReq.Values.Sum() > resultNum || careerExact.Values.Sum() > resultNum)
         {
-            await AppHost.AlertAsync("策略中要求的稀有度人数或职业人数总和超过了当前「随机数量」，请调整策略或数量。", "无法满足策略");
+            AppNotice.Post("策略要求的稀有度或职业人数超过了当前阵容人数，请调整策略或数量。");
             return;
         }
 
         if (StrategyRules.MinCareerSlots(careerExact, careerRange) > resultNum)
         {
-            await AppHost.AlertAsync("策略中各职业数量（及范围下限）之和超过了当前「随机数量」，请调整策略或数量。", "无法满足策略");
+            AppNotice.Post("策略中各职业数量下限之和超过了当前阵容人数，请调整策略或数量。");
             return;
         }
 
@@ -230,14 +355,14 @@ public partial class GenerateView : UserControl
             var nMax = Math.Min(Math.Min(maxTake, inPool), resultNum);
             if (nMin > nMax)
             {
-                await AppHost.AlertAsync("「某些干员总数」与当前已选干员池或随机数量不兼容，请调整勾选或策略。", "无法满足策略");
+                AppNotice.Post("「某些干员总数」与当前随机池或人数不兼容，请调整编入或策略。");
                 return;
             }
         }
 
         if (!ConstrainedTeamPicker.TryPick(pool, resultNum, rarityReq, careerExact, careerRange, staffSubsets, random, out var team))
         {
-            await AppHost.AlertAsync("在当前已选干员池下无法凑出满足该策略的阵容，请增加/调整勾选干员或修改策略条目。", "无法满足策略");
+            AppNotice.Post("当前随机池凑不出该策略，请增加编入干员或修改策略。");
             return;
         }
 

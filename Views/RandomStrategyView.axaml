@@ -134,7 +134,6 @@
             <StackPanel Name="StrategyEmptyState"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        IsHitTestVisible="False"
                         Spacing="12">
                 <Path Width="42"
                       Height="42"
@@ -151,7 +150,22 @@
                            Text="暂无随机策略" />
                 <TextBlock Classes="caption"
                            HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="360"
                            Text="新建规则，控制稀有度、职业与干员范围。" />
+                <TextBlock Name="StrategyEmptyWebHint"
+                           Classes="caption"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="360"
+                           IsVisible="False"
+                           Text="网页版数据只在本次会话有效，刷新即清空。长期使用请下载桌面客户端。" />
+                <Button Name="StrategyEmptyDownloadButton"
+                        Classes="text compact"
+                        HorizontalAlignment="Center"
+                        Content="下载桌面版"
+                        IsVisible="False"
+                        Click="OpenDesktop_Click" />
             </StackPanel>
         </Grid>
     </Grid>
