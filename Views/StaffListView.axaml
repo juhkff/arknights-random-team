@@ -392,8 +392,14 @@
                                         BorderBrush="{Binding CareerBrush}"
                                         Margin="0,0,12,12">
                                     <Grid>
-                                        <!-- 立绘铺满整张卡 -->
-                                        <Image Stretch="UniformToFill"
+                                        <!--
+                                            立绘按比例缩放并顶部对齐：半身像是 1:2 的竖图，
+                                            用 UniformToFill 会放大后居中裁切，把头切掉且过度放大。
+                                            这里改用 Uniform + 顶部对齐，底部空处由卡片底色与信息条承接。
+                                        -->
+                                        <Image Stretch="Uniform"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Top"
                                                views:ArtImage.Sources="{Binding ArtUris}" />
 
                                         <!-- 底部渐深，保证名字与数值始终读得清 -->

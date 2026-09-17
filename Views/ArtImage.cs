@@ -10,30 +10,43 @@ namespace arknights_random_team.Views;
 /// <summary>
 /// 按需加载远程图片的辅助类，供干员卡片显示立绘使用。
 ///
-/// 做法：在 <see cref="Image"/> 上挂一个 <see cref="SourceUriProperty"/>，
-/// 控件进入可视树时才发起下载，离开时清空。滚出屏幕的卡片不会占用网络。
+/// 做法：在 <see cref="Image"/> 上挂 <see cref="SourcesProperty"/>（一组候选地址），
+/// 控件进入可视树时才发起下载，离开可视树时清空。
+///
+/// 两处限流，干员一多时才不会卡：
+/// 1. 下载并发上限 <see cref="MaxConcurrent"/>。卡片视图用的是 WrapPanel，没有虚拟化，
+///    几百张卡会同时进入可视树 —— 不限并发就会瞬间打出几百个请求，
+///    既拖慢界面又容易触发 CDN 限流。
+/// 2. 位图缓存上限 <see cref="MaxCachedBitmaps"/>，超出后淘汰最久未用的，避免内存一直涨。
 ///
 /// 缓存的是 <see cref="Task{TResult}"/> 而不是 <see cref="Bitmap"/>：
-/// 同一个地址被多张卡片同时请求时只会下载一次，失败也会被记住，不会反复重试。
+/// 同一个地址被多张卡片同时请求时只下载一次，失败也会被记住，不会反复重试。
 /// </summary>
 public static class ArtImage
 {
+    /// <summary>同时进行的下载数上限。</summary>
+    private const int MaxConcurrent = 6;
+
+    /// <summary>位图缓存上限（按张数），超出后淘汰最久未用的。</summary>
+    private const int MaxCachedBitmaps = 200;
+
     private static readonly ConcurrentDictionary<Uri, Task<Bitmap?>> Cache = new();
 
-    public static readonly AttachedProperty<IReadOnlyList<Uri>?> SourcesProperty =
-        AvaloniaProperty.RegisterAttached<Image, IReadOnlyList<Uri>?>("Sources", typeof(ArtImage));
+    /// <summary>下载限流。</summary>
+    private static readonly SemaphoreSlim Gate = new(MaxConcurrent, MaxConcurrent);
+
+    /// <summary>已成功加载的地址，按最近使用排序，用于超限时淘汰。</summary>
+    private static readonly LinkedList<Uri> UsageOrder = new();
+    private static readonly HashSet<Uri> Tracked = [];
+    private static readonly object UsageLock = new();
 
     /// <summary>记录哪些 Image 当前挂在可视树上（这个 Avalonia 版本没有现成的判断方法）。</summary>
     private static readonly ConditionalWeakTable<Image, object> Attached = new();
 
-    public static readonly AttachedProperty<Uri?> SourceUriProperty =
-        AvaloniaProperty.RegisterAttached<Image, Uri?>("SourceUri", typeof(ArtImage));
+    public static readonly AttachedProperty<IReadOnlyList<Uri>?> SourcesProperty =
+        AvaloniaProperty.RegisterAttached<Image, IReadOnlyList<Uri>?>("Sources", typeof(ArtImage));
 
-    static ArtImage()
-    {
-        SourceUriProperty.Changed.AddClassHandler<Image, Uri?>(OnSourceUriChanged);
-        SourcesProperty.Changed.AddClassHandler<Image, IReadOnlyList<Uri>?>(OnSourcesChanged);
-    }
+    static ArtImage() => SourcesProperty.Changed.AddClassHandler<Image, IReadOnlyList<Uri>?>(OnSourcesChanged);
 
     public static IReadOnlyList<Uri>? GetSources(Image image) => image.GetValue(SourcesProperty);
 
@@ -58,42 +71,28 @@ public static class ArtImage
             _ = LoadAnyAsync(image, list);
     }
 
-    public static Uri? GetSourceUri(Image image) => image.GetValue(SourceUriProperty);
-
-    public static void SetSourceUri(Image image, Uri? value) => image.SetValue(SourceUriProperty, value);
-
-    private static void OnSourceUriChanged(Image image, AvaloniaPropertyChangedEventArgs<Uri?> args)
-    {
-        image.AttachedToVisualTree -= OnAttached;
-        image.DetachedFromVisualTree -= OnDetached;
-
-        if (args.NewValue.Value is null)
-        {
-            image.Source = null;
-            return;
-        }
-
-        image.AttachedToVisualTree += OnAttached;
-        image.DetachedFromVisualTree += OnDetached;
-
-        if (Attached.TryGetValue(image, out _))
-            _ = LoadAsync(image, args.NewValue.Value);
-    }
-
     private static void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
     {
         if (sender is not Image image)
             return;
 
-        Attached.AddOrUpdate(image, None);
+        Attached.AddOrUpdate(image, new object());
 
         if (GetSources(image) is { Count: > 0 } list)
             _ = LoadAnyAsync(image, list);
-        else if (GetSourceUri(image) is { } uri)
-            _ = LoadAsync(image, uri);
     }
 
-    /// <summary>按顺序尝试各镜像，第一个成功的就用。</summary>
+    private static void OnDetached(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        // 离开可视树就断开引用，避免把整屏图片的位图一直攥在手里
+        if (sender is not Image image)
+            return;
+
+        Attached.Remove(image);
+        image.Source = null;
+    }
+
+    /// <summary>按顺序尝试各候选地址，第一个成功的就用。</summary>
     private static async Task LoadAnyAsync(Image image, IReadOnlyList<Uri> candidates)
     {
         foreach (var uri in candidates)
@@ -104,6 +103,7 @@ public static class ArtImage
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                // 下载期间卡片可能已被回收或换了地址，这里确认一下再赋值
                 if (Attached.TryGetValue(image, out _) && ReferenceEquals(GetSources(image), candidates))
                     image.Source = bitmap;
             });
@@ -111,34 +111,35 @@ public static class ArtImage
         }
     }
 
-    private static readonly object None = new();
-
-    private static void OnDetached(object? sender, VisualTreeAttachmentEventArgs e)
+    private static Task<Bitmap?> GetOrLoadAsync(Uri uri)
     {
-        // 离开可视树就断开引用，避免滚动时把整屏图片的位图一直攥在手里
-        if (sender is not Image image)
-            return;
-
-        Attached.Remove(image);
-        image.Source = null;
-    }
-
-    private static async Task LoadAsync(Image image, Uri uri)
-    {
-        var bitmap = await GetOrLoadAsync(uri).ConfigureAwait(true);
-        if (bitmap is null)
-            return;
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        if (Cache.TryGetValue(uri, out var existing))
         {
-            // 下载期间卡片可能已被回收或换了地址，这里确认一下再赋值
-            if (Attached.TryGetValue(image, out _) && GetSourceUri(image) == uri)
-                image.Source = bitmap;
-        });
+            Touch(uri);
+            return existing;
+        }
+
+        var task = LoadThrottledAsync(uri);
+        // 并发请求同一地址时，先到的那个任务胜出，后来的复用同一个任务
+        task = Cache.GetOrAdd(uri, task);
+        return task;
     }
 
-    private static Task<Bitmap?> GetOrLoadAsync(Uri uri) =>
-        Cache.GetOrAdd(uri, static u => LoadCoreAsync(u));
+    private static async Task<Bitmap?> LoadThrottledAsync(Uri uri)
+    {
+        await Gate.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            var bitmap = await LoadCoreAsync(uri).ConfigureAwait(false);
+            if (bitmap is not null)
+                Touch(uri);
+            return bitmap;
+        }
+        finally
+        {
+            Gate.Release();
+        }
+    }
 
     private static async Task<Bitmap?> LoadCoreAsync(Uri uri)
     {
@@ -158,6 +159,33 @@ public static class ArtImage
         {
             // 网络失败、图不存在、解码失败都视作「没有立绘」，卡片显示占位即可
             return null;
+        }
+    }
+
+    /// <summary>登记一次使用，并在超出上限时淘汰最久未用的位图。</summary>
+    private static void Touch(Uri uri)
+    {
+        lock (UsageLock)
+        {
+            if (Tracked.Contains(uri))
+                UsageOrder.Remove(uri);
+
+            UsageOrder.AddLast(uri);
+            Tracked.Add(uri);
+
+            while (UsageOrder.Count > MaxCachedBitmaps)
+            {
+                var oldest = UsageOrder.First!.Value;
+                UsageOrder.RemoveFirst();
+                Tracked.Remove(oldest);
+
+                if (Cache.TryRemove(oldest, out var task) &&
+                    task.IsCompletedSuccessfully &&
+                    task.Result is { } bitmap)
+                {
+                    bitmap.Dispose();
+                }
+            }
         }
     }
 }
