@@ -395,12 +395,15 @@
                                         <!--
                                             立绘按比例缩放并顶部对齐：半身像是 1:2 的竖图，
                                             用 UniformToFill 会放大后居中裁切，把头切掉且过度放大。
-                                            这里改用 Uniform + 顶部对齐，底部空处由卡片底色与信息条承接。
+                                            这里改为按宽铺满 + 顶部对齐：横向铺满卡片，纵向从顶部开始，
+                                            露出头部与上身，超出卡片的部分由 ClipToBounds 裁掉。
+                                            半身像是 1:2 竖图，卡片接近 2:3，保留的是上半段。
                                         -->
-                                        <Image Stretch="Uniform"
+                                        <Image Stretch="UniformToFill"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Top"
-                                               views:ArtImage.Sources="{Binding ArtUris}" />
+                                               views:ArtImage.Sources="{Binding DisplayArtUris}"
+                                               views:ArtImage.AlternateSources="{Binding AlternateArtUris}" />
 
                                         <!-- 底部渐深，保证名字与数值始终读得清 -->
                                         <Border VerticalAlignment="Bottom"

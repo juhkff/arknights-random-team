@@ -103,7 +103,9 @@ public class ListModel : AutomaticNotify
             if (!SetProperty(ref _usePortrait, value))
                 return;
 
-            // 每张卡片的图源都要跟着换，逐张通知
+            // 头像与半身像都已预载，这里只需让卡片重建一次以套用新的图源；
+            // 不要在这里逐张 RaiseArtChanged —— 那会对所有卡片重新发起下载，人一多就卡。
+            // 头像与半身像都已预载，这里只需让卡片重取值即可，不必重新下载
             foreach (var staff in StaffList)
                 staff.RaiseArtChanged();
         }

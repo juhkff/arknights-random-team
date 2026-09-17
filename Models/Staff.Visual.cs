@@ -31,6 +31,9 @@ public partial class Staff
     // ---- 卡片视图用的立绘 ----
 
     private bool _usePortrait;
+    private IReadOnlyList<Uri>? _avatarUris;
+    private IReadOnlyList<Uri>? _portraitUris;
+    private bool _portraitUrisElite2;
 
     /// <summary>卡片是否使用半身立绘大图（否则用头像小图）。由干员列表统一下发。</summary>
     public bool UsePortrait
@@ -44,35 +47,54 @@ public partial class Staff
     }
 
     /// <summary>
-    /// 卡片图源的候选地址（多个 jsDelivr 镜像，按顺序回退）。
-    /// 手动录入的干员没有 <see cref="SourceId"/>，这里为空，卡片会显示职业徽记作为占位。
-    ///
-    /// 首选规格取不到时会回退到另一种：头像与半身像的收录并不一致，
-    /// 有的干员只有其中一种，回退一下能明显减少「没图」的情况。
+    /// 「头像」规格的候选地址（多个 jsDelivr 镜像，按顺序回退）。
+    /// 头像本身不分精英阶段，所以这一组与精英无关。
     /// </summary>
-    public IReadOnlyList<Uri> ArtUris
+    public IReadOnlyList<Uri> AvatarUris => _avatarUris ??= Domain.OperatorArt.Avatar(SourceId);
+
+    /// <summary>
+    /// 「半身像」规格的候选地址。精二用专属立绘（_2），取不到时回退默认立绘（_1）。
+    ///
+    /// 结果按「精英是否精二」缓存：编译绑定是靠对象引用判断有没有变的，
+    /// 每次访问都新建 List 会让它每帧都认为图源变了，白白重发下载。
+    /// </summary>
+    public IReadOnlyList<Uri> PortraitUris
     {
         get
         {
-            // 精二用专属立绘（_2），取不到时展示层会自动回退
             var elite2 = Level.EliteLevel >= 2;
-            var primary = _usePortrait
-                ? Domain.OperatorArt.Portrait(SourceId, elite2)
-                : Domain.OperatorArt.Avatar(SourceId);
-            // 头像本身不分精英阶段，回退时用默认立绘即可
-            var secondary = _usePortrait
-                ? Domain.OperatorArt.Avatar(SourceId)
-                : Domain.OperatorArt.Portrait(SourceId, elite2);
+            if (_portraitUris is { } cached && _portraitUrisElite2 == elite2)
+                return cached;
 
-            return [.. primary, .. secondary];
+            _portraitUris = Domain.OperatorArt.Portrait(SourceId, elite2);
+            _portraitUrisElite2 = elite2;
+            return _portraitUris;
         }
     }
 
-    /// <summary>通知界面重新取 <see cref="ArtUris"/>（切换头像/立绘时用）。</summary>
-    public void RaiseArtChanged() => OnPropertyChanged(nameof(ArtUris));
+    /// <summary>当前该显示的图源（由干员列表统一下发头像/半身像的开关）。</summary>
+    public IReadOnlyList<Uri> DisplayArtUris => _usePortrait ? PortraitUris : AvatarUris;
+
+    /// <summary>另一规格的图源，供展示层预载，切换时才不用重新下载。</summary>
+    public IReadOnlyList<Uri> AlternateArtUris => _usePortrait ? AvatarUris : PortraitUris;
+
+    /// <summary>清掉已缓存的候选列表（SourceId 变更后地址会变）。</summary>
+    private void InvalidateArtCache()
+    {
+        _avatarUris = null;
+        _portraitUris = null;
+    }
+
+    /// <summary>通知界面重新取图源（切换头像/立绘、或精英阶段变化时用）。</summary>
+    public void RaiseArtChanged()
+    {
+        OnPropertyChanged(nameof(DisplayArtUris));
+        OnPropertyChanged(nameof(AlternateArtUris));
+        OnPropertyChanged(nameof(HasArt));
+    }
 
     /// <summary>是否有立绘可显示。</summary>
-    public bool HasArt => ArtUris.Count > 0;
+    public bool HasArt => DisplayArtUris.Count > 0;
 
     /// <summary>职业名，用于卡片与表格上的文字标识。</summary>
     public string CareerName => Career switch

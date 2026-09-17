@@ -46,11 +46,38 @@ public static class ArtImage
     public static readonly AttachedProperty<IReadOnlyList<Uri>?> SourcesProperty =
         AvaloniaProperty.RegisterAttached<Image, IReadOnlyList<Uri>?>("Sources", typeof(ArtImage));
 
-    static ArtImage() => SourcesProperty.Changed.AddClassHandler<Image, IReadOnlyList<Uri>?>(OnSourcesChanged);
+    /// <summary>
+    /// 另一规格的候选地址（切换「头像 / 半身像」时显示的那一组）。
+    /// 与 <see cref="SourcesProperty"/> 一起预载，切换只是换显示，不必重新下载 ——
+    /// 否则切一次就要重载所有卡片，人一多界面会明显卡住。
+    /// </summary>
+    public static readonly AttachedProperty<IReadOnlyList<Uri>?> AlternateSourcesProperty =
+        AvaloniaProperty.RegisterAttached<Image, IReadOnlyList<Uri>?>("AlternateSources", typeof(ArtImage));
+
+    static ArtImage()
+    {
+        SourcesProperty.Changed.AddClassHandler<Image, IReadOnlyList<Uri>?>(OnSourcesChanged);
+        AlternateSourcesProperty.Changed.AddClassHandler<Image, IReadOnlyList<Uri>?>(OnAlternateChanged);
+    }
 
     public static IReadOnlyList<Uri>? GetSources(Image image) => image.GetValue(SourcesProperty);
 
     public static void SetSources(Image image, IReadOnlyList<Uri>? value) => image.SetValue(SourcesProperty, value);
+
+    public static IReadOnlyList<Uri>? GetAlternateSources(Image image) => image.GetValue(AlternateSourcesProperty);
+
+    public static void SetAlternateSources(Image image, IReadOnlyList<Uri>? value) =>
+        image.SetValue(AlternateSourcesProperty, value);
+
+    /// <summary>把另一规格也预载进来（后台排队，不阻塞当前显示）。</summary>
+    private static void OnAlternateChanged(Image image, AvaloniaPropertyChangedEventArgs<IReadOnlyList<Uri>?> args)
+    {
+        if (args.NewValue.Value is not { Count: > 0 } list)
+            return;
+
+        foreach (var uri in list)
+            _ = GetOrLoadAsync(uri);
+    }
 
     private static void OnSourcesChanged(Image image, AvaloniaPropertyChangedEventArgs<IReadOnlyList<Uri>?> args)
     {
@@ -77,6 +104,12 @@ public static class ArtImage
             return;
 
         Attached.AddOrUpdate(image, new object());
+
+        if (GetAlternateSources(image) is { Count: > 0 } alt)
+        {
+            foreach (var uri in alt)
+                _ = GetOrLoadAsync(uri);
+        }
 
         if (GetSources(image) is { Count: > 0 } list)
             _ = LoadAnyAsync(image, list);

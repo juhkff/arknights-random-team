@@ -72,6 +72,14 @@ public partial class Staff : AutomaticNotify
     public string? SourceId
     {
         get => _sourceId;
-        set => SetProperty(ref _sourceId, value);
+        set
+        {
+            if (!SetProperty(ref _sourceId, value))
+                return;
+
+            // 立绘地址由 SourceId 拼出，同步改写它之后要让缓存失效
+            InvalidateArtCache();
+            RaiseArtChanged();
+        }
     }
 }
