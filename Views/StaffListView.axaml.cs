@@ -1,6 +1,8 @@
 using System.Collections.Specialized;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -20,13 +22,26 @@ public partial class StaffListView : UserControl
     {
         DataContext = new ListModel();
         InitializeComponent();
-        UpdateClearButton();
+        if (DataContext is ListModel model)
+            model.PropertyChanged += ListModel_PropertyChanged;
+
+        StaffEmptyWebHint.IsVisible = SessionCopy.IsWeb;
+        StaffEmptyDownloadButton.IsVisible = SessionCopy.IsWeb;
+        UpdateEmptyState();
         AppState.StaffList.CollectionChanged += StaffList_CollectionChanged;
         AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel);
         Loaded += (_, _) => ClearGridSelection();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    private void ListModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ListModel.IsFilterEmpty)
+            or nameof(ListModel.FilteredCount)
+            or nameof(ListModel.StaffCount))
+            UpdateEmptyState();
+    }
 
     private void GridView_Click(object? sender, RoutedEventArgs e)
     {
@@ -43,7 +58,7 @@ public partial class StaffListView : UserControl
 
         // 卡片第一次显示时才需要立绘，切过去顺手把每张卡的图源刷一遍，
         // 让滚动到可视区的那些卡片按需发起下载。
-        foreach (var staff in model.StaffList)
+        foreach (var staff in model.FilteredStaffList)
             staff.RaiseArtChanged();
     }
 
@@ -60,14 +75,74 @@ public partial class StaffListView : UserControl
     }
 
     private void StaffList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
-        UpdateClearButton();
+        UpdateEmptyState();
 
-    private void UpdateClearButton()
+    private void UpdateEmptyState()
     {
+        var model = DataContext as ListModel;
         var hasStaff = AppState.StaffList.Count > 0;
         ClearAllButton.IsEnabled = hasStaff;
         StaffEmptyState.IsVisible = !hasStaff;
+        FilterEmptyState.IsVisible = model?.IsFilterEmpty == true;
     }
+
+    private void StarFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleButton { Tag: var tag } button || DataContext is not ListModel model)
+            return;
+        if (!int.TryParse(tag?.ToString(), out var star))
+            return;
+
+        var want = button.IsChecked == true;
+        if (model.IsStarFilterOn(star) != want)
+            model.ToggleStarFilter(star);
+    }
+
+    private void CareerFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleButton { Tag: var tag } button || DataContext is not ListModel model)
+            return;
+        if (!Enum.TryParse<Career>(tag?.ToString(), out var career))
+            return;
+
+        var want = button.IsChecked == true;
+        if (model.IsCareerFilterOn(career) != want)
+            model.ToggleCareerFilter(career);
+    }
+
+    private void SelectedFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ListModel model)
+            return;
+        var want = SelectedFilterButton.IsChecked == true;
+        if (model.FilterSelectedOnly != want)
+            model.ToggleSelectedFilter();
+    }
+
+    private void StandbyFilter_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ListModel model)
+            return;
+        var want = StandbyFilterButton.IsChecked == true;
+        if (model.FilterStandbyOnly != want)
+            model.ToggleStandbyFilter();
+    }
+
+    private void ClearFilters_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ListModel model)
+            return;
+
+        model.ClearFilters();
+        foreach (var button in FilterChipHost.Children.OfType<ToggleButton>())
+            button.IsChecked = false;
+    }
+
+    private void GoToInput_Click(object? sender, RoutedEventArgs e) =>
+        AppNavigation.GoTo(AppPage.Input);
+
+    private async void OpenDesktop_Click(object? sender, RoutedEventArgs e) =>
+        await SessionCopy.OpenDesktopDownloadAsync(this);
 
     private async void ClearAll_Click(object? sender, RoutedEventArgs e)
     {

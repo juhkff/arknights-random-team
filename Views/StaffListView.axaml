@@ -41,6 +41,33 @@
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <Style Selector="ToggleButton.filter-chip">
+            <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ToggleButton.filter-chip:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppSecondaryHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.filter-chip:checked">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
 
         <Style Selector="Border.operator-card-host">
             <Setter Property="Margin" Value="0,0,14,14" />
@@ -94,17 +121,15 @@
             <Setter Property="Padding" Value="0" />
             <Setter Property="CornerRadius" Value="16" />
             <Setter Property="FontSize" Value="16" />
-            <Setter Property="Opacity" Value="0" />
-            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Opacity" Value="0.92" />
+            <Setter Property="IsHitTestVisible" Value="True" />
         </Style>
-        <!-- 删除按钮平时不接收点击，避免挡住「点卡片切换编入」 -->
+        <!-- 触控没有 pointerover：删除始终可点；桌面悬停时再加一点对比 -->
         <Style Selector="Border.operator-card-host:pointerover Button.card-delete">
             <Setter Property="Opacity" Value="1" />
-            <Setter Property="IsHitTestVisible" Value="True" />
         </Style>
         <Style Selector="Button.card-delete:pointerover">
             <Setter Property="Opacity" Value="1" />
-            <Setter Property="IsHitTestVisible" Value="True" />
         </Style>
 
         <Style Selector="Border.operator-card-ring">
@@ -202,7 +227,7 @@
                       StrokeThickness="1"
                       Stretch="Fill"
                       Data="M 0,86 L 70,0 H 220 M 40,86 L 110,0 M 90,86 L 160,0" />
-                <Grid RowDefinitions="Auto,12,Auto">
+                <Grid RowDefinitions="Auto,12,Auto,10,Auto,12,Auto">
                 <Grid ColumnDefinitions="*,20,Auto">
                     <StackPanel Spacing="8">
                         <TextBlock Classes="eyebrow" Text="OPERATOR ROSTER" />
@@ -272,7 +297,55 @@
                                 Click="ClearAll_Click" />
                     </StackPanel>
                 </Grid>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
+                <Grid Grid.Row="2" ColumnDefinitions="*,10,Auto">
+                    <TextBox Name="SearchBox"
+                             Classes="form-control dense"
+                             HorizontalAlignment="Stretch"
+                             PlaceholderText="搜索干员名称"
+                             Text="{Binding SearchText, Mode=TwoWay}" />
+                    <Button Grid.Column="1"
+                            Name="ClearFilterButton"
+                            Classes="text compact"
+                            VerticalAlignment="Center"
+                            Content="清除筛选"
+                            IsVisible="{Binding HasActiveFilter}"
+                            Click="ClearFilters_Click" />
+                </Grid>
+                <WrapPanel Name="FilterChipHost"
+                           Grid.Row="4"
+                           Orientation="Horizontal">
+                    <ToggleButton Classes="filter-chip" Tag="1" Content="1★"
+                                  AutomationProperties.Name="筛选 1 星" Click="StarFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="2" Content="2★"
+                                  AutomationProperties.Name="筛选 2 星" Click="StarFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="3" Content="3★"
+                                  AutomationProperties.Name="筛选 3 星" Click="StarFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="4" Content="4★"
+                                  AutomationProperties.Name="筛选 4 星" Click="StarFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="5" Content="5★"
+                                  AutomationProperties.Name="筛选 5 星" Click="StarFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="6" Content="6★"
+                                  AutomationProperties.Name="筛选 6 星" Click="StarFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="先锋" Content="先锋" Click="CareerFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="近卫" Content="近卫" Click="CareerFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="狙击" Content="狙击" Click="CareerFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="重装" Content="重装" Click="CareerFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="医疗" Content="医疗" Click="CareerFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="辅助" Content="辅助" Click="CareerFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="术师" Content="术师" Click="CareerFilter_Click" />
+                    <ToggleButton Classes="filter-chip" Tag="特种" Content="特种" Click="CareerFilter_Click" />
+                    <ToggleButton Name="SelectedFilterButton"
+                                  Classes="filter-chip"
+                                  Content="编入"
+                                  AutomationProperties.Name="只看已编入"
+                                  Click="SelectedFilter_Click" />
+                    <ToggleButton Name="StandbyFilterButton"
+                                  Classes="filter-chip"
+                                  Content="待命"
+                                  AutomationProperties.Name="只看待命"
+                                  Click="StandbyFilter_Click" />
+                </WrapPanel>
+                <StackPanel Grid.Row="6" Orientation="Horizontal" Spacing="8">
                     <Border Classes="stat-hud">
                         <StackPanel Spacing="1">
                             <TextBlock Classes="stat-value" Text="{Binding StaffCount}" />
@@ -302,6 +375,11 @@
                     <TextBlock Classes="caption"
                                Margin="8,0,0,0"
                                VerticalAlignment="Bottom"
+                               IsVisible="{Binding HasActiveFilter}"
+                               Text="{Binding FilterSummary}" />
+                    <TextBlock Classes="caption"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Bottom"
                                IsVisible="{Binding IsCardView}"
                                Text="{Binding ArtLoadInfo}" />
                 </StackPanel>
@@ -326,7 +404,7 @@
                           CanUserResizeColumns="True"
                           HorizontalScrollBarVisibility="Auto"
                           SelectionMode="Single"
-                          ItemsSource="{Binding StaffList}"
+                          ItemsSource="{Binding FilteredStaffList}"
                           PreparingCellForEdit="StaffGrid_PreparingCellForEdit"
                           CellEditEnded="StaffGrid_CellEditEnded"
                           SelectionChanged="StaffGrid_SelectionChanged"
@@ -514,7 +592,7 @@
                               VerticalScrollBarVisibility="Auto">
                     <ItemsControl Name="StaffCards"
                                   Margin="16"
-                                  ItemsSource="{Binding StaffList}">
+                                  ItemsSource="{Binding FilteredStaffList}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal" />
@@ -684,7 +762,7 @@
                                                       IsVisible="{Binding IsSelected}"
                                                       Data="M 12,0 L 12,12 0,12" />
 
-                                                <!-- 删除：平时隐藏，悬停卡片才显现 -->
+                                                <!-- 删除始终可见，触控不必先悬停 -->
                                                 <Button Classes="danger compact card-delete"
                                                         Margin="0,0,8,78"
                                                         HorizontalAlignment="Right"
@@ -710,7 +788,6 @@
                 <StackPanel Name="StaffEmptyState"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            IsHitTestVisible="False"
                             Spacing="12">
                     <Path Width="42"
                           Height="42"
@@ -727,7 +804,46 @@
                                Text="暂无干员" />
                     <TextBlock Classes="caption"
                                HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="360"
                                Text="先录入或同步干员，再编入随机池。" />
+                    <TextBlock Name="StaffEmptyWebHint"
+                               Classes="caption"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="360"
+                               IsVisible="False"
+                               Text="网页版数据只在本次会话有效，刷新即清空。长期使用请下载桌面客户端。" />
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Spacing="8">
+                        <Button Classes="primary compact"
+                                Content="去干员录入"
+                                Click="GoToInput_Click" />
+                        <Button Name="StaffEmptyDownloadButton"
+                                Classes="text compact"
+                                Content="下载桌面版"
+                                IsVisible="False"
+                                Click="OpenDesktop_Click" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Name="FilterEmptyState"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="12"
+                            IsVisible="False">
+                    <TextBlock Classes="muted"
+                               HorizontalAlignment="Center"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Text="没有符合条件的干员" />
+                    <TextBlock Classes="caption"
+                               HorizontalAlignment="Center"
+                               Text="试试改搜索词，或点「清除筛选」。" />
+                    <Button Classes="secondary compact"
+                            HorizontalAlignment="Center"
+                            Content="清除筛选"
+                            Click="ClearFilters_Click" />
                 </StackPanel>
                     </Grid>
                 </Grid>
