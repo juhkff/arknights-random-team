@@ -28,7 +28,20 @@ public static class ArtImage
     private const int MaxConcurrent = 6;
 
     /// <summary>位图缓存上限（按张数），超出后淘汰最久未用的。</summary>
-    private const int MaxCachedBitmaps = 200;
+    private const int DefaultMaxCachedBitmaps = 200;
+
+    /// <summary>
+    /// 位图缓存上限。允许用环境变量覆盖，方便把上限调到很小以压测淘汰路径
+    /// （淘汰曾经因为误释放位图导致 ObjectDisposedException）。
+    /// </summary>
+    private static int MaxCachedBitmaps
+    {
+        get
+        {
+            var raw = Environment.GetEnvironmentVariable("ARTIMAGE_CACHE_LIMIT");
+            return int.TryParse(raw, out var v) && v > 0 ? v : DefaultMaxCachedBitmaps;
+        }
+    }
 
     private static readonly ConcurrentDictionary<Uri, Task<Bitmap?>> Cache = new();
 
@@ -260,12 +273,11 @@ public static class ArtImage
                 UsageOrder.RemoveFirst();
                 Tracked.Remove(oldest);
 
-                if (Cache.TryRemove(oldest, out var task) &&
-                    task.IsCompletedSuccessfully &&
-                    task.Result is { } bitmap)
-                {
-                    bitmap.Dispose();
-                }
+                // 只把它移出缓存，绝不 Dispose 位图：
+                // 缓存与 Image.Source 是两个独立引用，被淘汰的位图可能还挂在
+                // 某个可见的 Image 上，一旦释放，下次渲染就会抛 ObjectDisposedException。
+                // 内存上界由缓存条目数保证，移出后由 GC 回收。
+                Cache.TryRemove(oldest, out _);
             }
         }
     }
