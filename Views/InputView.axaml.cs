@@ -23,7 +23,7 @@ public partial class InputView : UserControl
         SetStar(1);
         CareerCombo.SelectedIndex = -1;
         UpdateSyncStatus();
-        SizeChanged += (_, e) => ApplyCompactLayout(e.NewSize.Width);
+        LayoutUpdated += (_, _) => ApplyCompactLayout(Bounds.Width);
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);

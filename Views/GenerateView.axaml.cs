@@ -41,7 +41,7 @@ public partial class GenerateView : UserControl
         RefreshStrategyCombo();
         UpdateTeamSizeControls();
         UpdateResultState();
-        SizeChanged += (_, e) => ApplyCompactLayout(e.NewSize.Width);
+        LayoutUpdated += (_, _) => ApplyCompactLayout(Bounds.Width);
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);

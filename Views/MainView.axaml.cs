@@ -36,8 +36,9 @@ public partial class MainView : UserControl
         DesktopDownloadButton.IsVisible = SessionCopy.IsWeb;
 
         AppNavigation.Requested += OnNavigateRequested;
-        SizeChanged += (_, e) => ApplyChrome(e.NewSize.Width);
-        AttachedToVisualTree += (_, _) => ApplyChrome(Bounds.Width);
+        AttachedToVisualTree += OnAttachedToVisualTree;
+        DetachedFromVisualTree += OnDetachedFromVisualTree;
+        LayoutUpdated += (_, _) => ApplyChrome(Bounds.Width);
 
         SwitchPage(
             _generate,
@@ -67,6 +68,26 @@ public partial class MainView : UserControl
                 break;
         }
     }
+
+    private TopLevel? _host;
+
+    private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        _host = TopLevel.GetTopLevel(this);
+        if (_host is not null)
+            _host.SizeChanged += OnHostSizeChanged;
+        ApplyChrome(Bounds.Width);
+    }
+
+    private void OnDetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        if (_host is not null)
+            _host.SizeChanged -= OnHostSizeChanged;
+        _host = null;
+    }
+
+    private void OnHostSizeChanged(object? sender, SizeChangedEventArgs e) =>
+        ApplyChrome(Bounds.Width > 1 ? Bounds.Width : e.NewSize.Width);
 
     private void ChangeToGenerate(object? sender, RoutedEventArgs e) =>
         SwitchPage(_generate, "阵容生成", "从已启用的干员中生成一支阵容", GenerateNavButton, CompactGenerateButton);
