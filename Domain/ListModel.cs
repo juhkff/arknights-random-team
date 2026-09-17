@@ -17,6 +17,7 @@ public class ListModel : AutomaticNotify
     {
         StaffList = AppState.StaffList;
         StaffList.CollectionChanged += OnCollectionChanged;
+        Views.ArtImage.StatsChanged += (_, _) => OnPropertyChanged(nameof(ArtLoadInfo));
         foreach (var staff in StaffList)
             staff.PropertyChanged += OnStaffPropertyChanged;
     }
@@ -93,6 +94,15 @@ public class ListModel : AutomaticNotify
     /// 是为了在 XAML 里直接绑 IsVisible。
     /// </summary>
     public bool IsGridView => !_isCardView;
+
+    /// <summary>
+    /// 立绘加载情况，显示在卡片视图头部，用来直观看出缓存的命中程度。
+    /// 这是一次性统计（本次运行内累计），不参与任何逻辑判断。
+    /// </summary>
+    public string ArtLoadInfo =>
+        Views.ArtImage.NetworkLoads == 0
+            ? "立绘：尚未加载"
+            : $"立绘：网络 {Views.ArtImage.NetworkLoads} 张 · 复用缓存 {Views.ArtImage.CacheHits} 次";
 
     /// <summary>卡片用半身立绘大图，而不是头像小图。</summary>
     public bool UsePortrait

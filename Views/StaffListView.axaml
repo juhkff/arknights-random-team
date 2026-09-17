@@ -199,6 +199,12 @@
                         Orientation="Horizontal"
                         VerticalAlignment="Center"
                         Spacing="10">
+                <!-- 立绘加载统计：直观看出缓存命中程度 -->
+                <TextBlock Classes="caption"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding IsCardView}"
+                           Text="{Binding ArtLoadInfo}" />
+
                 <!-- 视图切换：表格（可编辑排序）/ 卡片（看立绘） -->
                 <Border Padding="3"
                         Background="{StaticResource AppWellBrush}"

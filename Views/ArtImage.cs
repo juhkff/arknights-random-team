@@ -40,6 +40,18 @@ public static class ArtImage
     private static readonly HashSet<Uri> Tracked = [];
     private static readonly object UsageLock = new();
 
+    /// <summary>每张图落地后触发一次，供界面刷新统计显示。</summary>
+    public static event EventHandler? StatsChanged;
+
+    private static int _cacheHits;
+    private static int _networkLoads;
+
+    /// <summary>本次运行中命中缓存的次数（不含重复请求）。</summary>
+    public static int CacheHits => Volatile.Read(ref _cacheHits);
+
+    /// <summary>本次运行中真正发起网络的次数。</summary>
+    public static int NetworkLoads => Volatile.Read(ref _networkLoads);
+
     /// <summary>记录哪些 Image 当前挂在可视树上（这个 Avalonia 版本没有现成的判断方法）。</summary>
     private static readonly ConditionalWeakTable<Image, object> Attached = new();
 
@@ -117,7 +129,8 @@ public static class ArtImage
 
     private static void OnDetached(object? sender, VisualTreeAttachmentEventArgs e)
     {
-        // 离开可视树就断开引用，避免把整屏图片的位图一直攥在手里
+        // 离开可视树就断开引用。位图仍留在缓存里（所以不会重新走网络），
+        // 但这里不再持有它 —— 否则 200 张半身像会长期占约 49MB 内存。
         if (sender is not Image image)
             return;
 
@@ -134,6 +147,9 @@ public static class ArtImage
             if (bitmap is null)
                 continue;
 
+            // 让头部的加载统计跟着刷新
+            StatsChanged?.Invoke(null, EventArgs.Empty);
+
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 // 下载期间卡片可能已被回收或换了地址，这里确认一下再赋值
@@ -148,6 +164,8 @@ public static class ArtImage
     {
         if (Cache.TryGetValue(uri, out var existing))
         {
+            if (existing.IsCompletedSuccessfully && existing.Result is not null)
+                Interlocked.Increment(ref _cacheHits);
             Touch(uri);
             return existing;
         }
@@ -163,6 +181,7 @@ public static class ArtImage
         await Gate.WaitAsync().ConfigureAwait(false);
         try
         {
+            Interlocked.Increment(ref _networkLoads);
             var bitmap = await LoadCoreAsync(uri).ConfigureAwait(false);
             if (bitmap is not null)
                 Touch(uri);
