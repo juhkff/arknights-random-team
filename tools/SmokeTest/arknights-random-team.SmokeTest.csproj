@@ -10,8 +10,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- 无头运行：不需要显示器或 GPU，用来验证界面真能加载并完成布局。 -->
+        <!-- 无头运行：不需要显示器或 GPU，用来验证界面真能加载并完成布局。
+             加 Skia 后才能把帧真正画出来并截图（shots 模式）。 -->
         <PackageReference Include="Avalonia.Headless" Version="12.1.1" />
+        <PackageReference Include="Avalonia.Skia" Version="12.1.1" />
         <ProjectReference Include="../../Core/arknights-random-team.Core.csproj" />
     </ItemGroup>
 </Project>
