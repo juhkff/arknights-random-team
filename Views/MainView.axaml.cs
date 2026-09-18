@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 
 namespace arknights_random_team.Views;
 
@@ -46,6 +47,9 @@ public partial class MainView : UserControl
         Loaded += (_, _) =>
         {
             ApplyShellLayout();
+
+            // 抽屉打开时的 Esc 关闭：挂在根上冒泡处理，避免只对某个按钮生效。
+            KeyDown += OnShellKeyDown;
 
             // 外壳已经加载完成：网页端撤掉首屏遮罩的真实信号（桌面端只是无人订阅的事件）。
             AppHost.NotifyShellReady();
@@ -208,6 +212,19 @@ public partial class MainView : UserControl
         Sidebar.IsVisible = true;
         Sidebar.Width = 208;
         NavScrim.IsVisible = true;
+
+        // 打开即把焦点送进抽屉：否则键盘用户还要从头 Tab 一遍才轮到导航项。
+        Dispatcher.UIThread.Post(() => GenerateNavButton.Focus(), DispatcherPriority.Loaded);
+    }
+
+    /// <summary>抽屉打开时用 Esc 关闭（与对话框的 Esc 行为一致）。</summary>
+    private void OnShellKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || !_drawerOpen)
+            return;
+
+        e.Handled = true;
+        CloseDrawer();
     }
 
     private void CloseDrawer()
@@ -219,5 +236,8 @@ public partial class MainView : UserControl
         NavScrim.IsVisible = false;
         if (AppLayout.UseDrawerNav)
             Sidebar.IsVisible = false;
+
+        // 关闭后把焦点还给打开抽屉的按钮，避免掉回页面开头。
+        Dispatcher.UIThread.Post(() => MenuButton.Focus(), DispatcherPriority.Loaded);
     }
 }

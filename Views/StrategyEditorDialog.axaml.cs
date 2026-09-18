@@ -16,6 +16,9 @@ namespace arknights_random_team.Views;
 
 public partial class StrategyEditorDialog : ModalContent
 {
+    /// <inheritdoc />
+    public override bool PreferFullScreenOnPhone => true;
+
     private readonly RandomStrategyDefinition _target;
     private readonly string _backupName;
     private readonly List<StrategyRule> _backupRules;

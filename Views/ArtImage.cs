@@ -172,10 +172,34 @@ public static class ArtImage
 
         image.AttachedToVisualTree += OnAttached;
         image.DetachedFromVisualTree += OnDetached;
-        SetLoadState(image, ArtLoadState.Loading);
+        // 有图源但还没轮到下载时是「排队中」，与「加载中」必须能区分（方案 §3.3）。
+        SetLoadState(image, ArtLoadState.Queued);
 
         if (Attached.TryGetValue(image, out _))
+        {
             ScheduleVisibleLoad(image, list);
+            return;
+        }
+
+        // 图已经挂在可视树上、却是第一次拿到图源（绑定晚于挂载）：补登记再排队。
+        // 不做这一步的话它不会收到挂载事件，状态会永远停在「排队中」，图永远不出现。
+        if (TopLevel.GetTopLevel(image) is not null)
+        {
+            Track(image);
+            Dispatcher.UIThread.Post(() => LoadWhenViewportUnknown(image, list), DispatcherPriority.Background);
+            ScheduleVisibleLoad(image, list);
+        }
+    }
+
+    /// <summary>
+    /// 把一张图纳入跟踪：登记「已挂载」并订阅可见区事件。
+    /// 先订阅再登记没有任何顺序要求，但必须幂等——挂载回调与图源回调都可能调它。
+    /// </summary>
+    private static void Track(Image image)
+    {
+        Attached.AddOrUpdate(image, new object());
+        image.EffectiveViewportChanged -= OnEffectiveViewportChanged;
+        image.EffectiveViewportChanged += OnEffectiveViewportChanged;
     }
 
     private static void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -183,12 +207,11 @@ public static class ArtImage
         if (sender is not Image image)
             return;
 
-        Attached.AddOrUpdate(image, new object());
-        image.EffectiveViewportChanged += OnEffectiveViewportChanged;
+        Track(image);
 
         if (GetSources(image) is { Count: > 0 } list)
         {
-            SetLoadState(image, ArtLoadState.Loading);
+            SetLoadState(image, ArtLoadState.Queued);
 
             // 兜底：如果这个平台/版本压根不上报可见区，就不能让图永远停在占位。
             // 等到布局之后仍没有收到任何可见区信息，就退回「挂上即加载」的老行为。
@@ -269,8 +292,10 @@ public static class ArtImage
             return;
         }
 
-        // 滚出预取范围：让出并发名额，滚回来时会命中缓存立即显示。
+        // 滚出预取范围：让出并发名额，回到「排队中」，滚回来时命中缓存立即显示。
         CancelLoad(image);
+        if (GetLoadState(image) == ArtLoadState.Loading)
+            SetLoadState(image, ArtLoadState.Queued);
     }
 
     private static bool IsWithinPrefetchRange(Image image)
@@ -479,9 +504,19 @@ public static class ArtImage
 
 public enum ArtLoadState
 {
+    /// <summary>没有可用图源（例如手动录入、拼不出地址的干员）。</summary>
     Empty,
+
+    /// <summary>有图源但还没轮到下载：在预取范围外，或并发名额已满。</summary>
+    Queued,
+
+    /// <summary>正在下载或解码。</summary>
     Loading,
+
+    /// <summary>已成功显示。</summary>
     Loaded,
+
+    /// <summary>候选地址全部失败。</summary>
     Failed
 }
 

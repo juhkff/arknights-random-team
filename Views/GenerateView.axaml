@@ -46,7 +46,7 @@
             <Setter Property="MinWidth" Value="32" />
             <Setter Property="MinHeight" Value="32" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
             <Setter Property="Background" Value="{StaticResource AppSecondaryBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -78,11 +78,6 @@
             <Setter Property="Stroke" Value="{StaticResource AppMutedTextBrush}" />
         </Style>
 
-        <Style Selector="DataGrid#ResultGrid DataGridCell TextBlock.operator-name">
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
-        </Style>
 
         <!-- 编队卡片 -->
         <Style Selector="TextBlock.roster-name">
@@ -95,17 +90,6 @@
             <Setter Property="FontSize" Value="11" />
             <Setter Property="LetterSpacing" Value="1.5" />
             <Setter Property="Foreground" Value="{StaticResource AppSignalBrush}" />
-        </Style>
-        <Style Selector="TextBlock.roster-glyph">
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-        <Style Selector="Border.roster-badge">
-            <Setter Property="Width" Value="34" />
-            <Setter Property="Height" Value="34" />
-            <Setter Property="CornerRadius" Value="7" />
-            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
         </Style>
     </UserControl.Styles>
 
@@ -144,7 +128,7 @@
                 <ControlTemplate>
                     <Border Height="8"
                             VerticalAlignment="Center"
-                            CornerRadius="4"
+                            CornerRadius="{StaticResource AppRadiusControl}"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}" />
@@ -309,7 +293,7 @@
                                                 <Border Classes="avatar-frame"
                                                         Width="64"
                                                         Height="64"
-                                                        CornerRadius="8"
+                                                        CornerRadius="{StaticResource AppRadiusSurface}"
                                                         BorderBrush="{StaticResource AppBorderBrush}"
                                                         Background="{StaticResource AppWellBrush}">
                                                     <views:StaffThumb Sources="{Binding AvatarUris}"

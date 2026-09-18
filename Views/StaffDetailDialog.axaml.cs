@@ -15,6 +15,9 @@ namespace arknights_random_team.Views;
 /// </summary>
 public partial class StaffDetailDialog : ModalContent
 {
+    /// <inheritdoc />
+    public override bool PreferFullScreenOnPhone => true;
+
     private readonly Staff _staff;
 
     /// <summary>XAML 加载器使用的无参构造；实际调用请用 <see cref="StaffDetailDialog(Staff)"/>。</summary>

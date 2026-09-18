@@ -22,6 +22,16 @@ public sealed class OverlayPresenter : IModalPresenter
     /// <summary>卡片外壳的描边色。对话框内容本身不含描边——桌面端那条描边由窗口提供。</summary>
     private static readonly IBrush CardBorderBrush = new SolidColorBrush(Color.Parse("#303A45"));
 
+    /// <summary>
+    /// 弹层圆角：优先取 <c>App.axaml</c> 里的 <c>AppRadiusDialog</c> 令牌（方案 §2.2：弹层 12），
+    /// 取不到时退回同值常量。放在这里是让「弹层圆角」只有一个来源，而不是 XAML 一份、C# 一份。
+    /// </summary>
+    private static CornerRadius DialogRadius =>
+        Application.Current?.TryGetResource("AppRadiusDialog", Application.Current.ActualThemeVariant, out var value) == true
+            && value is CornerRadius radius
+                ? radius
+                : new CornerRadius(12);
+
     private readonly List<Entry> _stack = [];
     private bool _repositionPending;
 
@@ -68,22 +78,39 @@ public sealed class OverlayPresenter : IModalPresenter
             dialog.VerticalAlignment = VerticalAlignment.Center;
         }
 
+        // 小屏全屏：复杂编辑面板在 &lt;600 档铺满可用空间，不再留一圈居中卡片。
+        var fullScreenOnPhone = dialog.PreferFullScreenOnPhone && AppLayout.IsPhone;
+
         var card = new Border
         {
             Child = dialog,
             Background = dialog.Background ?? Brushes.Transparent,
             BorderBrush = CardBorderBrush,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(12),
+            BorderThickness = fullScreenOnPhone ? new Thickness(0) : new Thickness(1),
+            // 弹层圆角取全局令牌（方案 §2.2：弹层 12），全屏模式下去掉圆角。
+            CornerRadius = fullScreenOnPhone ? new CornerRadius(0) : DialogRadius,
             ClipToBounds = true,
-            Width = contentWidth,
-            Height = contentHeight
+            Width = fullScreenOnPhone ? double.NaN : contentWidth,
+            Height = fullScreenOnPhone ? double.NaN : contentHeight
         };
 
-        return ShowCoreAsync<T>(dialog, card, cancellationToken);
+        if (fullScreenOnPhone)
+        {
+            card.HorizontalAlignment = HorizontalAlignment.Stretch;
+            card.VerticalAlignment = VerticalAlignment.Stretch;
+
+            // 对话框自身与内容都要拉伸：没有固定高度的对话框走的是「居中」分支，
+            // 不在这里覆盖就会在整屏里居中、上下各留一大片空白。
+            dialog.HorizontalAlignment = HorizontalAlignment.Stretch;
+            dialog.VerticalAlignment = VerticalAlignment.Stretch;
+            dialog.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+            dialog.VerticalContentAlignment = VerticalAlignment.Stretch;
+        }
+
+        return ShowCoreAsync<T>(dialog, card, fullScreenOnPhone, cancellationToken);
     }
 
-    private Task<T?> ShowCoreAsync<T>(ModalContent dialog, Control visual, CancellationToken cancellationToken)
+    private Task<T?> ShowCoreAsync<T>(ModalContent dialog, Control visual, bool fullScreen, CancellationToken cancellationToken)
     {
         var completion = new TaskCompletionSource<T?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -96,7 +123,8 @@ public sealed class OverlayPresenter : IModalPresenter
         var entry = new Entry(dialog, visual, Dismiss, result => completion.TrySetResult(result is T typed ? typed : default))
         {
             // 记下打开前的焦点，关闭时归还，键盘用户不会掉回页面开头。
-            PreviousFocus = TopLevel.GetTopLevel(Overlay)?.FocusManager?.GetFocusedElement()
+            PreviousFocus = TopLevel.GetTopLevel(Overlay)?.FocusManager?.GetFocusedElement(),
+            FullScreen = fullScreen
         };
 
         CancellationTokenRegistration registration = default;
@@ -115,6 +143,10 @@ public sealed class OverlayPresenter : IModalPresenter
         _stack.Add(entry);
         Overlay.DialogLayer.Children.Add(visual);
         Overlay.IsActive = true;
+
+        // Tab 焦点圈禁：只在对话框内部循环，背景页面不再能被 Tab 走到
+        // （遮罩只挡指针，挡不住键盘）。对话框移除时这条设置随之失效。
+        KeyboardNavigation.SetTabNavigation(entry.Dialog, KeyboardNavigationMode.Cycle);
 
         UpdateSizing();
 
@@ -143,13 +175,20 @@ public sealed class OverlayPresenter : IModalPresenter
         if (!_stack.Remove(entry))
             return;
 
+        // 焦点是否还停在这个正在关闭的对话框里，必须在移除之前判断：
+        // 移除之后它的控件已经脱离可视树，任何「还在栈里吗」的检查都必然为假（原实现的漏洞）。
+        var focused = TopLevel.GetTopLevel(Overlay)?.FocusManager?.GetFocusedElement();
+        var focusWasInside = focused is null || IsWithin(entry.Visual, focused);
+
         entry.Dialog.CloseRequested -= entry.CloseRequestedHandler;
         Overlay.DialogLayer.Children.Remove(entry.Visual);
         Overlay.IsActive = _stack.Count > 0;
 
         entry.PublishResult();
         entry.Cleanup?.Invoke();
-        RestoreFocus(entry);
+
+        if (focusWasInside)
+            RestoreFocus(entry);
 
         if (_stack.Count > 0)
             Dispatcher.UIThread.Post(() => FocusDialog(_stack[^1]), DispatcherPriority.Loaded);
@@ -189,21 +228,16 @@ public sealed class OverlayPresenter : IModalPresenter
         return false;
     }
 
-    /// <summary>把焦点交还给对话框打开前持有焦点的控件。</summary>
+    /// <summary>
+    /// 把焦点交还给对话框打开前持有焦点的控件。
+    /// 是否需要归还由调用方（<see cref="Dismiss"/>）在移除对话框之前判断，这里只负责归还。
+    /// </summary>
     private void RestoreFocus(Entry entry)
     {
         if (entry.PreviousFocus is not { } previous)
             return;
 
-        Dispatcher.UIThread.Post(
-            () =>
-            {
-                // 只在焦点确实还停在这批对话框内部时才归还，避免抢走用户在关闭后主动点击的控件。
-                var focused = TopLevel.GetTopLevel(Overlay)?.FocusManager?.GetFocusedElement();
-                if (focused is null || _stack.Any(e => IsWithin(e.Visual, focused)))
-                    previous.Focus();
-            },
-            DispatcherPriority.Loaded);
+        Dispatcher.UIThread.Post(() => previous.Focus(), DispatcherPriority.Loaded);
     }
 
     private static bool IsWithin(Visual ancestor, IInputElement? candidate)
@@ -230,6 +264,19 @@ public sealed class OverlayPresenter : IModalPresenter
 
         foreach (var entry in _stack)
         {
+            if (entry.FullScreen)
+            {
+                // 小屏全屏：直接按宿主尺寸给宽高，由下面的定位把它摆到 (0,0)。
+                entry.Visual.Width = hostWidth;
+                entry.Visual.Height = hostHeight;
+                entry.Visual.MaxWidth = hostWidth;
+                entry.Visual.MaxHeight = hostHeight;
+                entry.Dialog.MaxWidth = hostWidth;
+                entry.Dialog.MaxHeight = hostHeight;
+                entry.Visual.InvalidateMeasure();
+                continue;
+            }
+
             var maxW = Math.Max(160, hostWidth - 32);
             var maxH = Math.Max(160, hostHeight - 32);
             entry.Visual.MaxWidth = maxW;
@@ -249,7 +296,16 @@ public sealed class OverlayPresenter : IModalPresenter
             {
                 _repositionPending = false;
                 foreach (var entry in _stack)
+                {
+                    if (entry.FullScreen)
+                    {
+                        Canvas.SetLeft(entry.Visual, 0);
+                        Canvas.SetTop(entry.Visual, 0);
+                        continue;
+                    }
+
                     CenterInLayer(entry.Visual);
+                }
             },
             DispatcherPriority.Loaded);
     }
@@ -282,6 +338,9 @@ public sealed class OverlayPresenter : IModalPresenter
 
         /// <summary>实际放进叠加层的控件：卡片外壳，其子元素才是对话框内容。</summary>
         public Control Visual { get; } = visual;
+
+        /// <summary>小屏全屏：铺满叠加层，而不是居中留边（叠加层用 Canvas 定位，Stretch 不起作用）。</summary>
+        public bool FullScreen { get; init; }
 
         /// <summary>关闭请求携带的返回值。</summary>
         public object? Result { get; set; }

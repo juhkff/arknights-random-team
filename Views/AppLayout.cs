@@ -5,7 +5,8 @@ namespace arknights_random_team.Views;
 /// </summary>
 public static class AppLayout
 {
-    public const double WideWidth = 1100;
+    /// <summary>宽屏阈值：方案 §5.1 要求 ≥1200 出完整侧栏，默认窗口宽度按此对齐（1240）。</summary>
+    public const double WideWidth = 1200;
     public const double MediumWidth = 900;
     public const double PhoneWidth = 600;
 

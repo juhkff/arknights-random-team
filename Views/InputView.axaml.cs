@@ -142,6 +142,23 @@ public partial class InputView : UserControl
             Level = new Level(ParseElite(EliteTextBox.Text), ParseRank(RankTextBox.Text))
         });
         PostSnack("添加成功");
+
+        // 成功后清空表单：否则用户不改内容直接再点一次，必然撞「列表中已有该干员」——
+        // 实测复现（连点两次：52 → 53 之后 53 → 53），这是新手最容易踩的一步。
+        ResetManualForm();
+    }
+
+    /// <summary>把手动录入表单恢复到刚打开时的状态，并把焦点放回名称框。</summary>
+    private void ResetManualForm()
+    {
+        NameTextBox.Text = "";
+        EliteTextBox.Text = "2";
+        RankTextBox.Text = "1";
+        CareerCombo.SelectedIndex = -1;
+        NameError.IsVisible = false;
+        CareerError.IsVisible = false;
+        LevelError.IsVisible = false;
+        NameTextBox.Focus();
     }
 
     private void ApplyInputLayout()

@@ -1,7 +1,7 @@
-# 统一行尾：仓库内一律 LF，工作区交给 git 归一化。
-# 没有这个文件时，Windows 侧编辑器写出的 CRLF 工作区文件会与仓库里的 LF 不一致，
-# `git status` 会持续显示几十个只有行尾差异的“已修改”文件，真实 diff 被淹没。
-* text=auto
+# 统一行尾：仓库与工作区都按 LF。
+# 为什么必须写 eol=lf：Windows 侧 core.autocrlf=true 会在检出一律给出 CRLF，
+# 结果是 git status 长期挂着几十个“只差行尾”的假修改，脚本做多行匹配也会失配。
+* text=auto eol=lf
 
 # 二进制与生成物不做行尾转换
 *.png binary

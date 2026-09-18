@@ -15,7 +15,7 @@
             <Border Width="4"
                     Margin="0,2"
                     Background="{StaticResource AppAccentBrush}"
-                    CornerRadius="2" />
+                    CornerRadius="{StaticResource AppRadiusHairline}" />
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
                 <TextBlock Name="TitleText"
                            FontSize="20"

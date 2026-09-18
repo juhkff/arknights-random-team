@@ -15,7 +15,7 @@
             <Border Width="4"
                     Margin="0,2"
                     Background="{StaticResource AppDangerBrush}"
-                    CornerRadius="2" />
+                    CornerRadius="{StaticResource AppRadiusHairline}" />
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
                 <TextBlock Name="TitleText"
                            FontSize="20"
@@ -48,11 +48,13 @@
                 <Button Name="CancelButton"
                         Classes="secondary"
                         MinWidth="96"
+                        IsCancel="True"
                         Content="取消"
                         Click="Cancel_Click" />
                 <Button Name="OkButton"
                         Classes="primary"
                         MinWidth="96"
+                        IsDefault="True"
                         Content="确定"
                         Click="Ok_Click" />
             </StackPanel>

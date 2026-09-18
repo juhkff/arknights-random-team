@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
              mc:Ignorable="d"
-             d:DesignWidth="1160"
+             d:DesignWidth="1240"
              d:DesignHeight="820"
              x:Class="arknights_random_team.Views.MainView"
              FontFamily="{StaticResource AppFont}"
@@ -25,7 +25,7 @@
             <Setter Property="Foreground" Value="{StaticResource AppSidebarTextBrush}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
         </Style>
         <Style Selector="Button.nav-item:pointerover">
             <Setter Property="Background" Value="{StaticResource AppSidebarHoverBrush}" />
@@ -108,7 +108,7 @@
                                           StrokeLineCap="Round"
                                           Data="M 2,4 H 14 M 2,8 H 14 M 2,12 H 14" />
                                 </Button>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
                                     <TextBlock Name="WindowTitle"
                                                Classes="page-title"
                                                FontSize="24"
@@ -144,7 +144,7 @@
                     <Grid RowDefinitions="Auto,*,Auto">
                         <Grid Name="BrandBlock" Margin="16,16,16,12">
                             <Border Name="BrandMark"
-                                    Width="40" Height="40" CornerRadius="6"
+                                    Width="40" Height="40" CornerRadius="{StaticResource AppRadiusControl}"
                                     HorizontalAlignment="Left"
                                     Background="{StaticResource AppPrimarySoftBrush}"
                                     BorderBrush="{StaticResource AppPrimaryBrush}"
@@ -157,9 +157,9 @@
                                            Text="RT" />
                             </Border>
                             <Border Name="BrandCopy" Margin="52,0,0,0" VerticalAlignment="Center">
-                                <StackPanel Spacing="2">
+                                <StackPanel Spacing="4">
                                     <TextBlock FontSize="16" FontWeight="Bold" Text="明日方舟" />
-                                    <TextBlock FontSize="11"
+                                    <TextBlock FontSize="12"
                                                FontFamily="{StaticResource AppMonoFont}"
                                                Foreground="{StaticResource AppMutedTextBrush}"
                                                Text="RANDOM TEAM" />
@@ -174,7 +174,7 @@
                                     ToolTip.Tip="阵容生成"
                                     Click="ChangeToGenerate">
                                 <Grid ColumnDefinitions="4,40,*">
-                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
+                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="{StaticResource AppRadiusIndicator}" />
                                     <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
                                           Data="M 2,6 H 10 M 7,3 L 10,6 7,9 M 6,10 H 14 M 9,7 L 6,10 9,13" />
@@ -187,7 +187,7 @@
                                     ToolTip.Tip="干员录入"
                                     Click="ChangeToInput">
                                 <Grid ColumnDefinitions="4,40,*">
-                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
+                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="{StaticResource AppRadiusIndicator}" />
                                     <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
                                           Data="M 8,3 V 13 M 3,8 H 13" />
@@ -200,7 +200,7 @@
                                     ToolTip.Tip="干员列表"
                                     Click="ChangeToList">
                                 <Grid ColumnDefinitions="4,40,*">
-                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
+                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="{StaticResource AppRadiusIndicator}" />
                                     <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
                                           Data="M 3,3 H 7 V 7 H 3 Z M 9,3 H 13 V 7 H 9 Z M 3,9 H 7 V 13 H 3 Z M 9,9 H 13 V 13 H 9 Z" />
@@ -213,7 +213,7 @@
                                     ToolTip.Tip="随机策略"
                                     Click="ChangeToRandomStrategy">
                                 <Grid ColumnDefinitions="4,40,*">
-                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="0,2,2,0" />
+                                    <Border Classes="nav-indicator" Margin="0,8,0,8" CornerRadius="{StaticResource AppRadiusIndicator}" />
                                     <Path Grid.Column="1" Classes="nav-icon" Width="16" Height="16"
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
                                           Data="M 2,4 H 14 M 2,8 H 14 M 2,12 H 14 M 6,2 V 6 M 11,6 V 10 M 5,10 V 14" />
@@ -229,13 +229,13 @@
                                 Background="{StaticResource AppPrimarySoftBrush}"
                                 BorderBrush="{StaticResource AppBorderBrush}"
                                 BorderThickness="1"
-                                CornerRadius="8">
+                                CornerRadius="{StaticResource AppRadiusSurface}">
                             <Grid>
                                 <Border Name="StorageDot"
                                         Width="8" Height="8"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        CornerRadius="4"
+                                        CornerRadius="{StaticResource AppRadiusControl}"
                                         Background="{StaticResource AppPrimaryBrush}"
                                         IsVisible="False" />
                                 <StackPanel Name="StorageCopy" Spacing="4">

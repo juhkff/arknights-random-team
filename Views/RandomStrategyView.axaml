@@ -18,11 +18,11 @@
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Border.rule-summary">
-            <Setter Property="MinHeight" Value="40" />
+            <Setter Property="MinHeight" Value="44" />
             <Setter Property="Margin" Value="0,6,0,0" />
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
         </Style>
         <Style Selector="Expander.rules">
             <Setter Property="Margin" Value="0,4,0,0" />

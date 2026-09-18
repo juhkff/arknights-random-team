@@ -25,6 +25,35 @@ public partial class StaffListView : UserControl
         DataContext = new ListModel();
         InitializeComponent();
         AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel);
+
+        // 拖动判定必须监听「已被处理」的事件：
+        // 卡片本身是 Button，它会把 PointerPressed/Moved 标记为已处理（ScrollViewer 也一样），
+        // 于是挂在卡片 XAML 上的这三个处理器根本不会被调用——拖动判定形同虚设。
+        // 实测复现：拖动 30px 后抬起，随机池被切换（方案 §3.6 明确禁止）。
+        // 这里在视图层用 handledEventsToo 接管，按下时按来源限定到卡片。
+        AddHandler(
+            PointerPressedEvent,
+            OnCardPointerPressedForDrag,
+            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
+            handledEventsToo: true);
+        AddHandler(
+            PointerMovedEvent,
+            (_, args) => TrackPressMove(args),
+            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
+            handledEventsToo: true);
+
+        // 表格同理：DataGrid 会把指针事件标记为已处理，挂在单元格 XAML 上的处理器收不到，
+        // 结果是「点入池列没反应」（实测复现）。这里按 .cell-hit 容器在视图层接管。
+        AddHandler(
+            PointerPressedEvent,
+            OnCellHitPointerPressed,
+            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
+            handledEventsToo: true);
+        AddHandler(
+            PointerReleasedEvent,
+            OnCellHitPointerReleased,
+            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
+            handledEventsToo: true);
         Loaded += (_, _) =>
         {
             ClearGridSelection();
@@ -268,6 +297,17 @@ public partial class StaffListView : UserControl
         _pressSuppressed = false;
     }
 
+    /// <summary>只对「卡片上的按下」开始跟踪拖动，其它控件的按下不参与。</summary>
+    private void OnCardPointerPressedForDrag(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is Visual source &&
+            source.FindAncestorOfType<Button>(true) is { } button &&
+            button.Classes.Contains("operator-card"))
+        {
+            BeginPress(e);
+        }
+    }
+
     private void OperatorCard_PointerPressed(object? sender, PointerPressedEventArgs e) => BeginPress(e);
 
     private void OperatorCard_PointerMoved(object? sender, PointerEventArgs e) => TrackPressMove(e);
@@ -306,9 +346,43 @@ public partial class StaffListView : UserControl
         Model?.ToggleSelectAll();
     }
 
+    /// <summary>
+    /// 事件来源是否落在复选框内部。
+    /// 不能只判 <c>e.Source is CheckBox</c>：实际来源常常是复选框模板里的图形，
+    /// 于是守卫失效——复选框自己切换一次、单元格处理器再切一次，净变化为零，
+    /// 用户看到的就是「点入池列没反应」（实测复现）。
+    /// </summary>
+    private static bool IsFromCheckBox(object? source) =>
+        source is Visual visual &&
+        (visual is CheckBox || visual.FindAncestorOfType<CheckBox>(true) is not null);
+
+    private static Border? CellHitTarget(object? source) =>
+        source is Visual visual &&
+        visual.FindAncestorOfType<Border>(true) is { } border &&
+        border.Classes.Contains("cell-hit")
+            ? border
+            : null;
+
+    private void OnCellHitPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (CellHitTarget(e.Source) is not null && !IsFromCheckBox(e.Source))
+            BeginPress(e);
+    }
+
+    private void OnCellHitPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (IsFromCheckBox(e.Source) || CellHitTarget(e.Source) is not { } border || !ReleaseIsTap(border, e))
+            return;
+
+        if (border.DataContext is Staff staff)
+            staff.IsSelected = !staff.IsSelected;
+        else
+            Model?.ToggleSelectAll();
+    }
+
     private void SelectAllHeader_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.Source is CheckBox)
+        if (IsFromCheckBox(e.Source))
             return;
         BeginPress(e);
     }
@@ -317,14 +391,14 @@ public partial class StaffListView : UserControl
 
     private void SelectAllHeader_PointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (!ReleaseIsTap(sender, e))
+        if (IsFromCheckBox(e.Source) || !ReleaseIsTap(sender, e))
             return;
         Model?.ToggleSelectAll();
     }
 
     private void SelectCell_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.Source is CheckBox)
+        if (IsFromCheckBox(e.Source))
             return;
         BeginPress(e);
     }
@@ -333,6 +407,8 @@ public partial class StaffListView : UserControl
 
     private void SelectCell_PointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (IsFromCheckBox(e.Source))
+            return;
         if (sender is not Border { DataContext: Staff staff } || !ReleaseIsTap(sender, e))
             return;
         staff.IsSelected = !staff.IsSelected;
@@ -381,6 +457,42 @@ public partial class StaffListView : UserControl
     {
         ClearRowHighlight(e.Row);
         Model?.EndEdit();
+    }
+
+    /// <summary>
+    /// 键盘排序：列头可聚焦（见 App.axaml 的列头主题），空格或回车触发与鼠标点击一致的排序循环。
+    /// 没有这条路径时，「键盘能完成主要操作」只覆盖选池与导航，排序仍只有鼠标可用。
+    /// </summary>
+    private void StaffGrid_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Space or Key.Enter))
+            return;
+
+        // 这个 Avalonia 版本不公开 DataGridColumnHeader.Column，
+        // 用「列头内容与列定义里的 Header 是同一个对象」反查，取不到时退回当前列。
+        if (e.Source is not Visual source ||
+            source.FindAncestorOfType<DataGridColumnHeader>(true) is not { } header)
+            return;
+
+        var column = StaffGrid.Columns.FirstOrDefault(c => ReferenceEquals(c.Header, header.Content))
+                     ?? StaffGrid.CurrentColumn;
+        if (column is null || string.IsNullOrWhiteSpace(column.SortMemberPath))
+            return;
+
+        _suppressRowSelection = true;
+        Model?.CycleSort(column.SortMemberPath);
+        e.Handled = true;
+
+        // 排序会刷新可见投影（整表 Reset），DataGrid 会把焦点收回自己身上，
+        // 于是「按一次空格排序、再按就落在网格上不再生效」。键盘用户期望停在刚操作的列头，
+        // 这里在刷新之后把焦点还回去（实测：不还的话连按三次空格，排序状态卡在第一次的结果）。
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (TopLevel.GetTopLevel(header) is not null)
+                    header.Focus();
+            },
+            DispatcherPriority.Loaded);
     }
 
     private void StaffGrid_Sorting(object? sender, DataGridColumnEventArgs e)

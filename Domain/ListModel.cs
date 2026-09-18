@@ -585,8 +585,8 @@ public class ListModel : AutomaticNotify
 
     /// <summary>
     /// 表格紧凑模式：行高 44、行内头像 32；关闭时按方案的普通档 56 / 40。
-    /// 具体尺寸由 StaffListView 的样式按 <c>DataGrid#StaffGrid.compact</c> 类切换，
-    /// 模型只负责保存开关状态，避免尺寸散落在两处。
+    /// 行高由 StaffListView 的样式按 <c>DataGrid#StaffGrid.compact</c> 类切换，
+    /// 行内头像与职业图标尺寸则由下面两个属性提供给绑定，避免尺寸散落在两处。
     /// </summary>
     public bool IsCompactTable
     {
@@ -597,8 +597,16 @@ public class ListModel : AutomaticNotify
                 return;
 
             AppState.UiPreferences.IsCompactTable = value;
+            OnPropertyChanged(nameof(RowAvatarSize));
+            OnPropertyChanged(nameof(RowCareerIconSize));
         }
     }
+
+    /// <summary>表格行内头像边长：普通 40，紧凑 32。</summary>
+    public double RowAvatarSize => IsCompactTable ? 32 : 40;
+
+    /// <summary>表格行内职业图标边长：普通 18，紧凑 16。</summary>
+    public double RowCareerIconSize => IsCompactTable ? 16 : 18;
 
     private static IOrderedEnumerable<Staff> OrderFirst(IEnumerable<Staff> source, StaffSort sort) =>
         sort.Direction == ListSortDirection.Ascending

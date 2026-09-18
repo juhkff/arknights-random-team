@@ -19,7 +19,7 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
             <Setter Property="Foreground" Value="{StaticResource AppSignalBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />

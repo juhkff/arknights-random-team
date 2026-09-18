@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:domain="clr-namespace:arknights_random_team.Domain"
              xmlns:models="clr-namespace:arknights_random_team.Models"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
              x:Class="arknights_random_team.Views.StrategyEditorDialog"
              Width="960"
@@ -48,7 +49,7 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
         </Style>
         <Style Selector="ListBox#RulesList ListBoxItem:pointerover Border.rule-row">
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
@@ -82,7 +83,7 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusFocusRing}" />
         </Style>
         <Style Selector="Border.form-section.editing">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
@@ -110,7 +111,7 @@
                 BorderBrush="{StaticResource AppBorderBrush}"
                 BorderThickness="0,0,0,1">
             <StackPanel VerticalAlignment="Center" Spacing="4">
-                <TextBlock FontSize="22" FontWeight="Bold" Text="随机策略编辑器" />
+                <TextBlock FontSize="20" FontWeight="Bold" Text="随机策略编辑器" />
                 <TextBlock Classes="caption" Text="配置阵容生成时需要满足的规则" />
             </StackPanel>
         </Border>
@@ -149,7 +150,7 @@
                                                     <Border Width="3"
                                                             Margin="0,2"
                                                             Background="{StaticResource AppPrimaryBrush}"
-                                                            CornerRadius="2" />
+                                                            CornerRadius="{StaticResource AppRadiusHairline}" />
                                                     <TextBlock Grid.Column="2"
                                                                Classes="rule-text"
                                                                VerticalAlignment="Center"
@@ -215,7 +216,13 @@
                                               Grid.Column="0"
                                               Classes="inline dense"
                                               HorizontalAlignment="Stretch"
-                                              ItemsSource="{x:Static models:AppOptions.Stars}" />
+                                              ItemsSource="{x:Static models:AppOptions.Stars}">
+                                              <ComboBox.ItemTemplate>
+                                                  <DataTemplate x:DataType="x:Int32">
+                                                      <TextBlock Text="{Binding Converter={x:Static views:StaffCardVisual.StarLabel}}" />
+                                                  </DataTemplate>
+                                              </ComboBox.ItemTemplate>
+                                              </ComboBox>
                                     <TextBox Name="RarityCountBox"
                                              Grid.Row="2"
                                              Grid.Column="2"

@@ -17,6 +17,16 @@
         <Color x:Key="AppHoverSurfaceColor">#202831</Color>
         <Color x:Key="AppWellSurfaceColor">#141A20</Color>
 
+        <!-- 圆角令牌：控件 6、卡片与面板 8、弹层 12。
+             发丝线（装饰细条）2、焦点环 10、药丸 999 是有意例外，不算同层级混用。 -->
+        <CornerRadius x:Key="AppRadiusControl">6</CornerRadius>
+        <CornerRadius x:Key="AppRadiusSurface">8</CornerRadius>
+        <CornerRadius x:Key="AppRadiusDialog">12</CornerRadius>
+        <CornerRadius x:Key="AppRadiusFocusRing">10</CornerRadius>
+        <CornerRadius x:Key="AppRadiusHairline">2</CornerRadius>
+        <CornerRadius x:Key="AppRadiusIndicator">0,2,2,0</CornerRadius>
+        <CornerRadius x:Key="AppRadiusPill">999</CornerRadius>
+
         <SolidColorBrush x:Key="AppBackgroundBrush" Color="#101418" />
         <SolidColorBrush x:Key="AppSurfaceBrush" Color="#181E24" />
         <SolidColorBrush x:Key="AppSurfaceSubtleBrush" Color="#1C242C" />
@@ -73,7 +83,7 @@
                     <Grid Name="PART_ButtonMotion" RenderTransform="translate(0,0)">
                         <Grid.Transitions>
                             <Transitions>
-                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
                             </Transitions>
                         </Grid.Transitions>
                         <Border Name="PART_FocusRing"
@@ -82,7 +92,7 @@
                                 Opacity="0"
                                 BorderBrush="{StaticResource AppSignalBrush}"
                                 BorderThickness="2"
-                                CornerRadius="10" />
+                                CornerRadius="{StaticResource AppRadiusFocusRing}" />
                         <Border Name="PART_RootBorder"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
@@ -127,7 +137,7 @@
                             Background="{StaticResource AppCardBrush}"
                             BorderBrush="{StaticResource AppBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="{StaticResource AppRadiusSurface}"
                             ClipToBounds="True">
                         <Border.Transitions>
                             <Transitions>
@@ -148,6 +158,8 @@
         </ControlTheme>
 
         <ControlTheme x:Key="{x:Type DataGridColumnHeader}" TargetType="DataGridColumnHeader">
+            <!-- 键盘可达：Tab 能停在列头上，空格/回车触发排序（排序由 StaffListView 接管）。 -->
+            <Setter Property="Focusable" Value="True" />
             <Setter Property="ClipToBounds" Value="False" />
             <Setter Property="Template">
                 <ControlTemplate>
@@ -179,6 +191,10 @@
                 <Setter Property="IsVisible" Value="True" />
                 <Setter Property="RenderTransform" Value="scale(0.85,-0.85)" />
             </Style>
+            <!-- 键盘可达：列头本身可聚焦，空格/回车触发排序（排序逻辑在 StaffListView 里接管）。 -->
+            <Style Selector="^:focus-visible /template/ Border#PART_FocusRing">
+                <Setter Property="Opacity" Value="1" />
+            </Style>
         </ControlTheme>
     </Application.Resources>
 
@@ -209,29 +225,16 @@
             <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
         </Style>
         <Style Selector="Border.surface-subtle">
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-        </Style>
-        <Style Selector="Border.input-shell">
-            <Setter Property="Height" Value="40" />
-            <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
         </Style>
         <Style Selector="Border.data-frame">
             <Setter Property="Padding" Value="4" />
-        </Style>
-        <Style Selector="Border.status-accent">
-            <Setter Property="Background" Value="{StaticResource AppAccentSoftBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="TextBlock.page-title">
             <Setter Property="FontSize" Value="24" />
@@ -257,76 +260,29 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
         </Style>
-        <Style Selector="TextBlock.mono">
-            <Setter Property="FontFamily" Value="{StaticResource AppMonoFont}" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
-        </Style>
-        <Style Selector="TextBlock.accent">
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
 
         <!-- Panels and chips used by every screen, so the surfaces read as one system. -->
-        <Style Selector="Border.panel">
-            <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-        </Style>
-        <Style Selector="Border.well">
-            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-        </Style>
         <Style Selector="Border.chip">
             <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusPill}" />
             <Setter Property="Padding" Value="11,4" />
         </Style>
         <Style Selector="Border.avatar-frame">
             <Setter Property="Width" Value="48" />
             <Setter Property="Height" Value="48" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
             <Setter Property="ClipToBounds" Value="True" />
             <Setter Property="BorderThickness" Value="1.5" />
             <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
-        </Style>
-        <Style Selector="Border.class-badge">
-            <Setter Property="Width" Value="28" />
-            <Setter Property="Height" Value="28" />
-            <Setter Property="CornerRadius" Value="7" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Background" Value="#CC0B1118" />
-        </Style>
-        <Style Selector="Border.elite-chip">
-            <Setter Property="Padding" Value="6,2" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Background" Value="#CC0B1118" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-        <Style Selector="Border.command-bar">
-            <Setter Property="Padding" Value="16,12" />
-            <Setter Property="Background" Value="{StaticResource AppSurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="Border.filter-chip">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
             <Setter Property="Padding" Value="8,4" />
-        </Style>
-        <Style Selector="TextBlock.stat-value">
-            <Setter Property="FontFamily" Value="{StaticResource AppMonoFont}" />
-            <Setter Property="FontSize" Value="18" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
 
         <!-- Stable hit areas; only the artwork shifts by one pixel on press. -->
@@ -338,7 +294,7 @@
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="TextBlock.FontWeight" Value="SemiBold" />
@@ -412,7 +368,7 @@
             <Setter Property="MinHeight" Value="32" />
             <Setter Property="Height" Value="32" />
             <Setter Property="Padding" Value="10,0" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
         </Style>
         <Style Selector="Button.icon">
             <Setter Property="MinWidth" Value="40" />
@@ -420,7 +376,7 @@
             <Setter Property="MinHeight" Value="40" />
             <Setter Property="Height" Value="40" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
         </Style>
 
         <Style Selector="CheckBox">
@@ -441,6 +397,21 @@
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
             <Setter Property="CaretBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
+        <!-- 紧凑输入：方案 §3.4 要求就地编辑更紧凑；此前 dense 类被用了 24 次却没有定义。 -->
+        <Style Selector="TextBox.dense">
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="MaxHeight" Value="32" />
+            <Setter Property="Padding" Value="10,2" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="ComboBox.dense">
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="MaxHeight" Value="32" />
+            <Setter Property="Padding" Value="10,2" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
         <Style Selector="TextBox.form-control">
             <Setter Property="Theme" Value="{StaticResource SoloTextBox}" />
             <Setter Property="MinHeight" Value="40" />
@@ -451,7 +422,7 @@
             <Setter Property="PlaceholderForeground" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="UseFloatingPlaceholder" Value="False" />
@@ -494,7 +465,7 @@
             <Setter Property="PlaceholderForeground" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
@@ -528,7 +499,7 @@
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
             <Setter Property="UseFloatingPlaceholder" Value="False" />
         </Style>
         <Style Selector="TextBox.inline:pointerover">
@@ -552,7 +523,7 @@
             <Setter Property="Background" Value="{StaticResource AppInputBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
             <Setter Property="ClipToBounds" Value="False" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
@@ -603,6 +574,9 @@
             <Setter Property="ClipToBounds" Value="False" />
             <Setter Property="SeparatorBrush" Value="{StaticResource AppBorderBrush}" />
         </Style>
+        <Style Selector="DataGridColumnHeader:focus-visible">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+        </Style>
         <Style Selector="DataGridColumnHeader:pointerover">
             <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
@@ -639,7 +613,7 @@
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
             <Setter Property="Padding" Value="24,16" />
             <Setter Property="MinWidth" Value="280" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
         </Style>
         <Style Selector="TextBlock#PART_SnackbarSupportingText">
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />

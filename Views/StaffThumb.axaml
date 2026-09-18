@@ -7,7 +7,11 @@
              x:Class="arknights_random_team.Views.StaffThumb"
              x:Name="Root">
     <UserControl.Styles>
-        <!-- 加载中：整块占位压暗，和「没有图源」「加载失败」区分开。 -->
+        <!-- 四态靠不透明度 + 重试按钮区分：
+             没有图源 = 原样；排队中 = 略淡；加载中 = 明显压暗；失败 = 原样 + 重试按钮。 -->
+        <Style Selector="StackPanel.thumb-state.queued">
+            <Setter Property="Opacity" Value="0.55" />
+        </Style>
         <Style Selector="StackPanel.thumb-state.loading">
             <Setter Property="Opacity" Value="0.3" />
         </Style>
@@ -24,6 +28,7 @@
                HorizontalAlignment="Center"
                VerticalAlignment="{Binding #Root.VerticalArtAlignment}" />
         <StackPanel Classes="thumb-state"
+                    Classes.queued="{Binding (views:ArtImage.LoadState), ElementName=ThumbArt, Converter={x:Static views:StaffCardVisual.IsArtQueued}}"
                     Classes.loading="{Binding (views:ArtImage.LoadState), ElementName=ThumbArt, Converter={x:Static views:StaffCardVisual.IsArtLoading}}"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"

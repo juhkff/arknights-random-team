@@ -11,6 +11,13 @@ namespace arknights_random_team.Views;
 /// </summary>
 public abstract class ModalContent : UserControl
 {
+    /// <summary>
+    /// 小屏（方案 §5.1 的 &lt;600 档）是否占满可用空间。
+    /// 复杂编辑面板（干员详情、策略编辑器）打开时为 true：小屏上侧栏式两栏布局没法用，
+    /// 全屏铺开比挤在一个居中小卡片里更好操作。默认 false，保持普通提示框的形态。
+    /// </summary>
+    public virtual bool PreferFullScreenOnPhone => false;
+
     /// <summary>请求关闭当前对话框；<paramref name="result"/> 会作为宿主 <c>ShowModalAsync</c> 的返回值。</summary>
     public event EventHandler<ModalCloseRequestedEventArgs>? CloseRequested;
 

@@ -27,12 +27,12 @@
                                 Opacity="0"
                                 BorderBrush="{StaticResource AppSignalBrush}"
                                 BorderThickness="2"
-                                CornerRadius="10" />
+                                CornerRadius="{StaticResource AppRadiusFocusRing}" />
                         <Border Name="PART_CardRoot"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
+                                CornerRadius="{StaticResource AppRadiusSurface}">
                             <Border.Transitions>
                                 <Transitions>
                                     <BrushTransition Property="Background" Duration="0:0:0.16" />
@@ -132,7 +132,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
             <Setter Property="Padding" Value="20,0" />
         </Style>
         <Style Selector="Button.dialog-cancel:pointerover">
@@ -148,7 +148,7 @@
             <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
-            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusSurface}" />
             <Setter Property="Padding" Value="24,0" />
             <Setter Property="FontSize" Value="15" />
             <Setter Property="TextBlock.FontWeight" Value="Bold" />
@@ -187,12 +187,12 @@
         <Grid Grid.Row="1" Margin="28,16,28,0" Height="4">
             <Border Name="SelectionTrack"
                     Background="{StaticResource AppWellBrush}"
-                    CornerRadius="2" />
+                    CornerRadius="{StaticResource AppRadiusHairline}" />
             <Border Name="SelectionMeter"
                     Width="0"
                     HorizontalAlignment="Left"
                     Background="{StaticResource AppPrimaryBrush}"
-                    CornerRadius="2">
+                    CornerRadius="{StaticResource AppRadiusHairline}">
                 <Border.Transitions>
                     <Transitions>
                         <DoubleTransition Property="Width" Duration="0:0:0.18" />
@@ -249,7 +249,7 @@
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Center"
                                         BorderThickness="1.5"
-                                        CornerRadius="10">
+                                        CornerRadius="{StaticResource AppRadiusFocusRing}">
                                     <Path Classes="select-tick"
                                           Width="11"
                                           Height="9"

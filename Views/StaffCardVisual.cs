@@ -32,9 +32,17 @@ public static class StaffCardVisual
     public static readonly IValueConverter IsArtPlaceholder =
         new FuncValueConverter<ArtLoadState, bool>(state => state != ArtLoadState.Loaded);
 
+    /// <summary>星级标签：全站统一显示成「6★」，避免下拉框里只显示裸数字。</summary>
+    public static readonly IValueConverter StarLabel =
+        new FuncValueConverter<int, string>(star => $"{star}★");
+
     /// <summary>正在加载：占位图标压暗一点，和「没有图源」「加载失败」区分开。</summary>
     public static readonly IValueConverter IsArtLoading =
         new FuncValueConverter<ArtLoadState, bool>(state => state == ArtLoadState.Loading);
+
+    /// <summary>有图源但还没轮到下载：占位比「没有图源」更淡一点，但不像加载中那么暗。</summary>
+    public static readonly IValueConverter IsArtQueued =
+        new FuncValueConverter<ArtLoadState, bool>(state => state == ArtLoadState.Queued);
 
     /// <summary>候选地址全部失败：只有这一态给出重试入口。</summary>
     public static readonly IValueConverter IsArtFailed =
