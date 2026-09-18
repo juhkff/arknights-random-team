@@ -40,6 +40,14 @@
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
+        <Style Selector="Path.sort-arrow">
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="6" />
+            <Setter Property="Stretch" Value="Uniform" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Fill" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Data" Value="F1 M -5.215,6.099L 5.215,6.099L 0,0L -5.215,6.099 Z" />
+        </Style>
         <Style Selector="ToggleButton.filter-choice">
             <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
             <Setter Property="MinHeight" Value="32" />
@@ -81,6 +89,25 @@
         <Style Selector="DataGridRow">
             <Setter Property="MinHeight" Value="56" />
         </Style>
+        <Style Selector="DataGrid#StaffGrid.compact DataGridRow">
+            <Setter Property="MinHeight" Value="44" />
+        </Style>
+        <Style Selector="Border.row-avatar">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+        </Style>
+        <Style Selector="DataGrid#StaffGrid.compact Border.row-avatar">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+        </Style>
+        <Style Selector="Image.row-career-icon">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+        </Style>
+        <Style Selector="DataGrid#StaffGrid.compact Image.row-career-icon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+        </Style>
         <Style Selector="DataGridCell TextBlock.cell-start">
             <Setter Property="TextAlignment" Value="Left" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -103,7 +130,6 @@
             <Setter Property="Padding" Value="4,0" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
-            <Setter Property="Focusable" Value="False" />
         </Style>
         <Style Selector="Border.cell-hit">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -262,6 +288,15 @@
                     <ComboBoxItem Content="职业" />
                     <ComboBoxItem Content="等级" />
                 </ComboBox>
+                <TextBlock Margin="0,0,8,8"
+                           VerticalAlignment="Center"
+                           Classes="caption"
+                           MaxWidth="220"
+                           TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding HasSorts}"
+                           Text="{Binding SortSummary}"
+                           ToolTip.Tip="点击表头可追加多列排序，左侧为第一优先级"
+                           AutomationProperties.Name="当前排序" />
                 <Border Margin="0,0,8,8"
                         Padding="3"
                         Background="{StaticResource AppWellBrush}"
@@ -289,6 +324,14 @@
                                       Click="PortraitMode_Click" />
                     </StackPanel>
                 </Border>
+                <ToggleButton Name="CompactToggle"
+                              Margin="0,0,8,8"
+                              Classes="view-switch"
+                              Content="紧凑"
+                              IsVisible="{Binding IsGridView}"
+                              AutomationProperties.Name="切换表格紧凑行高"
+                              ToolTip.Tip="紧凑行高 44；关闭为 56"
+                              IsChecked="{Binding IsCompactTable, Mode=TwoWay}" />
             </WrapPanel>
 
             <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasActiveFilters}">
@@ -371,6 +414,7 @@
         <Border Classes="surface data-frame" Padding="0" ClipToBounds="True">
             <Grid>
                 <DataGrid Name="StaffGrid"
+                          Classes.compact="{Binding IsCompactTable}"
                           IsVisible="{Binding ShowGrid}"
                           AutoGenerateColumns="False"
                           CanUserReorderColumns="False"
@@ -389,7 +433,9 @@
                                                 CanUserResize="False"
                                                 CanUserSort="False">
                             <DataGridTemplateColumn.Header>
-                                <Border Classes="cell-hit" PointerPressed="SelectAllHeader_PointerPressed">
+                                <Border Classes="cell-hit" PointerPressed="SelectAllHeader_PointerPressed"
+                                        PointerMoved="SelectAllHeader_PointerMoved"
+                                        PointerReleased="SelectAllHeader_PointerReleased">
                                     <CheckBox Classes="staff-select"
                                               IsThreeState="True"
                                               ToolTip.Tip="{Binding #Root.((domain:ListModel)DataContext).SelectAllScopeText}"
@@ -399,8 +445,11 @@
                             </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <Border Classes="cell-hit" PointerPressed="SelectCell_PointerPressed">
+                                    <Border Classes="cell-hit" PointerPressed="SelectCell_PointerPressed"
+                                            PointerMoved="SelectCell_PointerMoved"
+                                            PointerReleased="SelectCell_PointerReleased">
                                         <CheckBox Classes="staff-select"
+                                                  AutomationProperties.Name="{Binding PoolAutomationName}"
                                                   IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                                     </Border>
                                 </DataTemplate>
@@ -409,12 +458,26 @@
 
                         <DataGridTemplateColumn Width="2.4*"
                                                 MinWidth="168"
-                                                Header="干员"
                                                 SortMemberPath="Name">
+                            <DataGridTemplateColumn.Header>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="4"
+                                            Margin="4,0,0,0"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            ToolTip.Tip="点击按名称排序，再点切换降序，第三次取消该列">
+                                    <TextBlock Text="干员" VerticalAlignment="Center" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).NameSort, Converter={x:Static views:SortVisual.IsAscending}}" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).NameSort, Converter={x:Static views:SortVisual.IsDescending}}"
+                                          RenderTransform="scale(1,-1)" />
+                                </StackPanel>
+                            </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <Grid ColumnDefinitions="40,12,*" Margin="4,0" ToolTip.Tip="双击编辑名称">
-                                        <Border Width="40" Height="40"
+                                    <Grid ColumnDefinitions="Auto,12,*" Margin="4,0" ToolTip.Tip="双击编辑名称">
+                                        <Border Classes="row-avatar"
                                                 CornerRadius="6"
                                                 ClipToBounds="True"
                                                 Background="{StaticResource AppWellBrush}"
@@ -424,7 +487,7 @@
                                                 <Image Name="RowArt"
                                                        Stretch="UniformToFill"
                                                        views:ArtImage.Sources="{Binding AvatarUris}" />
-                                                <Image Width="18" Height="18"
+                                                <Image Classes="row-career-icon"
                                                        Opacity="0.75"
                                                        Stretch="Uniform"
                                                        HorizontalAlignment="Center"
@@ -455,9 +518,18 @@
                                                 MinWidth="88"
                                                 SortMemberPath="Star">
                             <DataGridTemplateColumn.Header>
-                                <TextBlock Text="稀有度"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="4"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            ToolTip.Tip="点击按稀有度排序，再点切换降序，第三次取消该列">
+                                    <TextBlock Text="稀有度" VerticalAlignment="Center" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).StarSort, Converter={x:Static views:SortVisual.IsAscending}}" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).StarSort, Converter={x:Static views:SortVisual.IsDescending}}"
+                                          RenderTransform="scale(1,-1)" />
+                                </StackPanel>
                             </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
@@ -481,8 +553,21 @@
 
                         <DataGridTemplateColumn Width="112"
                                                 MinWidth="104"
-                                                Header="职业"
                                                 SortMemberPath="Career">
+                            <DataGridTemplateColumn.Header>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="4"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            ToolTip.Tip="点击按职业排序，再点切换降序，第三次取消该列">
+                                    <TextBlock Text="职业" VerticalAlignment="Center" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).CareerSort, Converter={x:Static views:SortVisual.IsAscending}}" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).CareerSort, Converter={x:Static views:SortVisual.IsDescending}}"
+                                          RenderTransform="scale(1,-1)" />
+                                </StackPanel>
+                            </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
                                     <StackPanel Orientation="Horizontal"
@@ -509,8 +594,21 @@
 
                         <DataGridTemplateColumn Width="1.2*"
                                                 MinWidth="120"
-                                                Header="精英 / 等级"
                                                 SortMemberPath="Level">
+                            <DataGridTemplateColumn.Header>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="4"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            ToolTip.Tip="点击按精英阶段与等级排序，再点切换降序，第三次取消该列">
+                                    <TextBlock Text="精英 / 等级" VerticalAlignment="Center" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).LevelSort, Converter={x:Static views:SortVisual.IsAscending}}" />
+                                    <Path Classes="sort-arrow"
+                                          IsVisible="{Binding #Root.((domain:ListModel)DataContext).LevelSort, Converter={x:Static views:SortVisual.IsDescending}}"
+                                          RenderTransform="scale(1,-1)" />
+                                </StackPanel>
+                            </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
                                     <TextBlock HorizontalAlignment="Left"
@@ -548,6 +646,9 @@
                                             AutomationProperties.Name="更多">
                                         <Button.Flyout>
                                             <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                <MenuItem Header="详情 / 编辑"
+                                                          Tag="{Binding}"
+                                                          Click="Detail_Click" />
                                                 <MenuItem Header="删除干员"
                                                           Tag="{Binding}"
                                                           Click="Delete_Click" />
@@ -563,44 +664,38 @@
                 <ScrollViewer IsVisible="{Binding ShowCards}"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto">
-                    <ItemsControl Name="StaffCards"
-                                  Margin="16"
-                                  ItemsSource="{Binding VisibleStaff}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <views:AdaptiveWrapPanel MinItemWidth="156"
-                                                         MaxItemWidth="196"
-                                                         Spacing="12"
-                                                         NameplateHeight="68" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemContainerTheme>
-                            <ControlTheme TargetType="ContentPresenter">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="VerticalContentAlignment" Value="Stretch" />
-                            </ControlTheme>
-                        </ItemsControl.ItemContainerTheme>
-                        <ItemsControl.ItemTemplate>
+                    <ItemsRepeater Name="StaffCards"
+                                   Margin="16"
+                                   ItemsSource="{Binding VisibleStaff}">
+                        <ItemsRepeater.Layout>
+                            <!-- 虚拟化网格：只实例化可见区及其邻近的卡片，几百名干员时
+                                 不再一次性创建全部卡片控件（方案 §5.3）。 -->
+                            <UniformGridLayout MinItemWidth="156"
+                                               MinItemHeight="224"
+                                               MinRowSpacing="12"
+                                               MinColumnSpacing="12"
+                                               ItemsStretch="Fill" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="models:Staff">
                                 <Button Classes="operator-card"
                                         BorderBrush="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.PoolBorder}}"
                                         ToolTip.Tip="{Binding Name}"
-                                        AutomationProperties.Name="{Binding Name}"
+                                        AutomationProperties.Name="{Binding PoolAutomationName}"
+                                        AutomationProperties.HelpText="按空格或回车切换随机池状态；按 Tab 可聚焦卡片内的入池勾选框；⋯ 菜单可查看详情或删除"
+                                        PointerPressed="OperatorCard_PointerPressed"
+                                        PointerMoved="OperatorCard_PointerMoved"
+                                        PointerReleased="OperatorCard_PointerReleased"
+                                        KeyDown="OperatorCard_KeyDown"
                                         Click="OperatorCard_Click">
                                     <Grid RowDefinitions="*,68">
                                         <Panel ClipToBounds="True">
-                                            <Image Name="CardArt"
-                                                   Stretch="{Binding UsePortrait, Converter={x:Static views:StaffCardVisual.ArtStretch}}"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="{Binding UsePortrait, Converter={x:Static views:StaffCardVisual.ArtAlignment}}"
-                                                   views:ArtImage.Sources="{Binding DisplayArtUris}" />
-                                            <Image Width="48" Height="48"
-                                                   Opacity="0.45"
-                                                   Stretch="Uniform"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   IsVisible="{Binding (views:ArtImage.LoadState), ElementName=CardArt, Converter={x:Static views:StaffCardVisual.IsArtPlaceholder}}"
-                                                   views:ArtImage.Sources="{Binding CareerIconUris}" />
+                                            <views:StaffThumb Sources="{Binding DisplayArtUris}"
+                                                              PlaceholderSources="{Binding CareerIconUris}"
+                                                              PlaceholderSize="48"
+                                                              PlaceholderOpacity="0.45"
+                                                              Stretch="{Binding UsePortrait, Converter={x:Static views:StaffCardVisual.ArtStretch}}"
+                                                              VerticalArtAlignment="{Binding UsePortrait, Converter={x:Static views:StaffCardVisual.ArtAlignment}}" />
                                             <Border Height="40"
                                                     VerticalAlignment="Top"
                                                     IsHitTestVisible="False">
@@ -622,6 +717,7 @@
                                                         Background="#C0101418">
                                                     <CheckBox Classes="card-pool"
                                                               Content="{Binding PoolCheckLabel}"
+                                                              AutomationProperties.Name="{Binding PoolAutomationName}"
                                                               IsChecked="{Binding IsSelected, Mode=TwoWay}"
                                                               Click="CardPoolCheck_Click" />
                                                 </Border>
@@ -643,6 +739,9 @@
                                                     AutomationProperties.Name="更多">
                                                 <Button.Flyout>
                                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                        <MenuItem Header="详情 / 编辑"
+                                                                  Tag="{Binding}"
+                                                                  Click="Detail_Click" />
                                                         <MenuItem Header="删除干员"
                                                                   Tag="{Binding}"
                                                                   Click="Delete_Click" />
@@ -670,8 +769,8 @@
                                     </Grid>
                                 </Button>
                             </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
                 </ScrollViewer>
 
                 <StackPanel Name="StaffEmptyState"

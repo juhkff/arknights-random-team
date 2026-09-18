@@ -16,6 +16,9 @@
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="12.1.1" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
+        <!-- 卡片网格的虚拟化容器：ItemsRepeater + UniformGridLayout。
+             普通 WrapPanel 会把几百张卡全部实例化，方案 §5.3 要求先解决这一项。 -->
+        <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0" />
         <PackageReference Include="Material.Avalonia" Version="3.18.0" />
         <PackageReference Include="Material.Avalonia.DataGrid" Version="3.18.0" />
         <PackageReference Include="Material.Avalonia.Dialogs" Version="3.18.0" />
@@ -38,9 +41,9 @@
     -->
     <ItemGroup>
         <Compile Include="../**/*.cs"
-                 Exclude="../bin/**;../obj/**;../Core/**;../browser/**;../desktop/**;../Program.cs" />
+                 Exclude="../bin/**;../obj/**;../Core/**;../browser/**;../desktop/**;../tools/**;../Program.cs" />
         <AvaloniaXaml Include="../**/*.axaml"
-                      Exclude="../bin/**;../obj/**;../Core/**;../browser/**;../desktop/**" />
+                      Exclude="../bin/**;../obj/**;../Core/**;../browser/**;../desktop/**;../tools/**" />
         <None Remove="../**/*.axaml" />
     </ItemGroup>
 </Project>

@@ -60,6 +60,7 @@ public class ListModel : AutomaticNotify
     private int _sortIndex;
     private bool _isCardView;
     private bool _usePortrait;
+    private bool _isCompactTable;
     private bool _refreshing;
     private bool _editing;
 
@@ -110,6 +111,13 @@ public class ListModel : AutomaticNotify
     public ListModel()
     {
         StaffList = AppState.StaffList;
+
+        // 恢复上次的视图选择：方案要求「已有用户的选择应优先」，新用户仍是默认表格。
+        var saved = AppState.UiPreferences;
+        _isCardView = saved.ViewMode != StaffViewMode.Table;
+        _usePortrait = saved.ViewMode == StaffViewMode.Portrait;
+        _isCompactTable = saved.IsCompactTable;
+
         CareerFilters = Enum.GetValues<Career>()
             .Select(career => new FilterOption<Career>(career, career.ToString()) { Changed = RefreshVisible })
             .ToList();
@@ -185,11 +193,60 @@ public class ListModel : AutomaticNotify
                 _sorts.Add(new StaffSort(path, ListSortDirection.Ascending));
             }
 
+            NotifySorts();
             RefreshVisible();
         }
     }
 
     public IReadOnlyList<StaffSort> Sorts => _sorts;
+
+    /// <summary>是否存在生效中的排序，用于工具栏摘要的显隐。</summary>
+    public bool HasSorts => _sorts.Count > 0;
+
+    /// <summary>
+    /// 排序状态摘要，按优先级列出「列 方向」。表头可追加多列排序，
+    /// 工具栏据此说明当前排序顺序，避免多列排序时下拉框显示「默认排序」造成误解。
+    /// </summary>
+    public string SortSummary =>
+        _sorts.Count == 0
+            ? "默认排序"
+            : string.Join(" → ", _sorts.Select(Describe));
+
+    private static string Describe(StaffSort sort) =>
+        $"{PathLabel(sort.Path)} {(sort.Direction == ListSortDirection.Ascending ? "升序" : "降序")}";
+
+    /// <summary>
+    /// 四个可排序列当前的排序方向，供表头箭头直接绑定（渲染在列头模板里的 Path）。
+    /// 排序由本模型驱动，DataGrid 自身的排序流程被视图层拦下（Sorting 事件里
+    /// <c>e.Handled = true</c>），所以表头状态必须由模型提供，不能依赖 DataGrid 内部维护。
+    /// </summary>
+    public ListSortDirection? NameSort => DirectionFor("Name");
+
+    public ListSortDirection? StarSort => DirectionFor("Star");
+
+    public ListSortDirection? CareerSort => DirectionFor("Career");
+
+    public ListSortDirection? LevelSort => DirectionFor("Level");
+
+    private static string PathLabel(string path) => path switch
+    {
+        "Name" => "名称",
+        "Star" => "稀有度",
+        "Career" => "职业",
+        "Level" => "等级",
+        _ => path
+    };
+
+    private void NotifySorts()
+    {
+        OnPropertyChanged(nameof(Sorts));
+        OnPropertyChanged(nameof(HasSorts));
+        OnPropertyChanged(nameof(SortSummary));
+        OnPropertyChanged(nameof(NameSort));
+        OnPropertyChanged(nameof(StarSort));
+        OnPropertyChanged(nameof(CareerSort));
+        OnPropertyChanged(nameof(LevelSort));
+    }
 
     public bool? IsAllStaffSelected
     {
@@ -283,6 +340,7 @@ public class ListModel : AutomaticNotify
         }
 
         SetProperty(ref _sortIndex, _sorts.Count == 1 ? IndexOfPath(_sorts[0].Path) : 0, nameof(SortIndex));
+        NotifySorts();
         RefreshVisible();
     }
 
@@ -350,7 +408,8 @@ public class ListModel : AutomaticNotify
         _refreshing = true;
         try
         {
-            IEnumerable<Staff> query = StaffList.Where(Matches);
+            var filter = BuildFilter();
+            IEnumerable<Staff> query = StaffList.Where(filter.Matches);
             if (_sorts.Count > 0)
             {
                 IOrderedEnumerable<Staff>? ordered = null;
@@ -377,26 +436,45 @@ public class ListModel : AutomaticNotify
         }
     }
 
-    private bool Matches(Staff staff)
+    /// <summary>
+    /// 把当前筛选条件固化成一份可复用的投影条件。
+    ///
+    /// 原实现对每名干员都重新构造职业/稀有度 HashSet，500 名干员时一次刷新要分配上千个集合。
+    /// 现在每次刷新只构造一次，判定逐条走同一份数据。
+    /// </summary>
+    private ProjectionFilter BuildFilter()
     {
-        if (!string.IsNullOrWhiteSpace(_searchText) &&
-            staff.Name.IndexOf(_searchText.Trim(), StringComparison.OrdinalIgnoreCase) < 0)
-            return false;
-
         var careers = CareerFilters.Where(item => item.IsChecked).Select(item => item.Value).ToHashSet();
-        if (careers.Count > 0 && !careers.Contains(staff.Career))
-            return false;
-
         var stars = RarityFilters.Where(item => item.IsChecked).Select(item => item.Value).ToHashSet();
-        if (stars.Count > 0 && !stars.Contains(staff.Star))
-            return false;
+        return new ProjectionFilter(_searchText.Trim(), careers, stars, _poolFilter);
+    }
 
-        return _poolFilter switch
+    private readonly record struct ProjectionFilter(
+        string Search,
+        HashSet<Career> Careers,
+        HashSet<int> Stars,
+        PoolFilterKind Pool)
+    {
+        /// <summary>名称包含匹配；职业/稀有度组内为或，组间为且；随机池单独一组。</summary>
+        public bool Matches(Staff staff)
         {
-            PoolFilterKind.InPool => staff.IsSelected,
-            PoolFilterKind.OutPool => !staff.IsSelected,
-            _ => true
-        };
+            if (Search.Length > 0 &&
+                staff.Name.IndexOf(Search, StringComparison.OrdinalIgnoreCase) < 0)
+                return false;
+
+            if (Careers.Count > 0 && !Careers.Contains(staff.Career))
+                return false;
+
+            if (Stars.Count > 0 && !Stars.Contains(staff.Star))
+                return false;
+
+            return Pool switch
+            {
+                PoolFilterKind.InPool => staff.IsSelected,
+                PoolFilterKind.OutPool => !staff.IsSelected,
+                _ => true
+            };
+        }
     }
 
     private void RebuildChips()
@@ -456,6 +534,7 @@ public class ListModel : AutomaticNotify
             if (!SetProperty(ref _isCardView, value))
                 return;
 
+            PersistViewMode();
             NotifyViewMode();
         }
     }
@@ -484,9 +563,16 @@ public class ListModel : AutomaticNotify
             foreach (var staff in StaffList)
                 staff.UsePortrait = value;
 
+            PersistViewMode();
             NotifyViewMode();
         }
     }
+
+    /// <summary>把当前视图选择写回偏好；桌面端退出时随其它数据一起落盘。</summary>
+    private void PersistViewMode() =>
+        AppState.UiPreferences.ViewMode = IsCardView
+            ? (UsePortrait ? StaffViewMode.Portrait : StaffViewMode.Avatar)
+            : StaffViewMode.Table;
 
     private void NotifyViewMode()
     {
@@ -495,6 +581,23 @@ public class ListModel : AutomaticNotify
         OnPropertyChanged(nameof(IsPortraitView));
         OnPropertyChanged(nameof(ShowGrid));
         OnPropertyChanged(nameof(ShowCards));
+    }
+
+    /// <summary>
+    /// 表格紧凑模式：行高 44、行内头像 32；关闭时按方案的普通档 56 / 40。
+    /// 具体尺寸由 StaffListView 的样式按 <c>DataGrid#StaffGrid.compact</c> 类切换，
+    /// 模型只负责保存开关状态，避免尺寸散落在两处。
+    /// </summary>
+    public bool IsCompactTable
+    {
+        get => _isCompactTable;
+        set
+        {
+            if (!SetProperty(ref _isCompactTable, value))
+                return;
+
+            AppState.UiPreferences.IsCompactTable = value;
+        }
     }
 
     private static IOrderedEnumerable<Staff> OrderFirst(IEnumerable<Staff> source, StaffSort sort) =>

@@ -312,19 +312,12 @@
                                                         CornerRadius="8"
                                                         BorderBrush="{StaticResource AppBorderBrush}"
                                                         Background="{StaticResource AppWellBrush}">
-                                                    <Panel>
-                                                        <Image Name="RosterArt"
-                                                               Stretch="UniformToFill"
-                                                               views:ArtImage.Sources="{Binding AvatarUris}" />
-                                                        <Image Width="28"
-                                                               Height="28"
-                                                               Opacity="0.7"
-                                                               Stretch="Uniform"
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center"
-                                                               IsVisible="{Binding (views:ArtImage.LoadState), ElementName=RosterArt, Converter={x:Static views:StaffCardVisual.IsArtPlaceholder}}"
-                                                               views:ArtImage.Sources="{Binding CareerIconUris}" />
-                                                    </Panel>
+                                                    <views:StaffThumb Sources="{Binding AvatarUris}"
+                                                                      PlaceholderSources="{Binding CareerIconUris}"
+                                                                      PlaceholderSize="28"
+                                                                      PlaceholderOpacity="0.7"
+                                                                      Stretch="UniformToFill"
+                                                                      VerticalArtAlignment="Center" />
                                                 </Border>
                                                 <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto">
                                                     <Grid ColumnDefinitions="*,8,Auto">

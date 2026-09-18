@@ -32,6 +32,14 @@ public static class StaffCardVisual
     public static readonly IValueConverter IsArtPlaceholder =
         new FuncValueConverter<ArtLoadState, bool>(state => state != ArtLoadState.Loaded);
 
+    /// <summary>正在加载：占位图标压暗一点，和「没有图源」「加载失败」区分开。</summary>
+    public static readonly IValueConverter IsArtLoading =
+        new FuncValueConverter<ArtLoadState, bool>(state => state == ArtLoadState.Loading);
+
+    /// <summary>候选地址全部失败：只有这一态给出重试入口。</summary>
+    public static readonly IValueConverter IsArtFailed =
+        new FuncValueConverter<ArtLoadState, bool>(state => state == ArtLoadState.Failed);
+
     private static IBrush Brush(string key)
     {
         if (Application.Current?.TryGetResource(key, Application.Current.ActualThemeVariant, out var value) == true &&

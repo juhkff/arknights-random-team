@@ -1,0 +1,25 @@
+# 统一行尾：仓库内一律 LF，工作区交给 git 归一化。
+# 没有这个文件时，Windows 侧编辑器写出的 CRLF 工作区文件会与仓库里的 LF 不一致，
+# `git status` 会持续显示几十个只有行尾差异的“已修改”文件，真实 diff 被淹没。
+* text=auto
+
+# 二进制与生成物不做行尾转换
+*.png binary
+*.otf binary
+*.ico binary
+*.dll binary
+*.pdb binary
+*.snap binary
+
+# 脚本固定 LF，避免在 Linux/macOS 上出现 shebang 解析问题
+*.sh text eol=lf
+*.py text eol=lf
+
+# Windows 专用文件保留 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# .sln 在仓库里的历史版本本身就是 CRLF，交给 Visual Studio 维护即可。
+# 这里显式关闭行尾转换，避免出现「只改了行尾」的假差异。
+*.sln -text

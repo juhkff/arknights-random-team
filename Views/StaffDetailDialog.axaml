@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
+             mc:Ignorable="d"
+             x:Class="arknights_random_team.Views.StaffDetailDialog"
+             Width="440"
+             MinWidth="280"
+             MaxWidth="440"
+             Background="{StaticResource AppSurfaceBrush}"
+             FontFamily="{StaticResource AppFont}"
+             FontSize="14">
+    <Grid RowDefinitions="Auto,*,80">
+        <Grid Margin="24,24,24,0" ColumnDefinitions="4,16,*">
+            <Border Width="4"
+                    Margin="0,2"
+                    Background="{StaticResource AppAccentBrush}"
+                    CornerRadius="2" />
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="4">
+                <TextBlock FontSize="20" FontWeight="Bold" Text="干员详情" />
+                <TextBlock Name="HeaderNameText"
+                           Classes="caption"
+                           TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="完整名称" />
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      MaxHeight="420"
+                      Margin="24,18,24,18"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="88,16,*">
+                    <Border Classes="avatar-frame"
+                            Width="88"
+                            Height="88"
+                            BorderBrush="{StaticResource AppBorderBrush}">
+                        <views:StaffThumb Name="DetailThumb"
+                                          PlaceholderSize="22"
+                                          PlaceholderOpacity="0.75"
+                                          Stretch="UniformToFill"
+                                          VerticalArtAlignment="Center" />
+                    </Border>
+
+                    <StackPanel Grid.Column="2" Spacing="8">
+                        <TextBlock Classes="field-label" Text="名称" />
+                        <TextBox Name="NameBox"
+                                 Classes="form-control dense"
+                                 HorizontalAlignment="Stretch"
+                                 PlaceholderText="输入名称" />
+                        <TextBlock Name="NameError"
+                                   Classes="caption"
+                                   Foreground="{StaticResource AppDangerBrush}"
+                                   IsVisible="False" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,16,*">
+                    <StackPanel Grid.Column="0" Spacing="8">
+                        <TextBlock Classes="field-label" Text="职业" />
+                        <ComboBox Name="CareerBox"
+                                  Classes="form-control dense"
+                                  HorizontalAlignment="Stretch"
+                                  PlaceholderText="选择职业" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="8">
+                        <TextBlock Classes="field-label" Text="稀有度" />
+                        <ComboBox Name="StarBox"
+                                  Classes="form-control dense"
+                                  HorizontalAlignment="Stretch"
+                                  PlaceholderText="选择稀有度" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Classes="field-label" Text="精英 / 等级" />
+                    <TextBox Name="LevelBox"
+                             Classes="form-control dense"
+                             HorizontalAlignment="Stretch"
+                             PlaceholderText="精二90级" />
+                    <TextBlock Name="LevelError"
+                               Classes="caption"
+                               Foreground="{StaticResource AppDangerBrush}"
+                               IsVisible="False" />
+                </StackPanel>
+
+                <CheckBox Name="PoolBox" Content="加入随机池" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                Padding="24,0"
+                Background="{StaticResource AppSurfaceSubtleBrush}"
+                BorderBrush="{StaticResource AppBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Spacing="12">
+                <Button Classes="secondary"
+                        MinWidth="96"
+                        Content="取消"
+                        Click="Cancel_Click" />
+                <Button Classes="primary"
+                        MinWidth="112"
+                        Content="保存"
+                        Click="Save_Click" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

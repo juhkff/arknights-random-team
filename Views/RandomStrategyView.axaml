@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:domain="clr-namespace:arknights_random_team.Domain"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
              d:DesignWidth="760"
              d:DesignHeight="640"
@@ -22,6 +23,20 @@
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
             <Setter Property="CornerRadius" Value="6" />
+        </Style>
+        <Style Selector="Expander.rules">
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="Expander.rules /template/ ToggleButton#PART_toggle">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinHeight" Value="32" />
+        </Style>
+        <Style Selector="Expander.rules TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+            <Setter Property="FontSize" Value="12" />
         </Style>
     </UserControl.Styles>
 
@@ -78,17 +93,25 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding Rules}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="domain:StrategyRule">
-                                                <Border Classes="rule-summary">
-                                                    <TextBlock VerticalAlignment="Center"
-                                                               Text="{Binding SummaryLine}"
-                                                               TextWrapping="Wrap" />
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                                    <Expander Grid.Row="2"
+                                              Classes="rules"
+                                              IsExpanded="{Binding Rules, Mode=OneTime, Converter={x:Static views:RulesVisual.DefaultExpanded}}">
+                                        <Expander.Header>
+                                            <TextBlock VerticalAlignment="Center"
+                                                       Text="{Binding Rules, Converter={x:Static views:RulesVisual.Header}}" />
+                                        </Expander.Header>
+                                        <ItemsControl ItemsSource="{Binding Rules}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="domain:StrategyRule">
+                                                    <Border Classes="rule-summary">
+                                                        <TextBlock VerticalAlignment="Center"
+                                                                   Text="{Binding SummaryLine}"
+                                                                   TextWrapping="Wrap" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
                                 </Grid>
                             </Border>
                         </DataTemplate>

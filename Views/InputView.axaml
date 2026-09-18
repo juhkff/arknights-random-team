@@ -81,8 +81,8 @@
                                       SelectedIndex="-1"
                                       ItemsSource="{x:Static models:AppOptions.Careers}" />
                         </StackPanel>
-                        <Grid Grid.Column="2" ColumnDefinitions="*,10,*">
-                            <StackPanel Grid.Column="0" Spacing="8">
+                        <Grid Grid.Column="2" RowDefinitions="Auto,Auto" ColumnDefinitions="*,10,*">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="8">
                                 <TextBlock Classes="field-label" Text="精英阶段" />
                                 <TextBox Name="EliteTextBox"
                                          Classes="form-control dense"
@@ -93,7 +93,7 @@
                                          TextChanged="EliteTextBox_TextChanged"
                                          LostFocus="EliteTextBox_LostFocus" />
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="8">
+                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="8">
                                 <TextBlock Classes="field-label" Text="当前等级" />
                                 <TextBox Name="RankTextBox"
                                          Classes="form-control dense"
@@ -104,6 +104,14 @@
                                          TextChanged="RankTextBox_TextChanged"
                                          LostFocus="RankTextBox_LostFocus" />
                             </StackPanel>
+                            <TextBlock Name="LevelError"
+                                       Grid.Row="1"
+                                       Grid.Column="0"
+                                       Grid.ColumnSpan="3"
+                                       Margin="0,6,0,0"
+                                       Classes="caption"
+                                       Foreground="{StaticResource AppDangerBrush}"
+                                       IsVisible="False" />
                         </Grid>
                     </Grid>
                     <TextBlock Name="CareerError"

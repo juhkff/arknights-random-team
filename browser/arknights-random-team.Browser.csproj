@@ -10,6 +10,9 @@
         <SelfContained>false</SelfContained>
         <!-- 本项目本身就是浏览器专用，入口点只在 browser 平台可用，无需平台兼容性告警。 -->
         <NoWarn>$(NoWarn);CA1416</NoWarn>
+        <!-- 与宿主页通信的 [JSImport] 由 SDK 要求必须开启不安全代码（SYSLIB1074）。
+             只影响本浏览器项目，共享库与桌面端不受影响。 -->
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <!-- 资源全部使用相对路径（wwwroot/main.js 里 import './_framework/dotnet.js'），
              因此既能部署在域名根目录，也能部署在 GitHub Pages 的 /<仓库名>/ 子路径下。 -->
         <!-- 注意：不要开启 InvariantGlobalization。它会裁掉全球化数据，

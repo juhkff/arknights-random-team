@@ -118,6 +118,13 @@ public partial class Staff
     /// <summary>卡片勾选旁的固定文案，入池状态不只靠颜色区分。</summary>
     public string PoolCheckLabel => "入池";
 
+    /// <summary>
+    /// 无障碍名称：把干员名与入池状态读成一句话，读屏不依赖颜色或勾选图形。
+    /// 卡片按钮与卡片内的入池勾选框共用它。
+    /// </summary>
+    public string PoolAutomationName =>
+        IsSelected ? $"{Name}，已加入随机池" : $"{Name}，未加入随机池";
+
     // ---- 卡片视图用的立绘 ----
 
     private bool _usePortrait;

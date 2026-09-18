@@ -21,7 +21,11 @@ public partial class Staff : AutomaticNotify
     public string Name
     {
         get => _name;
-        set => SetProperty(ref _name, value);
+        set
+        {
+            if (SetProperty(ref _name, value))
+                OnPropertyChanged(nameof(PoolAutomationName));
+        }
     }
 
     public int Star
@@ -60,7 +64,10 @@ public partial class Staff : AutomaticNotify
         set
         {
             if (SetProperty(ref _isSelected, value))
+            {
                 OnPropertyChanged(nameof(RosterStatus));
+                OnPropertyChanged(nameof(PoolAutomationName));
+            }
         }
     }
 

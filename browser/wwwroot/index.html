@@ -51,18 +51,11 @@
 
     <script type="module" src="main.js"></script>
     <script>
+        // 遮罩何时撤掉由托管侧决定：主视图加载完成后经 main.js 的 arknightsAppReady 通知。
+        // 这里只负责错误态的重试按钮。
         addEventListener("DOMContentLoaded", () => {
             const retry = document.getElementById("app-loading-retry");
             retry?.addEventListener("click", () => location.reload());
-
-            const observer = new MutationObserver(() => {
-                const host = document.getElementById("out");
-                if (host && host.children.length > 0) {
-                    document.getElementById("app-loading")?.classList.add("hidden");
-                    observer.disconnect();
-                }
-            });
-            observer.observe(document.getElementById("out"), { childList: true });
         });
     </script>
 </body>

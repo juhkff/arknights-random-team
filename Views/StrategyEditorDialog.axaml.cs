@@ -55,9 +55,52 @@ public partial class StrategyEditorDialog : ModalContent
         UpdateStaffSubsetInputPanels();
         RefreshStaffSubsetTagPanel();
         UpdateSubmitButtonLabels();
+
+        // 窄屏重排：600–899 与 <600 都按单栏处理（方案 §5.1）。叠加层已经把对话框限制在
+        // host−32 之内，单栏之后窄屏只剩一列，等同于全屏编辑。
+        ApplyEditorLayout();
+        AppLayout.Changed += ApplyEditorLayout;
+        DetachedFromVisualTree += (_, _) => AppLayout.Changed -= ApplyEditorLayout;
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    /// <summary>
+    /// 宽屏保持「左侧名称与规则列表 + 右侧构建器」两栏；窄屏改成上下单栏，
+    /// 规则列表限高并自行滚动，构建器占满剩余高度。
+    /// </summary>
+    private void ApplyEditorLayout()
+    {
+        if (EditorBody is null || EditorSidebar is null || EditorForm is null)
+            return;
+
+        var narrow = AppLayout.IsNarrow;
+        if (narrow)
+        {
+            EditorBody.ColumnDefinitions = new ColumnDefinitions("*");
+            EditorBody.RowDefinitions = new RowDefinitions("Auto,16,*");
+            EditorBody.Margin = new Thickness(AppLayout.IsPhone ? 16 : 20);
+
+            Grid.SetColumn(EditorSidebar, 0);
+            Grid.SetRow(EditorSidebar, 0);
+            EditorSidebar.MaxHeight = 280;
+
+            Grid.SetColumn(EditorForm, 0);
+            Grid.SetRow(EditorForm, 2);
+            return;
+        }
+
+        EditorBody.ColumnDefinitions = new ColumnDefinitions("280,20,*");
+        EditorBody.RowDefinitions = new RowDefinitions("*");
+        EditorBody.Margin = new Thickness(24, 20);
+
+        Grid.SetColumn(EditorSidebar, 0);
+        Grid.SetRow(EditorSidebar, 0);
+        EditorSidebar.MaxHeight = double.PositiveInfinity;
+
+        Grid.SetColumn(EditorForm, 2);
+        Grid.SetRow(EditorForm, 0);
+    }
 
     private void Rules_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => UpdateRulesState();
 

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
@@ -29,6 +30,12 @@ public static class ArtImage
 
     /// <summary>位图缓存上限（按张数），超出后淘汰最久未用的。</summary>
     private const int DefaultMaxCachedBitmaps = 200;
+
+    /// <summary>
+    /// 邻近预取范围（逻辑像素）。可见区外再往前一屏左右就开始下载，
+    /// 滚动时不会看到成片空位；再远的不排队。
+    /// </summary>
+    private const double PrefetchMargin = 240;
 
     /// <summary>
     /// 位图缓存上限。允许用环境变量覆盖，方便把上限调到很小以压测淘汰路径
@@ -78,6 +85,17 @@ public static class ArtImage
     /// <summary>记录哪些 Image 当前挂在可视树上（这个 Avalonia 版本没有现成的判断方法）。</summary>
     private static readonly ConditionalWeakTable<Image, object> Attached = new();
 
+    /// <summary>每张图最近一次算出的可见区，用来判断是否在「可见 + 邻近」范围内。</summary>
+    private static readonly ConditionalWeakTable<Image, ViewportState> Viewports = new();
+
+    private sealed class ViewportState
+    {
+        public Rect Viewport { get; set; }
+
+        /// <summary>是否收到过可见区上报。没收到时不做限制，避免平台不支持就永远不加载。</summary>
+        public bool Received { get; set; }
+    }
+
     public static readonly AttachedProperty<CancellationTokenSource?> LoadCtsProperty =
         AvaloniaProperty.RegisterAttached<Image, CancellationTokenSource?>("LoadCts", typeof(ArtImage));
 
@@ -109,6 +127,35 @@ public static class ArtImage
 
     public static void SetLoadState(Image image, ArtLoadState value) => image.SetValue(LoadStateProperty, value);
 
+    /// <summary>
+    /// 手动重试当前候选地址。
+    ///
+    /// 失败结果会被缓存下来（避免对同一批 404 反复发请求），所以重试必须先丢掉这些
+    /// 「已完成但拿不到图」的缓存项，再重新按顺序加载；否则重试只是白跑一趟。
+    /// </summary>
+    public static void Retry(Image image)
+    {
+        if (GetSources(image) is not { Count: > 0 } list)
+            return;
+
+        foreach (var uri in list)
+        {
+            if (!Cache.TryGetValue(uri, out var cached) || !cached.IsCompleted)
+                continue;
+
+            if (!cached.IsCompletedSuccessfully || cached.Result is null)
+                Cache.TryRemove(uri, out _);
+        }
+
+        if (Attached.TryGetValue(image, out _))
+        {
+            StartLoad(image, list);
+            return;
+        }
+
+        SetLoadState(image, ArtLoadState.Loading);
+    }
+
     private static void OnSourcesChanged(Image image, AvaloniaPropertyChangedEventArgs<IReadOnlyList<Uri>?> args)
     {
         image.AttachedToVisualTree -= OnAttached;
@@ -128,7 +175,7 @@ public static class ArtImage
         SetLoadState(image, ArtLoadState.Loading);
 
         if (Attached.TryGetValue(image, out _))
-            StartLoad(image, list);
+            ScheduleVisibleLoad(image, list);
     }
 
     private static void OnAttached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -137,11 +184,31 @@ public static class ArtImage
             return;
 
         Attached.AddOrUpdate(image, new object());
+        image.EffectiveViewportChanged += OnEffectiveViewportChanged;
 
         if (GetSources(image) is { Count: > 0 } list)
-            StartLoad(image, list);
+        {
+            SetLoadState(image, ArtLoadState.Loading);
+
+            // 兜底：如果这个平台/版本压根不上报可见区，就不能让图永远停在占位。
+            // 等到布局之后仍没有收到任何可见区信息，就退回「挂上即加载」的老行为。
+            Dispatcher.UIThread.Post(() => LoadWhenViewportUnknown(image, list), DispatcherPriority.Background);
+        }
         else
+        {
             SetLoadState(image, ArtLoadState.Empty);
+        }
+    }
+
+    private static void LoadWhenViewportUnknown(Image image, IReadOnlyList<Uri> list)
+    {
+        if (!Attached.TryGetValue(image, out _) ||
+            !ReferenceEquals(GetSources(image), list) ||
+            HasViewportInfo(image))
+            return;
+
+        if (image.GetValue(LoadCtsProperty) is null)
+            StartLoad(image, list);
     }
 
     private static void OnDetached(object? sender, VisualTreeAttachmentEventArgs e)
@@ -151,10 +218,79 @@ public static class ArtImage
         if (sender is not Image image)
             return;
 
+        image.EffectiveViewportChanged -= OnEffectiveViewportChanged;
+        Viewports.Remove(image);
         CancelLoad(image);
         Attached.Remove(image);
         image.Source = null;
     }
+
+    /// <summary>
+    /// 可见区变化：只给「当前可见 + 邻近一屏」的图排队下载。
+    ///
+    /// 原来的做法是图片一挂上可视树就全部排队，一百多张卡片同时抢 6 个并发名额，
+    /// 后排的图要等很久才出现。现在按 <see cref="Layoutable.EffectiveViewportChanged"/>
+    /// 给出的实际可见区决定谁先下，滚出范围的主动让出名额（位图仍在缓存里）。
+    /// </summary>
+    private static void OnEffectiveViewportChanged(object? sender, EffectiveViewportChangedEventArgs e)
+    {
+        if (sender is not Image image)
+            return;
+
+        Viewports.AddOrUpdate(image, new ViewportState { Viewport = e.EffectiveViewport, Received = true });
+        if (GetSources(image) is { Count: > 0 } list)
+            UpdateVisibleLoad(image, list);
+    }
+
+    /// <summary>先把可见区判定排到布局之后，避免刚换图源时还没量出尺寸就下结论。</summary>
+    private static void ScheduleVisibleLoad(Image image, IReadOnlyList<Uri> list)
+    {
+        if (HasViewportInfo(image))
+        {
+            UpdateVisibleLoad(image, list);
+            return;
+        }
+
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (Attached.TryGetValue(image, out _) && ReferenceEquals(GetSources(image), list))
+                    UpdateVisibleLoad(image, list);
+            },
+            DispatcherPriority.Loaded);
+    }
+
+    private static void UpdateVisibleLoad(Image image, IReadOnlyList<Uri> list)
+    {
+        if (IsWithinPrefetchRange(image))
+        {
+            if (image.GetValue(LoadCtsProperty) is null)
+                StartLoad(image, list);
+            return;
+        }
+
+        // 滚出预取范围：让出并发名额，滚回来时会命中缓存立即显示。
+        CancelLoad(image);
+    }
+
+    private static bool IsWithinPrefetchRange(Image image)
+    {
+        if (!Viewports.TryGetValue(image, out var state))
+            return false;
+
+        // 没收到过可见区上报时不做限制（配合 OnAttached 的兜底），
+        // 收到过就按实际可见区判断：空可见区说明完全在屏幕外。
+        if (!state.Received)
+            return true;
+
+        var bounds = new Rect(image.Bounds.Size);
+        bounds.Inflate(PrefetchMargin);
+        return bounds.Intersects(state.Viewport);
+    }
+
+    /// <summary>是否收到过该图的可见区上报。没收到过就不能拿「可见区为空」当结论。</summary>
+    private static bool HasViewportInfo(Image image) =>
+        Viewports.TryGetValue(image, out var state) && state.Received;
 
     private static void CancelLoad(Image image)
     {

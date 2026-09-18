@@ -11,13 +11,19 @@
         <FontFamily x:Key="AppMonoFont">Cascadia Code, Consolas, Menlo, monospace</FontFamily>
 
         <!-- 罗德岛作战终端：中性灰层次 + 薄荷主色，普通面板最多一层细描边。 -->
+        <!-- 复用色值集中在这里：同一个颜色只写一次，其余令牌引用它，改一处即可全站生效。 -->
+        <Color x:Key="AppPrimaryColor">#65E6C4</Color>
+        <Color x:Key="AppMutedTextColor">#A5B2BF</Color>
+        <Color x:Key="AppHoverSurfaceColor">#202831</Color>
+        <Color x:Key="AppWellSurfaceColor">#141A20</Color>
+
         <SolidColorBrush x:Key="AppBackgroundBrush" Color="#101418" />
         <SolidColorBrush x:Key="AppSurfaceBrush" Color="#181E24" />
         <SolidColorBrush x:Key="AppSurfaceSubtleBrush" Color="#1C242C" />
         <SolidColorBrush x:Key="AppBorderBrush" Color="#303A45" />
         <SolidColorBrush x:Key="AppTextBrush" Color="#EDF4FA" />
-        <SolidColorBrush x:Key="AppMutedTextBrush" Color="#A5B2BF" />
-        <SolidColorBrush x:Key="AppPrimaryBrush" Color="#65E6C4" />
+        <SolidColorBrush x:Key="AppMutedTextBrush" Color="{StaticResource AppMutedTextColor}" />
+        <SolidColorBrush x:Key="AppPrimaryBrush" Color="{StaticResource AppPrimaryColor}" />
         <SolidColorBrush x:Key="AppPrimaryHoverBrush" Color="#91F2D8" />
         <SolidColorBrush x:Key="AppPrimaryPressedBrush" Color="#3BBF9F" />
         <SolidColorBrush x:Key="AppPrimarySoftBrush" Color="#183A38" />
@@ -26,7 +32,7 @@
         <SolidColorBrush x:Key="AppSecondaryHoverBrush" Color="#234448" />
         <SolidColorBrush x:Key="AppSecondaryPressedBrush" Color="#2C5656" />
         <SolidColorBrush x:Key="AppSecondaryBorderBrush" Color="#386663" />
-        <SolidColorBrush x:Key="AppAccentBrush" Color="#65E6C4" />
+        <SolidColorBrush x:Key="AppAccentBrush" Color="{StaticResource AppPrimaryColor}" />
         <SolidColorBrush x:Key="AppAccentSoftBrush" Color="#183A38" />
         <SolidColorBrush x:Key="AppDangerBrush" Color="#FF8294" />
         <SolidColorBrush x:Key="AppDangerSoftBrush" Color="#331E2A" />
@@ -34,36 +40,26 @@
         <SolidColorBrush x:Key="AppDangerPressedBrush" Color="#6B3040" />
         <SolidColorBrush x:Key="AppDangerBorderBrush" Color="#7F4352" />
         <SolidColorBrush x:Key="AppSignalBrush" Color="#F3C969" />
-        <SolidColorBrush x:Key="AppInputBrush" Color="#141A20" />
-        <SolidColorBrush x:Key="AppInputHoverBrush" Color="#202831" />
+        <SolidColorBrush x:Key="AppInputBrush" Color="{StaticResource AppWellSurfaceColor}" />
+        <SolidColorBrush x:Key="AppInputHoverBrush" Color="{StaticResource AppHoverSurfaceColor}" />
         <SolidColorBrush x:Key="AppTableHeaderBrush" Color="#1A2128" />
         <SolidColorBrush x:Key="AppTableAlternateBrush" Color="#161C22" />
-        <SolidColorBrush x:Key="AppTableHoverBrush" Color="#202831" />
+        <SolidColorBrush x:Key="AppTableHoverBrush" Color="{StaticResource AppHoverSurfaceColor}" />
         <SolidColorBrush x:Key="AppSidebarBrush" Color="#0E1318" />
-        <SolidColorBrush x:Key="AppSidebarItemBrush" Color="#141A20" />
         <SolidColorBrush x:Key="AppSidebarHoverBrush" Color="#1B242D" />
         <SolidColorBrush x:Key="AppSidebarPressedBrush" Color="#24303A" />
         <SolidColorBrush x:Key="AppSidebarActiveBrush" Color="#183A38" />
         <SolidColorBrush x:Key="AppSidebarActiveHoverBrush" Color="#234C47" />
         <SolidColorBrush x:Key="AppSidebarActivePressedBrush" Color="#2C5B53" />
         <SolidColorBrush x:Key="AppSidebarTextBrush" Color="#C0CEDB" />
-        <SolidColorBrush x:Key="AppSidebarMutedBrush" Color="#A5B2BF" />
+        <SolidColorBrush x:Key="AppSidebarMutedBrush" Color="{StaticResource AppMutedTextColor}" />
 
-        <SolidColorBrush x:Key="AppWellBrush" Color="#141A20" />
-        <SolidColorBrush x:Key="AppPanelTopBrush" Color="#1C242C" />
+        <SolidColorBrush x:Key="AppWellBrush" Color="{StaticResource AppWellSurfaceColor}" />
         <SolidColorBrush x:Key="AppCardBrush" Color="#181E24" />
-        <SolidColorBrush x:Key="AppCardHoverBrush" Color="#202831" />
+        <SolidColorBrush x:Key="AppCardHoverBrush" Color="{StaticResource AppHoverSurfaceColor}" />
         <SolidColorBrush x:Key="AppGridLineBrush" Color="#24303A" />
         <SolidColorBrush x:Key="AppSignalSoftBrush" Color="#3A2F17" />
-        <SolidColorBrush x:Key="AppPrimaryGlowBrush" Color="#2E7E6C" />
         <SolidColorBrush x:Key="AppVeilBrush" Color="#A0101418" />
-        <SolidColorBrush x:Key="AppHudLineBrush" Color="#24303A" />
-        <SolidColorBrush x:Key="AppRarity6Brush" Color="#FFB45A" />
-        <SolidColorBrush x:Key="AppRarity5Brush" Color="#F3C969" />
-        <SolidColorBrush x:Key="AppRarity4Brush" Color="#C48AE8" />
-        <SolidColorBrush x:Key="AppRarity3Brush" Color="#5EB0F0" />
-        <SolidColorBrush x:Key="AppRarity2Brush" Color="#7DCF8A" />
-        <SolidColorBrush x:Key="AppRarity1Brush" Color="#8A9AAB" />
 
         <Color x:Key="MaterialSnackbarBackgroundColor">#243C46</Color>
         <SolidColorBrush x:Key="MaterialSnackbarBackgroundBrush" Color="#243C46" />
@@ -237,13 +233,6 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
         </Style>
-        <Style Selector="TextBlock.eyebrow">
-            <Setter Property="FontFamily" Value="{StaticResource AppMonoFont}" />
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="LetterSpacing" Value="1.5" />
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
-        </Style>
         <Style Selector="TextBlock.page-title">
             <Setter Property="FontSize" Value="24" />
             <Setter Property="FontWeight" Value="Bold" />
@@ -276,12 +265,6 @@
         <Style Selector="TextBlock.accent">
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
-        <Style Selector="TextBlock.data-value">
-            <Setter Property="FontFamily" Value="{StaticResource AppMonoFont}" />
-            <Setter Property="FontSize" Value="26" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
-        </Style>
 
         <!-- Panels and chips used by every screen, so the surfaces read as one system. -->
         <Style Selector="Border.panel">
@@ -302,19 +285,6 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="20" />
             <Setter Property="Padding" Value="11,4" />
-        </Style>
-        <Style Selector="Border.rail">
-            <Setter Property="Width" Value="4" />
-            <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
-            <Setter Property="CornerRadius" Value="2" />
-        </Style>
-        <Style Selector="Border.stat-hud">
-            <Setter Property="MinWidth" Value="86" />
-            <Setter Property="Padding" Value="12,7" />
-            <Setter Property="Background" Value="{StaticResource AppWellBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
         </Style>
         <Style Selector="Border.avatar-frame">
             <Setter Property="Width" Value="48" />
@@ -352,20 +322,11 @@
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="8,4" />
         </Style>
-        <Style Selector="Border.tactical-strip">
-            <Setter Property="Height" Value="3" />
-            <Setter Property="CornerRadius" Value="0" />
-        </Style>
         <Style Selector="TextBlock.stat-value">
             <Setter Property="FontFamily" Value="{StaticResource AppMonoFont}" />
             <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
-        </Style>
-        <Style Selector="TextBlock.stat-label">
-            <Setter Property="FontSize" Value="10" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
         </Style>
 
         <!-- Stable hit areas; only the artwork shifts by one pixel on press. -->
@@ -505,6 +466,17 @@
         </Style>
         <Style Selector="TextBox.form-control /template/ Panel#PART_TextContainer">
             <Setter Property="Margin" Value="14,0" />
+        </Style>
+        <!-- 就地校验失败：红色描边优先于悬停/焦点配色，配合 ToolTip 说明期望格式。 -->
+        <Style Selector="TextBox.input-error">
+            <Setter Property="BorderBrush" Value="{StaticResource AppDangerBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+        </Style>
+        <Style Selector="TextBox.input-error:pointerover">
+            <Setter Property="BorderBrush" Value="{StaticResource AppDangerBrush}" />
+        </Style>
+        <Style Selector="TextBox.input-error:focus-within">
+            <Setter Property="BorderBrush" Value="{StaticResource AppDangerBrush}" />
         </Style>
         <Style Selector="ComboBox">
             <Setter Property="MinHeight" Value="36" />

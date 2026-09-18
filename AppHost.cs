@@ -12,6 +12,26 @@ public static class AppHost
     /// <summary>当前平台注册的对话框展示方式，在 <c>App.OnFrameworkInitializationCompleted</c> 里设置。</summary>
     public static IModalPresenter? Presenter { get; set; }
 
+    private static bool _shellReadyRaised;
+
+    /// <summary>
+    /// 应用外壳首次完成加载时触发一次。
+    ///
+    /// 浏览器端据此撤掉 HTML 首屏遮罩：「#out 里出现了子元素」只说明画布挂上了，
+    /// 不代表界面可用；遮罩必须等到主视图真正加载完成才撤。
+    /// </summary>
+    public static event Action? ShellReady;
+
+    /// <summary>主视图首次加载完成时调用；重复调用只生效一次。</summary>
+    public static void NotifyShellReady()
+    {
+        if (_shellReadyRaised)
+            return;
+
+        _shellReadyRaised = true;
+        ShellReady?.Invoke();
+    }
+
     /// <summary>显示确认框，用户确认返回 <c>true</c>。</summary>
     public static Task<bool> ConfirmAsync(string message, string title = "确认操作")
     {

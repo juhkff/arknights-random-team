@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml;
 using System.Xml.Linq;
 using arknights_random_team.Domain;
@@ -14,6 +15,9 @@ public static class AppState
     public static ObservableCollection<RandomStrategyDefinition> Strategies { get; } = [];
 
     public static OperatorSyncSettings OperatorSyncSettings { get; private set; } = new();
+
+    /// <summary>界面偏好（视图选择、表格紧凑开关），桌面端退出时落盘。</summary>
+    public static UiPreferences UiPreferences { get; private set; } = new();
 
     public static string? OperatorSyncSettingsError { get; private set; }
 
@@ -64,11 +68,14 @@ public static class AppState
 
     private static string OperatorSyncSettingsPath => SafeCombine("OperatorSyncSettings.json");
 
+    private static string UiPreferencesPath => SafeCombine("UiPreferences.json");
+
     public static void Initialize()
     {
         LoadStaff();
         StrategyPersistence.Load(StrategyPath, Strategies);
         LoadOperatorSyncSettings();
+        LoadUiPreferences();
     }
 
     public static void Save()
@@ -79,6 +86,7 @@ public static class AppState
         Directory.CreateDirectory(DataDirectory);
         SaveStaff();
         StrategyPersistence.Save(StrategyPath, Strategies);
+        SaveUiPreferences();
         if (OperatorSyncSettings.SelectedStars is { Count: > 0 })
             SaveOperatorSyncSettings();
     }
@@ -189,8 +197,41 @@ public static class AppState
         }
     }
 
-    private static void ValidateOperatorSyncSettings(OperatorSyncSettings settings)
+    private static void LoadUiPreferences()
     {
+        UiPreferences = new UiPreferences();
+        if (!UseFileStorage || !File.Exists(UiPreferencesPath))
+            return;
+
+        try
+        {
+            var preferences = JsonSerializer.Deserialize<UiPreferences>(
+                File.ReadAllText(UiPreferencesPath), UiPreferencesJson);
+            if (preferences is not null)
+                UiPreferences = preferences;
+        }
+        catch (Exception ex) when (ex is JsonException or IOException)
+        {
+            // 偏好文件损坏不值得打断启动：回到默认视图即可。
+            UiPreferences = new UiPreferences();
+        }
+    }
+
+    private static void SaveUiPreferences()
+    {
+        Directory.CreateDirectory(DataDirectory);
+        File.WriteAllText(
+            UiPreferencesPath,
+            JsonSerializer.Serialize(UiPreferences, UiPreferencesJson));
+    }
+
+    private static readonly JsonSerializerOptions UiPreferencesJson = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    private static void ValidateOperatorSyncSettings(OperatorSyncSettings settings)    {
         if (settings.SelectedStars == null)
             throw new InvalidDataException("同步设置缺少 SelectedStars 字段");
         if (settings.SelectedStars.Count == 0)

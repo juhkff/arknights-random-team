@@ -4,8 +4,9 @@ using Avalonia.Controls;
 namespace arknights_random_team.Views;
 
 /// <summary>
-/// 按可用宽度计算列数的卡片网格。单元宽度落在 [MinItemWidth, MaxItemWidth]，
-/// 单列时铺满内容区，避免固定 180 宽留下尾部空白。
+/// 按可用宽度计算列数的卡片网格，当前只服务于生成页的花名册
+/// （干员列表已改用可虚拟化的 ItemsRepeater）。
+/// 单元宽度落在 [MinItemWidth, MaxItemWidth]，单列时铺满内容区，避免固定宽度留下尾部空白。
 /// </summary>
 public sealed class AdaptiveWrapPanel : Panel
 {
@@ -18,12 +19,7 @@ public sealed class AdaptiveWrapPanel : Panel
     public static readonly StyledProperty<double> SpacingProperty =
         AvaloniaProperty.Register<AdaptiveWrapPanel, double>(nameof(Spacing), 12);
 
-    public static readonly StyledProperty<bool> PortraitModeProperty =
-        AvaloniaProperty.Register<AdaptiveWrapPanel, bool>(nameof(PortraitMode));
-
-    public static readonly StyledProperty<double> NameplateHeightProperty =
-        AvaloniaProperty.Register<AdaptiveWrapPanel, double>(nameof(NameplateHeight), 68);
-
+    /// <summary>固定单元高度；不设置时按单元宽度（正方形）计算。</summary>
     public static readonly StyledProperty<double> FixedItemHeightProperty =
         AvaloniaProperty.Register<AdaptiveWrapPanel, double>(nameof(FixedItemHeight), double.NaN);
 
@@ -33,8 +29,6 @@ public sealed class AdaptiveWrapPanel : Panel
             MinItemWidthProperty,
             MaxItemWidthProperty,
             SpacingProperty,
-            PortraitModeProperty,
-            NameplateHeightProperty,
             FixedItemHeightProperty);
     }
 
@@ -54,18 +48,6 @@ public sealed class AdaptiveWrapPanel : Panel
     {
         get => GetValue(SpacingProperty);
         set => SetValue(SpacingProperty, value);
-    }
-
-    public bool PortraitMode
-    {
-        get => GetValue(PortraitModeProperty);
-        set => SetValue(PortraitModeProperty, value);
-    }
-
-    public double NameplateHeight
-    {
-        get => GetValue(NameplateHeightProperty);
-        set => SetValue(NameplateHeightProperty, value);
     }
 
     public double FixedItemHeight
@@ -129,9 +111,7 @@ public sealed class AdaptiveWrapPanel : Panel
 
         itemWidth = Math.Max(1, itemWidth);
         var fixedHeight = FixedItemHeight;
-        itemHeight = !double.IsNaN(fixedHeight) && fixedHeight > 0
-            ? fixedHeight
-            : itemWidth * (PortraitMode ? 5.0 / 3.0 : 1.0) + Math.Max(0, NameplateHeight);
+        itemHeight = !double.IsNaN(fixedHeight) && fixedHeight > 0 ? fixedHeight : itemWidth;
     }
 
     private Size Extent(double width, int columns, double itemWidth, double itemHeight)

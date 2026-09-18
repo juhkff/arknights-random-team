@@ -115,10 +115,11 @@
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="1"
+        <Grid Name="EditorBody"
+              Grid.Row="1"
               Margin="24,20"
               ColumnDefinitions="280,20,*">
-            <Grid Grid.Column="0" RowDefinitions="Auto,18,*">
+            <Grid Name="EditorSidebar" Grid.Column="0" RowDefinitions="Auto,18,*">
                 <Border Grid.Row="0" Classes="surface" Padding="16">
                     <StackPanel Spacing="8">
                         <TextBlock Classes="field-label" Text="策略名称" />
@@ -192,7 +193,7 @@
                 </Border>
             </Grid>
 
-            <Grid Grid.Column="2" RowDefinitions="Auto,14,*">
+            <Grid Name="EditorForm" Grid.Column="2" RowDefinitions="Auto,14,*">
                 <StackPanel Grid.Row="0" Spacing="5">
                     <TextBlock Classes="section-title" Text="规则构建器" />
                     <TextBlock Classes="caption" Text="稀有度、职业与指定干员" />

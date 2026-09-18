@@ -33,6 +33,8 @@ public partial class StaffListView : UserControl
             SyncViewButtons();
         };
         AppLayout.Changed += ApplyListLayout;
+        // 宽高变化是全局静态事件，视图离开可视树时必须退订，否则被回收的实例仍会收到通知。
+        DetachedFromVisualTree += (_, _) => AppLayout.Changed -= ApplyListLayout;
         if (DataContext is ListModel model)
             model.PropertyChanged += OnModelPropertyChanged;
     }
@@ -90,9 +92,17 @@ public partial class StaffListView : UserControl
 
     private void UpdateCardPanel()
     {
-        if (StaffCards.ItemsPanelRoot is AdaptiveWrapPanel panel && Model is { } model)
-            panel.PortraitMode = model.UsePortrait;
+        if (Model is not { } model)
+            return;
+
+        // 卡片高度随视图切换：头像卡为「宽 + 名牌」，立绘卡按 5:3 再加名牌。
+        // 虚拟化布局要求固定单元高度，所以这里必须显式给出，而不是按内容量算。
+        if (StaffCards.Layout is UniformGridLayout layout)
+            layout.MinItemHeight = CardHeight(model.UsePortrait);
     }
+
+    private static double CardHeight(bool portrait) =>
+        StaffCardVisual.MinCardWidth * (portrait ? 5d / 3d : 1d) + StaffCardVisual.NameplateHeight;
 
     private void ApplyListLayout()
     {
@@ -184,6 +194,14 @@ public partial class StaffListView : UserControl
     {
         if (sender is not Button { DataContext: Staff staff })
             return;
+
+        // 刚发生过拖动（滚动列表）时，抬起不应被当成「切换随机池」。
+        if (_pressSuppressed)
+        {
+            ResetPress();
+            return;
+        }
+
         if (e.Source is Visual visual)
         {
             if (visual is CheckBox || visual.FindAncestorOfType<CheckBox>() is not null)
@@ -198,6 +216,75 @@ public partial class StaffListView : UserControl
     }
 
     private void CardPoolCheck_Click(object? sender, RoutedEventArgs e) => e.Handled = true;
+
+    // ---- 点击与拖动区分 ----
+    //
+    // 方案要求整卡快捷选池不能在指针刚按下时提交，并且要能区分点击与拖动：
+    // 按下只记录起点，移动超过阈值就标记为拖动，抬起时不提交；键盘激活（空格/回车）
+    // 不经过指针路径，永远按点击处理。
+
+    private const double PressDragThreshold = 8;
+
+    private Point _pressOrigin;
+    private bool _pressTracking;
+    private bool _pressSuppressed;
+
+    private void BeginPress(PointerPressedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(this);
+        if (e.Pointer.Type == PointerType.Mouse && !point.Properties.IsLeftButtonPressed)
+            return;
+
+        _pressOrigin = point.Position;
+        _pressTracking = true;
+        _pressSuppressed = false;
+    }
+
+    private void TrackPressMove(PointerEventArgs e)
+    {
+        if (!_pressTracking)
+            return;
+
+        var current = e.GetPosition(this);
+        if (Math.Abs(current.X - _pressOrigin.X) > PressDragThreshold ||
+            Math.Abs(current.Y - _pressOrigin.Y) > PressDragThreshold)
+            _pressSuppressed = true;
+    }
+
+    /// <summary>抬起时判断这是一次「轻点」还是「拖动/移出目标」。</summary>
+    private bool ReleaseIsTap(object? sender, PointerReleasedEventArgs e)
+    {
+        var suppressed = _pressSuppressed;
+        ResetPress();
+        if (suppressed)
+            return false;
+
+        return sender is not Visual visual || new Rect(visual.Bounds.Size).Contains(e.GetPosition(visual));
+    }
+
+    private void ResetPress()
+    {
+        _pressTracking = false;
+        _pressSuppressed = false;
+    }
+
+    private void OperatorCard_PointerPressed(object? sender, PointerPressedEventArgs e) => BeginPress(e);
+
+    private void OperatorCard_PointerMoved(object? sender, PointerEventArgs e) => TrackPressMove(e);
+
+    /// <summary>
+    /// 延后清理一次：Click 与本事件在同一轮输入处理里先后触发，
+    /// 立即清理会让被拖动的那次抬起反而提交选池。
+    /// </summary>
+    private void OperatorCard_PointerReleased(object? sender, PointerReleasedEventArgs e) =>
+        Dispatcher.UIThread.Post(ResetPress, DispatcherPriority.Input);
+
+    /// <summary>键盘激活不参与拖动判定，先清掉可能残留的指针状态。</summary>
+    private void OperatorCard_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key is Key.Space or Key.Enter)
+            ResetPress();
+    }
 
     private void OnPreviewPointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -223,6 +310,15 @@ public partial class StaffListView : UserControl
     {
         if (e.Source is CheckBox)
             return;
+        BeginPress(e);
+    }
+
+    private void SelectAllHeader_PointerMoved(object? sender, PointerEventArgs e) => TrackPressMove(e);
+
+    private void SelectAllHeader_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (!ReleaseIsTap(sender, e))
+            return;
         Model?.ToggleSelectAll();
     }
 
@@ -230,8 +326,16 @@ public partial class StaffListView : UserControl
     {
         if (e.Source is CheckBox)
             return;
-        if (sender is Border { DataContext: Staff staff })
-            staff.IsSelected = !staff.IsSelected;
+        BeginPress(e);
+    }
+
+    private void SelectCell_PointerMoved(object? sender, PointerEventArgs e) => TrackPressMove(e);
+
+    private void SelectCell_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (sender is not Border { DataContext: Staff staff } || !ReleaseIsTap(sender, e))
+            return;
+        staff.IsSelected = !staff.IsSelected;
     }
 
     private void StaffGrid_PreparingCellForEdit(object? sender, DataGridPreparingCellForEditEventArgs e)
@@ -247,6 +351,30 @@ public partial class StaffListView : UserControl
             inner.MinWidth = 0;
             inner.HorizontalAlignment = HorizontalAlignment.Stretch;
         }
+
+        // 等级是唯一「自由文本 + 解析」的列：模型解析失败会静默丢掉这次输入，
+        // 编辑期间就地标红并给出格式提示，不让用户以为已经改成功。
+        if (e.Column.SortMemberPath == LevelSortPath && editor is TextBox levelBox)
+        {
+            levelBox.TextChanged -= LevelEditor_TextChanged;
+            levelBox.TextChanged += LevelEditor_TextChanged;
+            ValidateLevelEditor(levelBox);
+        }
+    }
+
+    private const string LevelSortPath = "Level";
+
+    private static void LevelEditor_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (sender is TextBox box)
+            ValidateLevelEditor(box);
+    }
+
+    private static void ValidateLevelEditor(TextBox box)
+    {
+        var valid = Level.TryParse(box.Text, out _, out _);
+        box.Classes.Set("input-error", !valid);
+        ToolTip.SetTip(box, valid ? null : "等级格式应为「精二90级」，否则本次修改不会保存。");
     }
 
     private void StaffGrid_CellEditEnded(object? sender, DataGridCellEditEndedEventArgs e)
@@ -260,6 +388,7 @@ public partial class StaffListView : UserControl
         _suppressRowSelection = true;
         if (Model is { } model)
             model.CycleSort(e.Column.SortMemberPath);
+
         e.Handled = true;
 
         void ClearIfSuppressed()
@@ -295,6 +424,16 @@ public partial class StaffListView : UserControl
 
         row.IsHitTestVisible = false;
         Dispatcher.UIThread.Post(() => row.IsHitTestVisible = true, DispatcherPriority.Input);
+    }
+
+    private async void Detail_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ResolveStaff(sender) is not { } staff)
+            return;
+
+        // 字段在面板里是草稿，保存才写回；模型已监听 Staff 的属性变化，
+        // 名称/职业/稀有度/等级改动会自行重算当前筛选与排序，这里不需要额外刷新。
+        await AppHost.ShowAsync<bool>(new StaffDetailDialog(staff));
     }
 
     private async void Delete_Click(object? sender, RoutedEventArgs e)

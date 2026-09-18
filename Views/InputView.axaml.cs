@@ -102,6 +102,7 @@ public partial class InputView : UserControl
     {
         NameError.IsVisible = false;
         CareerError.IsVisible = false;
+        LevelError.IsVisible = false;
 
         var name = NameTextBox.Text?.Trim() ?? "";
         if (name.Length <= 0)
@@ -115,6 +116,13 @@ public partial class InputView : UserControl
         {
             CareerError.Text = "请选择职阶";
             CareerError.IsVisible = true;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EliteTextBox.Text) || string.IsNullOrWhiteSpace(RankTextBox.Text))
+        {
+            LevelError.Text = "请填写精英阶段与当前等级";
+            LevelError.IsVisible = true;
             return;
         }
 

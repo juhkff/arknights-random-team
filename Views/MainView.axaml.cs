@@ -40,8 +40,16 @@ public partial class MainView : UserControl
         }
 
         AppNavigation.Requested += OnNavigationRequested;
+        // 静态事件必须在离开可视树时退订：否则视图被重建时旧实例仍会收到导航请求。
+        DetachedFromVisualTree += (_, _) => AppNavigation.Requested -= OnNavigationRequested;
         PropertyChanged += OnViewPropertyChanged;
-        Loaded += (_, _) => ApplyShellLayout();
+        Loaded += (_, _) =>
+        {
+            ApplyShellLayout();
+
+            // 外壳已经加载完成：网页端撤掉首屏遮罩的真实信号（桌面端只是无人订阅的事件）。
+            AppHost.NotifyShellReady();
+        };
 
         SwitchPage(
             _generate,
@@ -118,8 +126,6 @@ public partial class MainView : UserControl
         var compact = AppLayout.UseIconNav;
         var pad = AppLayout.PagePadding;
 
-        Classes.Set("nav-compact", compact);
-        Classes.Set("layout-phone", AppLayout.IsPhone);
         WindowSubtitle.IsVisible = !AppLayout.IsPhone;
         WindowTitle.FontSize = AppLayout.IsPhone ? 20 : 24;
 
