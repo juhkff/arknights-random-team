@@ -4,10 +4,13 @@
         x:Class="arknights_random_team.MainWindow"
         Title="明日方舟随机阵容"
         Width="1240"
-        Height="840"
+        Height="880"
         MinWidth="768"
-        MinHeight="700"
+        MinHeight="740"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource AppBackgroundBrush}">
-    <views:MainView />
+    <DockPanel>
+        <views:ThemedTitleBar DockPanel.Dock="Top" />
+        <views:MainView />
+    </DockPanel>
 </Window>

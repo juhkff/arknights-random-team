@@ -1,6 +1,6 @@
 namespace arknights_random_team;
 
-/// <summary>应用内嵌字体。仅 WebAssembly 端需要——那里的 Skia 无法枚举系统字体。</summary>
+/// <summary>应用内嵌字体。网页端必须用它（Skia 枚举不到系统字体）；桌面端也优先用它，避免微软雅黑的界面观感。</summary>
 public static class AppFonts
 {
     /// <summary>

@@ -19,6 +19,5 @@ public enum RosterViewMode
 public sealed class UiPreferences
 {
     public StaffViewMode ViewMode { get; set; } = StaffViewMode.Table;
-    public bool IsCompactTable { get; set; }
     public RosterViewMode RosterViewMode { get; set; } = RosterViewMode.List;
 }

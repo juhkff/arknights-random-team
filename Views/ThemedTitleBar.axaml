@@ -1,0 +1,137 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="arknights_random_team.Views.ThemedTitleBar"
+             Height="40">
+    <Panel WindowDecorationProperties.ElementRole="TitleBar"
+           PointerPressed="TitleBar_PointerPressed">
+        <Border>
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#183A38" Offset="0" />
+                    <GradientStop Color="#0E1318" Offset="0.18" />
+                    <GradientStop Color="#0E1318" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border Height="1"
+                VerticalAlignment="Top"
+                IsHitTestVisible="False">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#65E6C4" Offset="0" />
+                    <GradientStop Color="#8065E6C4" Offset="0.12" />
+                    <GradientStop Color="#0065E6C4" Offset="0.42" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <Border VerticalAlignment="Bottom"
+                Height="1"
+                Background="{StaticResource AppBorderBrush}"
+                IsHitTestVisible="False" />
+
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0,0,6,0">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="8"
+                        Margin="10,0,12,0"
+                        VerticalAlignment="Center">
+                <Border Width="24" Height="24"
+                        CornerRadius="{StaticResource AppRadiusControl}"
+                        Background="{StaticResource AppPrimarySoftBrush}"
+                        BorderBrush="{StaticResource AppPrimaryBrush}"
+                        BorderThickness="1"
+                        IsHitTestVisible="False">
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontSize="10"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource AppPrimaryBrush}"
+                               Text="RT" />
+                </Border>
+                <TextBlock Name="TitleText"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource AppTextBrush}"
+                           VerticalAlignment="Center"
+                           IsHitTestVisible="False"
+                           TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Margin="0,0,10,0"
+                        VerticalAlignment="Center"
+                        IsHitTestVisible="False">
+                <Border Width="6" Height="6"
+                        CornerRadius="{StaticResource AppRadiusControl}"
+                        Background="{StaticResource AppPrimaryBrush}"
+                        VerticalAlignment="Center"
+                        BoxShadow="0 0 8 0 #8065E6C4" />
+                <TextBlock FontFamily="{StaticResource AppMonoFont}"
+                           FontSize="11"
+                           Foreground="{StaticResource AppMutedTextBrush}"
+                           VerticalAlignment="Center"
+                           Text="OP.TERMINAL" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="3"
+                        Name="CaptionButtons"
+                        Orientation="Horizontal"
+                        Spacing="4"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center">
+                    <Button Name="MinButton"
+                            Classes="caption"
+                            WindowDecorationProperties.ElementRole="User"
+                            ToolTip.Tip="最小化"
+                            AutomationProperties.Name="最小化"
+                            Click="Minimize_Click">
+                        <Path Classes="caption-icon"
+                              Width="12" Height="12"
+                              Stretch="None"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Data="M 2,6 H 10" />
+                    </Button>
+                    <Button Name="MaxButton"
+                            Classes="caption"
+                            WindowDecorationProperties.ElementRole="User"
+                            ToolTip.Tip="最大化"
+                            AutomationProperties.Name="最大化"
+                            Click="Maximize_Click">
+                        <Panel Width="12" Height="12">
+                            <Path Name="MaximizeGlyph"
+                                  Classes="caption-icon"
+                                  Width="12" Height="12"
+                                  Stretch="None"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Data="M 2.5,2.5 H 9.5 V 9.5 H 2.5 Z" />
+                            <Path Name="RestoreGlyph"
+                                  Classes="caption-icon"
+                                  Width="12" Height="12"
+                                  Stretch="None"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="False"
+                                  Data="M 4,2.5 H 9.5 V 8 M 2.5,4 H 8 V 9.5 H 2.5 Z" />
+                        </Panel>
+                    </Button>
+                    <Button Name="CloseButton"
+                            Classes="caption close"
+                            WindowDecorationProperties.ElementRole="User"
+                            ToolTip.Tip="关闭"
+                            AutomationProperties.Name="关闭"
+                            Click="Close_Click">
+                        <Path Classes="caption-icon"
+                              Width="12" Height="12"
+                              Stretch="None"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Data="M 2.5,2.5 L 9.5,9.5 M 9.5,2.5 L 2.5,9.5" />
+                    </Button>
+                </StackPanel>
+        </Grid>
+    </Panel>
+</UserControl>

@@ -7,7 +7,7 @@
              x:Class="arknights_random_team.App"
              RequestedThemeVariant="Dark">
     <Application.Resources>
-        <FontFamily x:Key="AppFont">Microsoft YaHei, PingFang SC, Noto Sans CJK SC, Source Han Sans SC, Inter, sans-serif</FontFamily>
+        <FontFamily x:Key="AppFont">avares://arknights-random-team.Core/Assets/NotoSansSC-App.otf#Noto Sans CJK SC, Inter, Microsoft YaHei UI, Microsoft YaHei, PingFang SC, sans-serif</FontFamily>
         <FontFamily x:Key="AppMonoFont">Cascadia Code, Consolas, Menlo, monospace</FontFamily>
 
         <!-- 罗德岛作战终端：中性灰层次 + 薄荷主色，普通面板最多一层细描边。 -->
@@ -70,6 +70,8 @@
         <SolidColorBrush x:Key="AppGridLineBrush" Color="#24303A" />
         <SolidColorBrush x:Key="AppSignalSoftBrush" Color="#3A2F17" />
         <SolidColorBrush x:Key="AppVeilBrush" Color="#A0101418" />
+        <SolidColorBrush x:Key="AppPoolRowBrush" Color="#16262C" />
+        <SolidColorBrush x:Key="AppPoolRowHoverBrush" Color="#1C3338" />
 
         <Color x:Key="MaterialSnackbarBackgroundColor">#243C46</Color>
         <SolidColorBrush x:Key="MaterialSnackbarBackgroundBrush" Color="#243C46" />
@@ -129,6 +131,90 @@
             </Style>
         </ControlTheme>
 
+        <ControlTheme x:Key="AppCaptionButtonTheme" TargetType="Button">
+            <Setter Property="FocusAdorner" Value="{x:Null}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel Width="30" Height="30" ClipToBounds="False">
+                        <Border Name="PART_Glow"
+                                Margin="-2"
+                                IsHitTestVisible="False"
+                                Opacity="0"
+                                CornerRadius="4"
+                                Background="#183A38"
+                                BoxShadow="0 0 16 1 #8065E6C4">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.14" />
+                                </Transitions>
+                            </Border.Transitions>
+                        </Border>
+                        <Panel Name="PART_Motion" RenderTransform="scale(1)">
+                            <Panel.Transitions>
+                                <Transitions>
+                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+                                </Transitions>
+                            </Panel.Transitions>
+                            <Path Name="PART_Plate"
+                                  Width="30" Height="30"
+                                  Stretch="None"
+                                  Fill="{TemplateBinding Background}"
+                                  Stroke="{TemplateBinding BorderBrush}"
+                                  StrokeThickness="1.2"
+                                  StrokeJoin="Miter"
+                                  Data="M 6,1 H 24 L 29,6 V 24 L 24,29 H 6 L 1,24 V 6 Z">
+                                <Path.Transitions>
+                                    <Transitions>
+                                        <BrushTransition Property="Fill" Duration="0:0:0.12" />
+                                        <BrushTransition Property="Stroke" Duration="0:0:0.12" />
+                                    </Transitions>
+                                </Path.Transitions>
+                            </Path>
+                            <Path Name="PART_Ticks"
+                                  Width="30" Height="30"
+                                  Stretch="None"
+                                  IsHitTestVisible="False"
+                                  Stroke="{StaticResource AppSecondaryBorderBrush}"
+                                  StrokeThickness="1.3"
+                                  StrokeLineCap="Square"
+                                  Opacity="0.55"
+                                  Data="M 2,10 V 2 H 10 M 20,2 H 28 V 10 M 2,20 V 28 H 10 M 20,28 H 28 V 20" />
+                            <ContentPresenter Name="PART_ContentPresenter"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              HorizontalContentAlignment="Center"
+                                              VerticalContentAlignment="Center" />
+                        </Panel>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover /template/ Border#PART_Glow">
+                <Setter Property="Opacity" Value="1" />
+            </Style>
+            <Style Selector="^:pointerover /template/ Panel#PART_Motion">
+                <Setter Property="RenderTransform" Value="scale(1.08)" />
+            </Style>
+            <Style Selector="^:pressed /template/ Panel#PART_Motion">
+                <Setter Property="RenderTransform" Value="scale(0.94)" />
+            </Style>
+            <Style Selector="^:pointerover /template/ Path#PART_Ticks">
+                <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
+                <Setter Property="Opacity" Value="1" />
+            </Style>
+            <Style Selector="^.close:pointerover /template/ Border#PART_Glow">
+                <Setter Property="Background" Value="#331E2A" />
+                <Setter Property="BoxShadow" Value="0 0 16 1 #80FF8294" />
+            </Style>
+            <Style Selector="^.close:pointerover /template/ Path#PART_Ticks">
+                <Setter Property="Stroke" Value="{StaticResource AppDangerBrush}" />
+                <Setter Property="Opacity" Value="1" />
+            </Style>
+        </ControlTheme>
+
         <ControlTheme x:Key="AppRosterCardTheme" TargetType="ContentControl">
             <Setter Property="Focusable" Value="False" />
             <Setter Property="Template">
@@ -159,39 +245,55 @@
 
         <ControlTheme x:Key="{x:Type DataGridColumnHeader}" TargetType="DataGridColumnHeader">
             <!-- 键盘可达：Tab 能停在列头上，空格/回车触发排序（排序由 StaffListView 接管）。 -->
+            <Setter Property="FocusAdorner" Value="{x:Null}" />
             <Setter Property="Focusable" Value="True" />
             <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Grid ColumnDefinitions="*,Auto" Background="{TemplateBinding Background}">
-                        <Panel>
-                            <ContentPresenter Content="{TemplateBinding Content}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="Center" />
-                            <Path Name="SortIcon"
-                                  Width="8" Height="8" Margin="0,0,8,0"
-                                  HorizontalAlignment="Right" VerticalAlignment="Center"
-                                  Stretch="Uniform" IsVisible="False"
-                                  Fill="{TemplateBinding Foreground}"
-                                  Data="F1 M -5.215,6.099L 5.215,6.099L 0,0L -5.215,6.099 Z " />
-                        </Panel>
-                        <Rectangle Name="VerticalSeparator" Grid.Column="1"
-                                   Width="1" Height="16" VerticalAlignment="Center"
-                                   Fill="{TemplateBinding SeparatorBrush}" />
-                    </Grid>
+                    <Panel>
+                        <Border Name="PART_HeaderSurface"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{StaticResource AppGridLineBrush}"
+                                BorderThickness="0,0,0,1">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <BrushTransition Property="Background" Duration="0:0:0.14" />
+                                </Transitions>
+                            </Border.Transitions>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <ContentPresenter Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center" />
+                                <Rectangle Name="VerticalSeparator"
+                                           Grid.Column="1"
+                                           Width="1"
+                                           Height="14"
+                                           VerticalAlignment="Center"
+                                           Opacity="0.45"
+                                           Fill="{TemplateBinding SeparatorBrush}" />
+                            </Grid>
+                        </Border>
+                        <Border Name="PART_HoverLine"
+                                Height="2"
+                                VerticalAlignment="Bottom"
+                                IsHitTestVisible="False"
+                                Background="Transparent" />
+                        <Border Name="PART_FocusRing"
+                                Margin="-2"
+                                IsHitTestVisible="False"
+                                Opacity="0"
+                                BorderBrush="{StaticResource AppSignalBrush}"
+                                BorderThickness="2"
+                                CornerRadius="{StaticResource AppRadiusHairline}" />
+                    </Panel>
                 </ControlTemplate>
             </Setter>
-            <Style Selector="^:sortascending /template/ Path#SortIcon">
-                <Setter Property="IsVisible" Value="True" />
-                <Setter Property="RenderTransform" Value="scale(0.85,0.85)" />
+            <Style Selector="^:pointerover /template/ Border#PART_HoverLine">
+                <Setter Property="Background" Value="{StaticResource AppSecondaryBorderBrush}" />
             </Style>
-            <Style Selector="^:sortdescending /template/ Path#SortIcon">
-                <Setter Property="IsVisible" Value="True" />
-                <Setter Property="RenderTransform" Value="scale(0.85,-0.85)" />
-            </Style>
-            <!-- 键盘可达：列头本身可聚焦，空格/回车触发排序（排序逻辑在 StaffListView 里接管）。 -->
             <Style Selector="^:focus-visible /template/ Border#PART_FocusRing">
                 <Setter Property="Opacity" Value="1" />
             </Style>
@@ -208,6 +310,8 @@
             <Setter Property="FontSize" Value="14" />
             <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+            <Setter Property="ExtendClientAreaToDecorationsHint" Value="True" />
+            <Setter Property="WindowDecorations" Value="BorderOnly" />
         </Style>
         <Style Selector="ScrollBar">
             <Setter Property="Theme" Value="{StaticResource MaterialModernScrollBar}" />
@@ -282,7 +386,10 @@
             <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
-            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="10,0,4,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <!-- Stable hit areas; only the artwork shifts by one pixel on press. -->
@@ -359,10 +466,12 @@
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.text:pointerover">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppSecondaryHoverBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
         <Style Selector="Button.text:pressed">
             <Setter Property="Background" Value="{StaticResource AppSecondaryPressedBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
         <Style Selector="Button.compact">
             <Setter Property="MinHeight" Value="32" />
@@ -377,6 +486,101 @@
             <Setter Property="Height" Value="40" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.icon Path">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Stretch" Value="None" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Stroke" Value="{StaticResource AppTextBrush}" />
+            <Setter Property="StrokeThickness" Value="1.6" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeJoin" Value="Round" />
+            <Setter Property="Fill" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.icon:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppInputHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.icon:pressed">
+            <Setter Property="Background" Value="{StaticResource AppTableHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+        </Style>
+        <Style Selector="Button.icon:pointerover Path">
+            <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.caption">
+            <Setter Property="Theme" Value="{StaticResource AppCaptionButtonTheme}" />
+            <Setter Property="MinWidth" Value="30" />
+            <Setter Property="Width" Value="30" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="{StaticResource AppSidebarHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.caption Path.caption-icon">
+            <Setter Property="Width" Value="12" />
+            <Setter Property="Height" Value="12" />
+            <Setter Property="Stretch" Value="None" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Stroke" Value="{StaticResource AppSidebarTextBrush}" />
+            <Setter Property="StrokeThickness" Value="1.6" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeJoin" Value="Round" />
+            <Setter Property="Fill" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.caption:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.caption:pressed">
+            <Setter Property="Background" Value="{StaticResource AppSidebarActivePressedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryHoverBrush}" />
+        </Style>
+        <Style Selector="Button.caption:pointerover Path.caption-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.caption:pressed Path.caption-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.caption.close:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppDangerSoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppDangerBrush}" />
+        </Style>
+        <Style Selector="Button.caption.close:pressed">
+            <Setter Property="Background" Value="{StaticResource AppDangerHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppDangerBrush}" />
+        </Style>
+        <Style Selector="Button.caption.close:pointerover Path.caption-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppDangerBrush}" />
+        </Style>
+        <Style Selector="Button.caption.close:pressed Path.caption-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppDangerBrush}" />
+        </Style>
+        <Style Selector="Button.filter-trigger.active">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.filter-trigger.active:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppSidebarActiveHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.filter-trigger.active:pressed">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
 
         <Style Selector="CheckBox">
@@ -566,20 +770,27 @@
         <Style Selector="DataGridColumnHeader">
             <Setter Property="Theme" Value="{StaticResource {x:Type DataGridColumnHeader}}" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="Background" Value="{StaticResource AppTableHeaderBrush}" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="MinHeight" Value="40" />
-            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Padding" Value="10,0" />
             <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="SeparatorBrush" Value="{StaticResource AppBorderBrush}" />
         </Style>
-        <Style Selector="DataGridColumnHeader:focus-visible">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
-        </Style>
         <Style Selector="DataGridColumnHeader:pointerover">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppInputHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="DataGridColumnHeader:pressed">
+            <Setter Property="Background" Value="{StaticResource AppTableHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="DataGridColumnHeader:focus-visible">
+            <Setter Property="Background" Value="{StaticResource AppTableHeaderBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="DataGridRow">
             <Setter Property="MinHeight" Value="56" />
@@ -591,7 +802,7 @@
             <Setter Property="Background" Value="{StaticResource AppTableHoverBrush}" />
         </Style>
         <Style Selector="DataGridRow:selected">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppTableHoverBrush}" />
         </Style>
         <Style Selector="DataGridCell">
             <Setter Property="Background" Value="Transparent" />
@@ -600,7 +811,7 @@
             <Setter Property="VerticalContentAlignment" Value="Stretch" />
         </Style>
         <Style Selector="DataGridCell:focus-within">
-            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="Background" Value="Transparent" />
         </Style>
         <Style Selector="DataGridCell TextBlock">
             <Setter Property="HorizontalAlignment" Value="Stretch" />

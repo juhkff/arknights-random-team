@@ -24,17 +24,21 @@
         <Style Selector="Button.count-preset:pointerover">
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
             <Setter Property="Background" Value="{StaticResource AppSecondaryHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
         </Style>
         <Style Selector="Button.count-preset:pressed">
             <Setter Property="Background" Value="{StaticResource AppSecondaryPressedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppSecondaryBorderBrush}" />
         </Style>
         <Style Selector="Button.count-preset.selected:pointerover">
-            <Setter Property="Background" Value="{StaticResource AppPrimaryHoverBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppSidebarActiveHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.count-preset.selected:pressed">
-            <Setter Property="Background" Value="{StaticResource AppPrimaryPressedBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppSidebarActivePressedBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <!--
             人数增减按钮：32×32 圆角方块，图标改用矢量 Path（原来用 − / ＋ 两个不同字体字符，
@@ -55,6 +59,8 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
         <Style Selector="Button.count-step Path">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Stroke" Value="{StaticResource AppMutedTextBrush}" />
             <Setter Property="StrokeThickness" Value="2" />
             <Setter Property="StrokeLineCap" Value="Round" />
@@ -104,6 +110,7 @@
         </Style>
         <Style Selector="ToggleButton.roster-switch:pointerover">
             <Setter Property="Background" Value="{StaticResource AppSecondaryHoverBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="ToggleButton.roster-switch:checked">
@@ -113,8 +120,9 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="ToggleButton.roster-switch:checked:pointerover">
-            <Setter Property="Background" Value="{StaticResource AppPrimaryHoverBrush}" />
-            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+            <Setter Property="Background" Value="{StaticResource AppSidebarActiveHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
 
         <!-- 编队卡片 -->

@@ -18,6 +18,9 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Decode roster art while the window and first page are still being constructed.
+        ArtPrefetcher.Shared.Attach();
+
         switch (ApplicationLifetime)
         {
             // 桌面端：常规窗口 + 退出时保存。

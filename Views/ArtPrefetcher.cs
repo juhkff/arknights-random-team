@@ -14,9 +14,13 @@ namespace arknights_random_team.Views;
 /// </summary>
 internal sealed class ArtPrefetcher
 {
+    /// <summary>Process-wide coordinator so warming can start before the shell control exists.</summary>
+    internal static readonly ArtPrefetcher Shared = new();
+
     private readonly Dictionary<Staff, int> _subscriptions = new(ReferenceEqualityComparer.Instance);
     private readonly DispatcherTimer _debounce = new() { Interval = TimeSpan.FromSeconds(1) };
     private CancellationTokenSource? _cancellation;
+    private ImmutableArray<(string SourceId, bool Elite2)> _snapshot;
     private Task _worker = Task.CompletedTask;
     private bool _attached;
     private bool _bulkDirty;
@@ -34,7 +38,7 @@ internal sealed class ArtPrefetcher
         AppState.BulkUpdateCompleted += OnBulkUpdateCompleted;
         foreach (var staff in AppState.StaffList)
             Subscribe(staff);
-        RequestUpdate();
+        RequestUpdate(immediate: true);
     }
 
     public void Detach()
@@ -47,6 +51,7 @@ internal sealed class ArtPrefetcher
         AppState.BulkUpdateCompleted -= OnBulkUpdateCompleted;
         ClearSubscriptions();
         CancelWorker();
+        _snapshot = default;
         // Keep _worker: a rapid reattach must still await the old worker's shutdown.
     }
 
@@ -118,21 +123,25 @@ internal sealed class ArtPrefetcher
         RequestUpdate();
     }
 
-    private void RequestUpdate()
+    private void RequestUpdate(bool immediate = false)
     {
         Dispatcher.UIThread.VerifyAccess();
         if (!_attached)
             return;
 
-        // Notifications only reset one UI timer, never create a task or enumerate models.
-        CancelWorker();
+        // Coalesce roster edits on a timer. Do not cancel an in-flight warmup here:
+        // opening the operator list can fire bindings, and aborting would make the
+        // first visit look like loading only starts after navigation.
         _debounce.Stop();
         if (AppState.IsBulkUpdating)
         {
             _bulkDirty = true;
             return;
         }
-        _debounce.Start();
+        if (immediate)
+            QueueSnapshot();
+        else
+            _debounce.Start();
     }
 
     private void CancelWorker()
@@ -158,6 +167,11 @@ internal sealed class ArtPrefetcher
     private void OnDebounceElapsed(object? sender, EventArgs e)
     {
         _debounce.Stop();
+        QueueSnapshot();
+    }
+
+    private void QueueSnapshot()
+    {
         if (!_attached)
             return;
         if (AppState.IsBulkUpdating)
@@ -175,7 +189,13 @@ internal sealed class ArtPrefetcher
                 .Select(staff => (SourceId: staff.SourceId!, Elite2: staff.Level.EliteLevel >= FieldLimits.MaxElite))
                 .Distinct()
                 .ToImmutableArray();
+            if (!_snapshot.IsDefault &&
+                _snapshot.SequenceEqual(snapshot) &&
+                _cancellation is { IsCancellationRequested: false })
+                return;
+
             CancelWorker();
+            _snapshot = snapshot;
             _cancellation = new CancellationTokenSource();
             _worker = RunAfterAsync(_worker, snapshot, _cancellation.Token);
         }
@@ -202,6 +222,7 @@ internal sealed class ArtPrefetcher
                     .Concat(snapshot.Select(staff => OperatorArt.Avatar(staff.SourceId, staff.Elite2)))
                     .Where(group => group.Count > 0)
                     .ToArray();
+                AppState.LogTrace($"后台预取图片 {groups.Length} 张");
                 ArtImage.SetRosterSources(groups);
                 var progress = Stopwatch.StartNew();
                 await PublishAsync(false);

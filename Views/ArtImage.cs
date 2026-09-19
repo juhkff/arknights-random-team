@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
@@ -46,7 +47,8 @@ public static class ArtImage
 
     /// <summary>下载限流。</summary>
     private static readonly SemaphoreSlim Gate = new(MaxConcurrent, MaxConcurrent);
-    // Limit disk reads and retained encoded buffers too, not just HTTP and decoding.
+    // Visible controls only. Background warming uses PrefetchGate so it cannot exhaust
+    // the slots that the operator list needs when it first appears.
     private static readonly SemaphoreSlim ForegroundGate = new(4, 4);
     private static readonly SemaphoreSlim PrefetchGate = new(1, 1);
     private static readonly ConcurrentDictionary<Uri, LoadEntry<byte[]>> Downloads = new();
@@ -60,9 +62,10 @@ public static class ArtImage
 
     private static async Task WaitForIdleAsync(CancellationToken ct)
     {
-        while (Volatile.Read(ref _foregroundLoads) != 0 ||
-               Environment.TickCount64 - Volatile.Read(ref _lastActivity) < 750)
-            await Task.Delay(200, ct).ConfigureAwait(false);
+        // Yield to visible loads and in-progress input. Do not keep waiting after the last
+        // click: that delayed warming until the operator list was opened and then sat idle.
+        while (Volatile.Read(ref _foregroundLoads) != 0 || IsInteracting)
+            await Task.Delay(50, ct).ConfigureAwait(false);
     }
 
     private sealed record ResolvedSource(IReadOnlyList<Uri> Candidates, Uri Uri);
@@ -412,8 +415,13 @@ public static class ArtImage
     {
         switch (control)
         {
-            case ArtBitmap art: art.Source = bitmap; break;
-            case Image image: image.Source = bitmap; break;
+            case ArtBitmap art:
+                art.Source = bitmap;
+                break;
+            case Image image:
+                RenderOptions.SetBitmapInterpolationMode(image, BitmapInterpolationMode.HighQuality);
+                image.Source = bitmap;
+                break;
         }
     }
 
@@ -750,7 +758,15 @@ public static class ArtImage
         Interlocked.Increment(ref _foregroundLoads);
         try
         {
-            return await GetOrLoadCoreAsync(uri, ct).ConfigureAwait(false);
+            await ForegroundGate.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                return await GetOrLoadCoreAsync(uri, ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                ForegroundGate.Release();
+            }
         }
         finally
         {
@@ -888,7 +904,6 @@ public static class ArtImage
     /// <summary>Loads one URI. Local paths bypass the network concurrency gate.</summary>
     private static async Task<Bitmap?> LoadSharedAsync(Uri uri, CancellationToken cancellationToken)
     {
-        await ForegroundGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             if (await ReadLocalAsync(uri, cancellationToken).ConfigureAwait(false) is { Length: > 0 } local)
@@ -930,10 +945,6 @@ public static class ArtImage
             cancellationToken.ThrowIfCancellationRequested();
             // 网络失败、图不存在、解码失败都视作「没有立绘」，卡片显示占位即可
             return TrackResult(uri, null);
-        }
-        finally
-        {
-            ForegroundGate.Release();
         }
     }
 

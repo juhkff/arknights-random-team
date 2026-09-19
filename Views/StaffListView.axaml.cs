@@ -20,9 +20,9 @@ public partial class StaffListView : UserControl
 {
     private bool _suppressRowSelection;
     private DispatcherTimer? _searchDebounce;
-    private Staff? _nameEditStaff;
-    private string? _nameEditOriginal;
     private bool _cardLayoutUpdateQueued;
+    private double _fittedNameWidth;
+    private readonly Dictionary<DataGridRow, PoolRowWatch> _poolRows = new();
 
     public StaffListView()
     {
@@ -42,6 +42,7 @@ public partial class StaffListView : UserControl
             if (e.Source is ScrollBar)
                 ArtImage.NotifyInteraction();
         }, RoutingStrategies.Bubble, handledEventsToo: true);
+        StaffGrid.SizeChanged += (_, _) => FitStaffGridColumns();
 
         Loaded += (_, _) =>
         {
@@ -77,6 +78,7 @@ public partial class StaffListView : UserControl
                 AppState.BulkUpdateCompleted += model.OnBulkUpdateCompleted;
                 ArtImage.StatsChanged -= model.OnArtStatsChanged;
                 ArtImage.StatsChanged += model.OnArtStatsChanged;
+                model.OnArtStatsChanged(null, EventArgs.Empty);
             }
 
             ApplyListLayout();
@@ -94,6 +96,7 @@ public partial class StaffListView : UserControl
             }
 
             FlushPendingSearch();
+            UnbindAllPoolRows();
         };
 
         if (DataContext is ListModel model)
@@ -186,20 +189,16 @@ public partial class StaffListView : UserControl
         BatchBar.IsVisible = model.ShowBatchBar && !narrow;
         BatchMenuButton.IsVisible = model.ShowBatchBar && narrow;
 
-        // Keep both view segments visible on narrow layouts; only sorting and row density move to a menu.
         var phone = AppLayout.IsPhone;
-        WideToolsPanel.IsVisible = !phone;
-        PhoneToolsButton.IsVisible = phone;
         FilterChipsList.IsVisible = !phone;
         SelectAllScopeLabel.IsVisible = !phone && model.HasActiveFilters;
 
-        Grid.SetColumnSpan(SummaryPanel, phone ? 3 : 1);
-        Grid.SetRow(ViewModeSwitch, phone ? 1 : 0);
-        Grid.SetColumn(ViewModeSwitch, phone ? 0 : 1);
-        Grid.SetRow(TopMoreButton, phone ? 1 : 0);
-        ViewModeSwitch.HorizontalAlignment = phone ? HorizontalAlignment.Left : HorizontalAlignment.Right;
-        ViewModeSwitch.Margin = phone ? new Thickness(0, 8, 8, 0) : new Thickness(8, 0);
-        TopMoreButton.Margin = phone ? new Thickness(0, 8, 0, 0) : default;
+        Grid.SetColumnSpan(SummaryPanel, phone ? 2 : 1);
+        Grid.SetRow(ListHeaderActions, phone ? 1 : 0);
+        ListHeaderActions.HorizontalAlignment = phone ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+        ListHeaderActions.Margin = phone ? new Thickness(0, 8, 0, 0) : new Thickness(8, 0, 0, 0);
+        if (ListChrome is not null)
+            ListChrome.Padding = phone ? new Thickness(12) : new Thickness(16, 14);
 
         if (phone && Bounds.Width > 0)
         {
@@ -208,25 +207,15 @@ public partial class StaffListView : UserControl
         }
         else
         {
-            // Keep search/filter/sort on one row without forcing the flexible search field too narrow.
-            var reserved = model.IsGridView ? 332 : 268;
+            // Keep search and filter on one row without forcing the flexible search field too narrow.
+            var reserved = 240;
             SearchBox.Width = Bounds.Width > 0
                 ? Math.Clamp(Bounds.Width - reserved, 200, 360)
                 : 240;
         }
 
         SyncViewButtons();
-    }
-
-    /// <summary>窄屏菜单里的排序：与宽屏下拉走同一份 SortIndex。</summary>
-    private void PhoneSort_Click(object? sender, RoutedEventArgs e)
-    {
-        if (sender is MenuItem { Tag: string tag } &&
-            int.TryParse(tag, out var index) &&
-            Model is { } model)
-        {
-            model.SortIndex = index;
-        }
+        FitStaffGridColumns();
     }
 
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
@@ -323,12 +312,6 @@ public partial class StaffListView : UserControl
         ClearGridSelection();
     }
 
-    private async void ArtStats_Click(object? sender, RoutedEventArgs e)
-    {
-        if (Model is { } model)
-            await AppHost.AlertAsync(model.ArtLoadInfo, "图片加载统计");
-    }
-
     private void OperatorCard_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is not Button { DataContext: Staff staff })
@@ -346,18 +329,12 @@ public partial class StaffListView : UserControl
 
         if (e.Source is Visual visual)
         {
-            if (visual is CheckBox || visual.FindAncestorOfType<CheckBox>() is not null)
-                return;
             if (visual.FindAncestorOfType<Button>(true) is { } inner && inner != sender)
-                return;
-            if (visual.FindAncestorOfType<MenuItem>(true) is not null)
                 return;
         }
 
         staff.IsSelected = !staff.IsSelected;
     }
-
-    private void CardPoolCheck_Click(object? sender, RoutedEventArgs e) => e.Handled = true;
 
     // ---- 点击与拖动区分 ----
     //
@@ -472,15 +449,25 @@ public partial class StaffListView : UserControl
         }
 
         var button = source.FindAncestorOfType<Button>(true);
-        if (button?.Classes.Contains("operator-card") == true)
+        if (button is not null)
         {
-            BeginPress(e, button);
+            if (button.Classes.Contains("operator-card"))
+                BeginPress(e, button);
+            else
+                ResetPress();
             return;
         }
 
-        if (!IsFromCheckBox(source) && CellHitTarget(source) is { } cell)
+        if (source.FindAncestorOfType<DataGridColumnHeader>(true) is not null ||
+            source.FindAncestorOfType<ScrollBar>(true) is not null)
         {
-            BeginPress(e, cell);
+            ResetPress();
+            return;
+        }
+
+        if (source.FindAncestorOfType<DataGridRow>(true) is { } row)
+        {
+            BeginPress(e, row);
             return;
         }
 
@@ -510,22 +497,25 @@ public partial class StaffListView : UserControl
             return;
         }
 
-        if (_pressTarget is Border { } cell && cell.Classes.Contains("cell-hit"))
+        if (_pressTarget is DataGridRow row)
         {
-            if (ReferenceEquals(CellHitTarget(e.Source), cell) &&
-                !IsFromCheckBox(e.Source) &&
-                ReleaseIsTap(cell, e))
+            var fromButton = e.Source is Visual visual &&
+                             visual.FindAncestorOfType<Button>(true) is not null;
+            var sourceRow = e.Source is Visual sourceVisual
+                ? sourceVisual.FindAncestorOfType<DataGridRow>(true)
+                : null;
+
+            if (!fromButton && ReferenceEquals(sourceRow, row) && ReleaseIsTap(row, e))
             {
-                if (cell.DataContext is Staff staff)
+                if (row.DataContext is Staff staff)
                     staff.IsSelected = !staff.IsSelected;
-                else
-                    Model?.ToggleSelectAll();
             }
             else
             {
                 ResetPress();
             }
 
+            ClearGridSelection();
             return;
         }
 
@@ -578,137 +568,122 @@ public partial class StaffListView : UserControl
             _suppressRowSelection = false;
     }
 
-    private void SelectAll_Click(object? sender, RoutedEventArgs e)
+    private void StaffGrid_LoadingRow(object? sender, DataGridRowEventArgs e) => BindPoolRow(e.Row);
+
+    private void StaffGrid_UnloadingRow(object? sender, DataGridRowEventArgs e) => UnbindPoolRow(e.Row);
+
+    private void BindPoolRow(DataGridRow row)
     {
-        Model?.ToggleSelectAll();
+        UnbindPoolRow(row);
+        if (row.DataContext is not Staff staff)
+        {
+            row.Classes.Set("in-pool", false);
+            return;
+        }
+
+        PropertyChangedEventHandler handler = (_, args) =>
+        {
+            if (args.PropertyName is nameof(Staff.IsSelected) or null or "")
+                row.Classes.Set("in-pool", staff.IsSelected);
+        };
+        staff.PropertyChanged += handler;
+        _poolRows[row] = new PoolRowWatch(staff, handler);
+        row.Classes.Set("in-pool", staff.IsSelected);
+    }
+
+    private void UnbindPoolRow(DataGridRow row)
+    {
+        if (_poolRows.Remove(row, out var watch))
+            watch.Staff.PropertyChanged -= watch.Handler;
+        row.Classes.Set("in-pool", false);
+    }
+
+    private void UnbindAllPoolRows()
+    {
+        foreach (var (row, watch) in _poolRows)
+        {
+            watch.Staff.PropertyChanged -= watch.Handler;
+            row.Classes.Set("in-pool", false);
+        }
+
+        _poolRows.Clear();
     }
 
     /// <summary>
-    /// 事件来源是否落在复选框内部。
-    /// 不能只判 <c>e.Source is CheckBox</c>：实际来源常常是复选框模板里的图形，
-    /// 于是守卫失效——复选框自己切换一次、单元格处理器再切一次，净变化为零，
-    /// 用户看到的就是「点入池列没反应」（实测复现）。
+    /// 干员列用星号宽度吃掉剩余空间。个别布局轮次里 DataGrid 不会把星号列拉满，
+    /// 这里按表格实际宽度补一次像素宽度，避免右侧留白。
     /// </summary>
-    private static bool IsFromCheckBox(object? source) =>
-        source is Visual visual &&
-        (visual is CheckBox || visual.FindAncestorOfType<CheckBox>(true) is not null);
-
-    private static Border? CellHitTarget(object? source) =>
-        source is Visual visual &&
-        visual.FindAncestorOfType<Border>(true) is { } border &&
-        border.Classes.Contains("cell-hit")
-            ? border
-            : null;
-
-    private void StaffGrid_PreparingCellForEdit(object? sender, DataGridPreparingCellForEditEventArgs e)
+    private void FitStaffGridColumns()
     {
-        Model?.BeginEdit();
-        if (e.EditingElement is not Control editor)
+        if (StaffGrid.Columns.Count < 2)
             return;
 
-        editor.MinWidth = 0;
-        editor.HorizontalAlignment = HorizontalAlignment.Stretch;
-        if (editor is Decorator { Child: Control inner })
-        {
-            inner.MinWidth = 0;
-            inner.HorizontalAlignment = HorizontalAlignment.Stretch;
-        }
+        var available = StaffGrid.Bounds.Width;
+        if (available <= 0)
+            return;
 
-        // 名称是生成阵容时的分组键：留一份原值，编辑结束若校验不通过就还原，
-        // 否则表格可以直接把名称写成空或与别人重名（方案 §4 U5）。
-        if (e.Column.SortMemberPath == NameSortPath && e.Row.DataContext is Staff nameStaff)
-        {
-            _nameEditStaff = nameStaff;
-            _nameEditOriginal = nameStaff.Name;
-        }
+        double trailing = 0;
+        for (var i = 1; i < StaffGrid.Columns.Count; i++)
+            trailing += StaffGrid.Columns[i].ActualWidth;
+        if (trailing <= 0)
+            trailing = 88 + 108 + 132 + 96;
 
-        // 等级是唯一「自由文本 + 解析」的列：模型解析失败会静默丢掉这次输入，
-        // 编辑期间就地标红并给出格式提示，不让用户以为已经改成功。
-        if (e.Column.SortMemberPath == LevelSortPath && editor is TextBox levelBox)
-        {
-            levelBox.TextChanged -= LevelEditor_TextChanged;
-            levelBox.TextChanged += LevelEditor_TextChanged;
-            ValidateLevelEditor(levelBox);
-        }
-    }
+        var nameWidth = Math.Max(180, available - trailing);
+        if (Math.Abs(_fittedNameWidth - nameWidth) <= 2)
+            return;
 
-    private const string NameSortPath = "Name";
-
-    private const string LevelSortPath = "Level";
-
-    private static void LevelEditor_TextChanged(object? sender, TextChangedEventArgs e)
-    {
-        if (sender is TextBox box)
-            ValidateLevelEditor(box);
-    }
-
-    private static void ValidateLevelEditor(TextBox box)
-    {
-        var valid = Level.TryParse(box.Text, out _, out _);
-        box.Classes.Set("input-error", !valid);
-        ToolTip.SetTip(box, valid ? null : "等级格式应为「精二90级」，否则本次修改不会保存。");
-    }
-
-    private void StaffGrid_CellEditEnded(object? sender, DataGridCellEditEndedEventArgs e)
-    {
-        ClearRowHighlight(e.Row);
-
-        if (e.Column.SortMemberPath == NameSortPath && _nameEditStaff is { } staff)
-        {
-            var original = _nameEditOriginal ?? "";
-            _nameEditStaff = null;
-            _nameEditOriginal = null;
-
-            var normalized = staff.Name.Trim();
-            if (StaffValidator.ValidateName(normalized, AppState.StaffList, staff) is { } error)
-            {
-                staff.Name = original;
-                PostSnack($"{error}已还原为「{original}」。");
-            }
-            else
-            {
-                AppState.RenameStaff(staff, original, normalized);
-            }
-        }
-
-        Model?.EndEdit();
+        _fittedNameWidth = nameWidth;
+        StaffGrid.Columns[0].Width = new DataGridLength(nameWidth);
     }
 
     /// <summary>
     /// 键盘排序：列头可聚焦（见 App.axaml 的列头主题），空格或回车触发与鼠标点击一致的排序循环。
-    /// 没有这条路径时，「键盘能完成主要操作」只覆盖选池与导航，排序仍只有鼠标可用。
+    /// 行上的空格 / 回车切换随机池，替代已去掉的复选框。
     /// </summary>
     private void StaffGrid_KeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Key is not (Key.Space or Key.Enter))
             return;
 
-        // 这个 Avalonia 版本不公开 DataGridColumnHeader.Column，
-        // 用「列头内容与列定义里的 Header 是同一个对象」反查，取不到时退回当前列。
-        if (e.Source is not Visual source ||
-            source.FindAncestorOfType<DataGridColumnHeader>(true) is not { } header)
+        if (e.Source is not Visual source)
             return;
 
-        var column = StaffGrid.Columns.FirstOrDefault(c => ReferenceEquals(c.Header, header.Content))
-                     ?? StaffGrid.CurrentColumn;
-        if (column is null || string.IsNullOrWhiteSpace(column.SortMemberPath))
+        if (source.FindAncestorOfType<Button>(true) is not null)
             return;
 
-        _suppressRowSelection = true;
-        Model?.CycleSort(column.SortMemberPath);
-        e.Handled = true;
+        if (source.FindAncestorOfType<DataGridColumnHeader>(true) is { } header)
+        {
+            // 这个 Avalonia 版本不公开 DataGridColumnHeader.Column，
+            // 用「列头内容与列定义里的 Header 是同一个对象」反查，取不到时退回当前列。
+            var column = StaffGrid.Columns.FirstOrDefault(c => ReferenceEquals(c.Header, header.Content))
+                         ?? StaffGrid.CurrentColumn;
+            if (column is null || string.IsNullOrWhiteSpace(column.SortMemberPath))
+                return;
 
-        // 排序会刷新可见投影（整表 Reset），DataGrid 会把焦点收回自己身上，
-        // 于是「按一次空格排序、再按就落在网格上不再生效」。键盘用户期望停在刚操作的列头，
-        // 这里在刷新之后把焦点还回去（实测：不还的话连按三次空格，排序状态卡在第一次的结果）。
-        Dispatcher.UIThread.Post(
-            () =>
-            {
-                ClearGridSelection();
-                if (TopLevel.GetTopLevel(header) is not null)
-                    header.Focus();
-            },
-            DispatcherPriority.Loaded);
+            _suppressRowSelection = true;
+            Model?.CycleSort(column.SortMemberPath);
+            e.Handled = true;
+
+            // 排序会刷新可见投影（整表 Reset），DataGrid 会把焦点收回自己身上，
+            // 于是「按一次空格排序、再按就落在网格上不再生效」。键盘用户期望停在刚操作的列头，
+            // 这里在刷新之后把焦点还回去（实测：不还的话连按三次空格，排序状态卡在第一次的结果）。
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    ClearGridSelection();
+                    if (TopLevel.GetTopLevel(header) is not null)
+                        header.Focus();
+                },
+                DispatcherPriority.Loaded);
+            return;
+        }
+
+        if (source.FindAncestorOfType<DataGridRow>(true) is { DataContext: Staff staff })
+        {
+            staff.IsSelected = !staff.IsSelected;
+            ClearGridSelection();
+            e.Handled = true;
+        }
     }
 
     private void StaffGrid_Sorting(object? sender, DataGridColumnEventArgs e)
@@ -731,7 +706,7 @@ public partial class StaffListView : UserControl
 
     private void StaffGrid_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (_suppressRowSelection && StaffGrid.SelectedItem is not null)
+        if (StaffGrid.SelectedItem is not null)
             StaffGrid.SelectedItem = null;
     }
 
@@ -744,15 +719,7 @@ public partial class StaffListView : UserControl
         _suppressRowSelection = false;
     }
 
-    private void ClearRowHighlight(DataGridRow? row = null)
-    {
-        StaffGrid.SelectedItem = null;
-        if (row is null)
-            return;
-
-        row.IsHitTestVisible = false;
-        Dispatcher.UIThread.Post(() => row.IsHitTestVisible = true, DispatcherPriority.Input);
-    }
+    private readonly record struct PoolRowWatch(Staff Staff, PropertyChangedEventHandler Handler);
 
     private async void Detail_Click(object? sender, RoutedEventArgs e)
     {

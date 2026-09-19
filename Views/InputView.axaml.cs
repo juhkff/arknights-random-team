@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
@@ -17,6 +18,7 @@ public partial class InputView : UserControl
     private readonly List<ToggleButton> _starChoices = [];
     private int _star = 1;
     private bool _updatingLevelText;
+    private bool _updatingElite;
     private bool _syncInProgress;
 
     public InputView()
@@ -102,9 +104,11 @@ public partial class InputView : UserControl
 
     private void SetStar(int star)
     {
-        _star = star;
+        _star = FieldLimits.ClampStar(star);
         foreach (var choice in _starChoices)
-            choice.IsChecked = choice.Tag?.ToString() == star.ToString();
+            choice.IsChecked = choice.Tag?.ToString() == _star.ToString();
+        RefreshEliteChoices();
+        ClampRankField();
     }
 
     private void Input_Click(object? sender, RoutedEventArgs e)
@@ -114,7 +118,7 @@ public partial class InputView : UserControl
         LevelError.IsVisible = false;
 
         var name = NameTextBox.Text?.Trim() ?? "";
-        // 名称规则（空名 / 重名）与详情面板、表格内联编辑共用一份 StaffValidator。
+        // 名称规则（空名 / 重名）与详情面板共用一份 StaffValidator。
         if (StaffValidator.ValidateName(name, AppState.StaffList) is { } nameError)
         {
             NameError.Text = nameError;
@@ -131,21 +135,23 @@ public partial class InputView : UserControl
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(EliteTextBox.Text) || string.IsNullOrWhiteSpace(RankTextBox.Text))
+        if (string.IsNullOrWhiteSpace(RankTextBox.Text))
         {
-            LevelError.Text = "请填写精英阶段与当前等级";
+            LevelError.Text = "请填写当前等级";
             LevelError.IsVisible = true;
-            EliteTextBox.Focus();
+            RankTextBox.Focus();
             return;
         }
 
+        var elite = CurrentElite();
+        var rank = FieldLimits.ClampRankFor(ParseRank(RankTextBox.Text), _star, elite);
         AppState.StaffList.Add(new Staff
         {
             Name = name,
             Star = _star,
             Career = career,
             IsSelected = true,
-            Level = new Level(ParseElite(EliteTextBox.Text), ParseRank(RankTextBox.Text))
+            Level = new Level(elite, rank)
         });
         PostSnack("添加成功");
 
@@ -158,9 +164,10 @@ public partial class InputView : UserControl
     private void ResetManualForm()
     {
         NameTextBox.Text = "";
-        EliteTextBox.Text = "2";
         RankTextBox.Text = "1";
         CareerCombo.SelectedIndex = -1;
+        RefreshEliteChoices();
+        ClampRankField();
         NameError.IsVisible = false;
         CareerError.IsVisible = false;
         LevelError.IsVisible = false;
@@ -206,16 +213,12 @@ public partial class InputView : UserControl
         SnackbarHost.Post(new SnackbarModel(text, TimeSpan.FromSeconds(2.5)), "MainSnackbar", DispatcherPriority.Normal);
     }
 
-    private void EliteTextBox_TextChanged(object? sender, TextChangedEventArgs e)
+    private void EliteCombo_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (_updatingLevelText)
+        if (_updatingElite)
             return;
 
-        var filtered = new string((EliteTextBox.Text ?? "")
-            .Where(ch => ch >= '0' + FieldLimits.MinElite && ch <= '0' + FieldLimits.MaxElite)
-            .Take(1)
-            .ToArray());
-        SetLevelText(EliteTextBox, filtered);
+        ClampRankField();
     }
 
     private void RankTextBox_TextChanged(object? sender, TextChangedEventArgs e)
@@ -223,17 +226,28 @@ public partial class InputView : UserControl
         if (_updatingLevelText)
             return;
 
-        var maxDigits = FieldLimits.MaxRank.ToString().Length;
-        var digits = new string((RankTextBox.Text ?? "").Where(char.IsDigit).Take(maxDigits).ToArray());
-        if (digits.Length > 0 && int.TryParse(digits, out var value))
-        {
-            if (value < FieldLimits.MinRank)
-                digits = "";
-            else if (value > FieldLimits.MaxRank)
-                digits = FieldLimits.MaxRank.ToString();
-        }
+        ClampRankField(keepEmpty: true);
+    }
 
-        SetLevelText(RankTextBox, digits);
+    private void RankTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta))
+            return;
+
+        if (e.Key is Key.Back or Key.Delete or Key.Tab or Key.Enter or Key.Escape
+            or Key.Left or Key.Right or Key.Home or Key.End)
+            return;
+
+        if (e.Key is >= Key.D0 and <= Key.D9 || e.Key is >= Key.NumPad0 and <= Key.NumPad9)
+            return;
+
+        e.Handled = true;
+    }
+
+    private void RankTextBox_TextInput(object? sender, TextInputEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Text) || e.Text.Any(ch => !char.IsDigit(ch)))
+            e.Handled = true;
     }
 
     private void SetLevelText(TextBox box, string text)
@@ -247,25 +261,66 @@ public partial class InputView : UserControl
         _updatingLevelText = false;
     }
 
-    private void EliteTextBox_LostFocus(object? sender, RoutedEventArgs e)
+    private void RankTextBox_LostFocus(object? sender, RoutedEventArgs e) =>
+        ClampRankField(keepEmpty: false);
+
+    private void RefreshEliteChoices()
     {
-        EliteTextBox.Text = ParseElite(EliteTextBox.Text).ToString();
+        var maxElite = FieldLimits.MaxEliteForStar(_star);
+        var elite = CurrentElite();
+        _updatingElite = true;
+        try
+        {
+            EliteCombo.ItemsSource = Enumerable.Range(0, maxElite + 1)
+                .Select(FieldLimits.FormatElite)
+                .ToList();
+            EliteCombo.SelectedIndex = Math.Clamp(elite < 0 ? maxElite : elite, 0, maxElite);
+        }
+        finally
+        {
+            _updatingElite = false;
+        }
     }
 
-    private void RankTextBox_LostFocus(object? sender, RoutedEventArgs e)
+    private void ClampRankField(bool keepEmpty = false)
     {
-        RankTextBox.Text = ParseRank(RankTextBox.Text).ToString();
+        var max = FieldLimits.MaxRankFor(_star, CurrentElite());
+        RankTextBox.PlaceholderText = $"1–{max}";
+        RankTextBox.MaxLength = max.ToString().Length;
+
+        var raw = RankTextBox.Text ?? "";
+        if (keepEmpty && string.IsNullOrEmpty(raw))
+            return;
+
+        var digits = new string(raw.Where(char.IsDigit).Take(RankTextBox.MaxLength).ToArray());
+        if (digits.Length == 0)
+        {
+            SetLevelText(RankTextBox, keepEmpty ? "" : FieldLimits.MinRank.ToString());
+            return;
+        }
+
+        if (!int.TryParse(digits, out var value))
+        {
+            SetLevelText(RankTextBox, FieldLimits.MinRank.ToString());
+            return;
+        }
+
+        if (value > max)
+            digits = max.ToString();
+        else if (!keepEmpty && value < FieldLimits.MinRank)
+            digits = FieldLimits.MinRank.ToString();
+        else if (keepEmpty && value == 0)
+            digits = "";
+
+        SetLevelText(RankTextBox, digits);
     }
 
-    private static int ParseElite(string? text) =>
-        int.TryParse(text, out var elite) &&
-        elite is >= FieldLimits.MinElite and <= FieldLimits.MaxElite
-            ? elite
-            : FieldLimits.MaxElite;
+    private int CurrentElite()
+    {
+        var max = FieldLimits.MaxEliteForStar(_star);
+        return EliteCombo.SelectedIndex < 0 ? max : Math.Clamp(EliteCombo.SelectedIndex, 0, max);
+    }
 
     private static int ParseRank(string? text) =>
-        int.TryParse(text, out var rank) &&
-        rank is >= FieldLimits.MinRank and <= FieldLimits.MaxRank
-            ? rank
-            : FieldLimits.MinRank;
+        int.TryParse(text, out var rank) ? rank : FieldLimits.MinRank;
 }

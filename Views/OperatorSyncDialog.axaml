@@ -127,7 +127,12 @@
             <Setter Property="Opacity" Value="1" />
         </Style>
 
-        <!-- 页脚：文字式取消 + 实心主按钮，右边距与内容对齐。 -->
+        <Style Selector="Button.sync-range">
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+        </Style>
+        <Style Selector="Button.sync-range:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
         <Style Selector="Button.dialog-cancel">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -142,6 +147,7 @@
         </Style>
         <Style Selector="Button.dialog-cancel:pressed">
             <Setter Property="Background" Value="{StaticResource AppTableHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="Button.dialog-confirm">
@@ -209,20 +215,18 @@
             <Grid ColumnDefinitions="*,Auto,Auto">
                 <TextBlock Classes="field-label" VerticalAlignment="Center" Text="选择同步的稀有度" />
                 <Button Grid.Column="1"
-                        Classes="compact"
+                        Classes="text compact sync-range"
                         Height="36"
                         MinHeight="36"
                         Margin="0,0,8,0"
                         Padding="14,0"
-                        Foreground="{StaticResource AppMutedTextBrush}"
                         Content="全选"
                         Click="SelectAll_Click" />
                 <Button Grid.Column="2"
-                        Classes="compact"
+                        Classes="text compact sync-range"
                         Height="36"
                         MinHeight="36"
                         Padding="14,0"
-                        Foreground="{StaticResource AppMutedTextBrush}"
                         Content="清除"
                         Click="ClearAll_Click" />
             </Grid>

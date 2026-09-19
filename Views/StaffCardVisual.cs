@@ -43,9 +43,17 @@ public static class StaffCardVisual
     public static double CardHeight(double itemWidth) =>
         itemWidth * HalfBodyRatio + CardToolbarHeight;
 
-    public static readonly IValueConverter PoolBorder =
+    /// <summary>表格入池行的左侧色条；未入池为透明。</summary>
+    public static readonly IValueConverter PoolAccent =
         new FuncValueConverter<bool, IBrush>(selected =>
-            Brush(selected ? "AppPrimaryBrush" : "AppBorderBrush"));
+            selected ? Brush("AppPrimaryBrush") : Brushes.Transparent);
+
+    public static readonly IValueConverter PoolOpacity =
+        new FuncValueConverter<bool, double>(selected => selected ? 1 : 0);
+
+    public static readonly IValueConverter PoolRing =
+        new FuncValueConverter<bool, IBrush>(selected =>
+            selected ? Brush("AppPrimaryBrush") : Brush("AppBorderBrush"));
 
     public static readonly IValueConverter IsArtLoaded =
         new FuncValueConverter<ArtLoadState, bool>(state => state == ArtLoadState.Loaded);

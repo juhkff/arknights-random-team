@@ -92,6 +92,8 @@ public partial class Staff : AutomaticNotify
             RaiseArtChanged();
             OnPropertyChanged(nameof(EliteLabel));
             OnPropertyChanged(nameof(LevelLine));
+            OnPropertyChanged(nameof(RankMark));
+            OnPropertyChanged(nameof(LevelSortKey));
         }
     }
 
@@ -104,11 +106,14 @@ public partial class Staff : AutomaticNotify
         if (e.PropertyName == nameof(Models.Level.EliteLevel))
         {
             OnPropertyChanged(nameof(EliteLabel));
+            OnPropertyChanged(nameof(LevelSortKey));
             RaiseArtChanged();
         }
         else if (e.PropertyName == nameof(Models.Level.Description))
         {
             OnPropertyChanged(nameof(LevelLine));
+            OnPropertyChanged(nameof(RankMark));
+            OnPropertyChanged(nameof(LevelSortKey));
         }
     }
 

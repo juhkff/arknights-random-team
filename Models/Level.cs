@@ -64,15 +64,11 @@ public class Level : AutomaticNotify
 
     public static Level GenerateDefaultLevel() => new(2, 1);
 
-    public static Level GenerateMaxLevel(int star) => star switch
+    public static Level GenerateMaxLevel(int star)
     {
-        1 or 2 => new Level(0, 30),
-        3 => new Level(1, 55),
-        4 => new Level(2, 70),
-        5 => new Level(2, 80),
-        6 => new Level(2, 90),
-        _ => throw new ArgumentOutOfRangeException(nameof(star), "稀有度越界")
-    };
+        var elite = FieldLimits.MaxEliteForStar(star);
+        return new Level(elite, FieldLimits.MaxRankFor(star, elite));
+    }
 
     public static bool TryParse(string? text, out int eliteLevel, out int rank)
     {

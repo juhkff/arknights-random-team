@@ -21,4 +21,47 @@ public static class FieldLimits
     public static int ClampElite(int elite) => Math.Clamp(elite, MinElite, MaxElite);
 
     public static int ClampRank(int rank) => Math.Clamp(rank, MinRank, MaxRank);
+
+    /// <summary>1–2 星不能精英，3 星最高精一，4–6 星可精二。</summary>
+    public static int MaxEliteForStar(int star) => ClampStar(star) switch
+    {
+        1 or 2 => 0,
+        3 => 1,
+        _ => MaxElite
+    };
+
+    public static int ClampEliteForStar(int elite, int star) =>
+        Math.Clamp(elite, MinElite, MaxEliteForStar(star));
+
+    /// <summary>当前稀有度与精英阶段下的等级上限，与游戏本体一致。</summary>
+    public static int MaxRankFor(int star, int elite)
+    {
+        star = ClampStar(star);
+        elite = ClampEliteForStar(elite, star);
+        return (star, elite) switch
+        {
+            (1 or 2, _) => 30,
+            (3, 0) => 40,
+            (3, _) => 55,
+            (4, 0) => 50,
+            (4, 1) => 60,
+            (4, _) => 70,
+            (5, 0) => 50,
+            (5, 1) => 70,
+            (5, _) => 80,
+            (_, 0) => 50,
+            (_, 1) => 80,
+            _ => 90
+        };
+    }
+
+    public static int ClampRankFor(int rank, int star, int elite) =>
+        Math.Clamp(rank, MinRank, MaxRankFor(star, elite));
+
+    public static string FormatElite(int elite) => elite switch
+    {
+        1 => "精一",
+        2 => "精二",
+        _ => "精零"
+    };
 }

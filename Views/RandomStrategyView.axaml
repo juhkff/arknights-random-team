@@ -33,6 +33,16 @@
         <Style Selector="Expander.rules /template/ ToggleButton#PART_toggle">
             <Setter Property="Padding" Value="0" />
             <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Expander.rules /template/ ToggleButton#PART_toggle:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppSecondaryHoverBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Expander.rules /template/ ToggleButton#PART_toggle:pressed">
+            <Setter Property="Background" Value="{StaticResource AppSecondaryPressedBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
         <Style Selector="Expander.rules TextBlock">
             <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
@@ -79,6 +89,9 @@
                                                     Click="EditStrategy_Click" />
                                             <Button Classes="icon compact"
                                                     Width="32" Height="32" MinWidth="32"
+                                                    Padding="0"
+                                                    HorizontalContentAlignment="Center"
+                                                    VerticalContentAlignment="Center"
                                                     Content="⋯"
                                                     Tag="{Binding}"
                                                     AutomationProperties.Name="更多">

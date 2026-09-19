@@ -58,9 +58,7 @@ public class ListModel : AutomaticNotify
     private readonly HashSet<Staff> _subscribedStaff = [];
     private string _searchText = "";
     private PoolFilterKind _poolFilter = PoolFilterKind.All;
-    private int _sortIndex;
     private bool _isCardView;
-    private bool _isCompactTable;
     private bool _refreshing;
     private bool _editing;
     private bool _active;
@@ -90,12 +88,17 @@ public class ListModel : AutomaticNotify
 
     public string SelectAllScopeText =>
         HasActiveFilters
-            ? $"全选与批量入池作用于当前筛选的 {VisibleCount} 名干员"
-            : "全选作用于全部干员";
+            ? $"批量入池作用于当前筛选的 {VisibleCount} 名干员"
+            : "批量入池作用于全部干员";
 
     public string BatchMenuText => $"批量操作（{VisibleCount}）";
 
     public bool HasActiveFilters => ActiveFilters.Count > 0;
+
+    public bool HasFlyoutFilters =>
+        CareerFilters.Any(item => item.IsChecked) ||
+        RarityFilters.Any(item => item.IsChecked) ||
+        _poolFilter != PoolFilterKind.All;
 
     public bool ShowStaffEmpty => StaffCount == 0;
 
@@ -117,7 +120,6 @@ public class ListModel : AutomaticNotify
         var saved = AppState.UiPreferences;
         // Avatar/Portrait are legacy persisted values; every non-table value now opens half-body cards.
         _isCardView = saved.ViewMode != StaffViewMode.Table;
-        _isCompactTable = saved.IsCompactTable;
         PersistViewMode();
 
         CareerFilters = Enum.GetValues<Career>()
@@ -185,44 +187,17 @@ public class ListModel : AutomaticNotify
 
     public bool IsPoolFilterOut => _poolFilter == PoolFilterKind.OutPool;
 
-    public int SortIndex
-    {
-        get => _sortIndex;
-        set
-        {
-            if (!SetProperty(ref _sortIndex, value))
-                return;
-
-            _sorts.Clear();
-            if (value is > 0 and <= 4)
-            {
-                var path = value switch
-                {
-                    1 => "Name",
-                    2 => "Star",
-                    3 => "Career",
-                    _ => "Level"
-                };
-                _sorts.Add(new StaffSort(path, ListSortDirection.Ascending));
-            }
-
-            NotifySorts();
-            RefreshVisible();
-        }
-    }
-
     public IReadOnlyList<StaffSort> Sorts => _sorts;
 
-    /// <summary>是否存在生效中的排序，用于工具栏摘要的显隐。</summary>
     public bool HasSorts => _sorts.Count > 0;
 
     /// <summary>
-    /// 排序状态摘要，按优先级列出「列 方向」。表头可追加多列排序，
-    /// 工具栏据此说明当前排序顺序，避免多列排序时下拉框显示「默认排序」造成误解。
+    /// 排序状态摘要，按优先级列出「列 方向」。表头可追加多列排序；
+    /// 第三次点击同一列会取消该列。无排序时显示默认顺序。
     /// </summary>
     public string SortSummary =>
         _sorts.Count == 0
-            ? "默认排序"
+            ? "默认顺序"
             : string.Join(" → ", _sorts.Select(Describe));
 
     private static string Describe(StaffSort sort) =>
@@ -246,7 +221,7 @@ public class ListModel : AutomaticNotify
         "Name" => "名称",
         "Star" => "稀有度",
         "Career" => "职业",
-        "Level" => "等级",
+        "Level" => "精英 / 等级",
         _ => path
     };
 
@@ -345,13 +320,6 @@ public class ListModel : AutomaticNotify
             _sorts.RemoveAt(index);
         }
 
-        var selectorIndex = _sorts.Count switch
-        {
-            0 => 0,
-            1 => IndexOfPath(_sorts[0].Path),
-            _ => -1
-        };
-        SetProperty(ref _sortIndex, selectorIndex, nameof(SortIndex));
         NotifySorts();
         RefreshVisible();
     }
@@ -366,7 +334,10 @@ public class ListModel : AutomaticNotify
     /// <summary>Refreshes image diagnostics while the view is attached.</summary>
     public void OnArtStatsChanged(object? sender, EventArgs e)
     {
-        OnPropertyChanged(nameof(ArtLoadInfo));
+        OnPropertyChanged(nameof(ArtPreloadText));
+        OnPropertyChanged(nameof(ArtCacheText));
+        OnPropertyChanged(nameof(ArtSourceText));
+        OnPropertyChanged(nameof(ArtFailureText));
         OnPropertyChanged(nameof(HasArtLoadFailures));
     }
 
@@ -442,7 +413,7 @@ public class ListModel : AutomaticNotify
         nameof(Staff.Name) => !string.IsNullOrWhiteSpace(_searchText) || HasSort("Name"),
         nameof(Staff.Career) => CareerFilters.Any(item => item.IsChecked) || HasSort("Career"),
         nameof(Staff.Star) => RarityFilters.Any(item => item.IsChecked) || HasSort("Star"),
-        nameof(Staff.LevelLine) => HasSort("Level"),
+        nameof(Staff.LevelLine) or nameof(Staff.LevelSortKey) => HasSort("Level"),
         _ => false
     };
 
@@ -568,6 +539,7 @@ public class ListModel : AutomaticNotify
         OnPropertyChanged(nameof(SelectAllScopeText));
         OnPropertyChanged(nameof(BatchMenuText));
         OnPropertyChanged(nameof(HasActiveFilters));
+        OnPropertyChanged(nameof(HasFlyoutFilters));
         OnPropertyChanged(nameof(ShowStaffEmpty));
         OnPropertyChanged(nameof(ShowFilterEmpty));
         OnPropertyChanged(nameof(ShowGrid));
@@ -594,19 +566,21 @@ public class ListModel : AutomaticNotify
     /// <summary>卡片模式现在固定使用半身像；旧头像/立绘偏好只负责迁移到这里。</summary>
     public bool IsHalfBodyView => _isCardView;
 
-    public string ArtLoadInfo
-    {
-        get
-        {
-            var image = Views.ArtImage.NetworkLoads == 0 && Views.ArtImage.DiskHits == 0
-                ? "图片：尚未加载"
-                : $"图片：网络 {Views.ArtImage.NetworkLoads} 张 · 内存命中 {Views.ArtImage.CacheHits} · 本地缓存 {Views.ArtImage.DiskHits}";
-            var result = $"{Views.ArtImage.PreloadSummary}\n{Views.ArtImage.CacheSummary}\n{image}";
-            return Views.ArtImage.CurrentFailedLoads > 0
-                ? $"{result}\n当前失败 {Views.ArtImage.CurrentFailedLoads} 张"
-                : result;
-        }
-    }
+    /// <summary>全名单预热进度，例如「图片就绪 120/668 · 准备中」。</summary>
+    public string ArtPreloadText => Views.ArtImage.PreloadSummary;
+
+    /// <summary>解码缓存占用，例如「内存图片 12 张 · 4.5 / 256 MiB」。</summary>
+    public string ArtCacheText => Views.ArtImage.CacheSummary;
+
+    /// <summary>本次运行从网络、内存和磁盘取图的次数。</summary>
+    public string ArtSourceText =>
+        $"网络 {Views.ArtImage.NetworkLoads} · 内存命中 {Views.ArtImage.CacheHits} · 本地缓存 {Views.ArtImage.DiskHits}";
+
+    /// <summary>当前可视树中加载失败的图片数；没有失败时为空。</summary>
+    public string ArtFailureText =>
+        Views.ArtImage.CurrentFailedLoads > 0
+            ? $"当前失败 {Views.ArtImage.CurrentFailedLoads} 张，名称和操作仍可使用"
+            : "";
 
     /// <summary>Whether any currently attached image exhausted all candidate sources.</summary>
     public bool HasArtLoadFailures => Views.ArtImage.CurrentFailedLoads > 0;
@@ -625,31 +599,6 @@ public class ListModel : AutomaticNotify
         OnPropertyChanged(nameof(ShowCards));
     }
 
-    /// <summary>
-    /// 表格紧凑模式：行高 44、行内头像 32；关闭时按方案的普通档 56 / 40。
-    /// 行高由 StaffListView 的样式按 <c>DataGrid#StaffGrid.compact</c> 类切换，
-    /// 行内头像与职业图标尺寸则由下面两个属性提供给绑定，避免尺寸散落在两处。
-    /// </summary>
-    public bool IsCompactTable
-    {
-        get => _isCompactTable;
-        set
-        {
-            if (!SetProperty(ref _isCompactTable, value))
-                return;
-
-            AppState.UiPreferences.IsCompactTable = value;
-            OnPropertyChanged(nameof(RowAvatarSize));
-            OnPropertyChanged(nameof(RowCareerIconSize));
-        }
-    }
-
-    /// <summary>表格行内头像边长：普通 40，紧凑 32。</summary>
-    public double RowAvatarSize => IsCompactTable ? 32 : 40;
-
-    /// <summary>表格行内职业图标边长：普通 18，紧凑 16。</summary>
-    public double RowCareerIconSize => IsCompactTable ? 16 : 18;
-
     private static IOrderedEnumerable<Staff> OrderFirst(IEnumerable<Staff> source, StaffSort sort) =>
         sort.Direction == ListSortDirection.Ascending
             ? source.OrderBy(staff => SortKey(staff, sort.Path))
@@ -665,20 +614,14 @@ public class ListModel : AutomaticNotify
         "Name" => staff.Name,
         "Star" => staff.Star,
         "Career" => (int)staff.Career,
-        "Level" => staff.Level.EliteLevel * 100 + staff.Level.Rank,
+        "Level" => staff.Level.EliteLevel * 1000 + staff.Level.Rank,
         _ => 0
     };
 
-    private static string NormalizeSortPath(string path) =>
-        path is "Level.Description" or "Level.EliteLevel" ? "Level" : path;
-
-    private static int IndexOfPath(string path) => path switch
+    private static string NormalizeSortPath(string path) => path switch
     {
-        "Name" => 1,
-        "Star" => 2,
-        "Career" => 3,
-        "Level" => 4,
-        _ => 0
+        "Level.Description" or "Level.EliteLevel" or "LevelSortKey" => "Level",
+        _ => path
     };
 }
 

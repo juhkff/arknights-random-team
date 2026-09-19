@@ -78,25 +78,25 @@ public partial class Staff
     public string StarGlyphs => new('★', Star);
 
     /// <summary>精英阶段短标签，用于卡片角标。</summary>
-    public string EliteLabel => Level.EliteLevel switch
-    {
-        2 => "精二",
-        1 => "精一",
-        _ => "精零"
-    };
+    public string EliteLabel => FieldLimits.FormatElite(Level.EliteLevel);
 
     /// <summary>信息区用的易读等级，避免「精二」和「2-90」同时出现。</summary>
     public string LevelLine => $"{EliteLabel} · Lv.{Level.Rank}";
 
+    /// <summary>表格等级列里跟在精英阶段后面的短标记。</summary>
+    public string RankMark => $"Lv.{Level.Rank}";
+
+    /// <summary>
+    /// 表格「精英 / 等级」列的排序键：先比精英阶段，再比等级数字。
+    /// DataGrid 只能给可比较的标量挂 SortMemberPath，<see cref="Level"/> 本身不行。
+    /// </summary>
+    public int LevelSortKey => Level.EliteLevel * 1000 + Level.Rank;
+
     /// <summary>稀有度短标记，例如 6★。</summary>
     public string RarityMark => $"{Star}★";
 
-    /// <summary>卡片勾选旁的固定文案，入池状态不只靠颜色区分。</summary>
-    public string PoolCheckLabel => "入池";
-
     /// <summary>
-    /// 无障碍名称：把干员名与入池状态读成一句话，读屏不依赖颜色或勾选图形。
-    /// 卡片按钮与卡片内的入池勾选框共用它。
+    /// 无障碍名称：把干员名与入池状态读成一句话，读屏不依赖颜色。
     /// </summary>
     public string PoolAutomationName =>
         IsSelected ? $"{Name}，已加入随机池" : $"{Name}，未加入随机池";

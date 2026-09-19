@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Threading;
 
 namespace arknights_random_team.Views;
@@ -11,8 +12,8 @@ namespace arknights_random_team.Views;
 /// 桌面端的对话框展示方式：包装成真正的系统窗口并模态显示。
 ///
 /// 等价于改造前的写法（<c>Window</c> + <c>ShowDialog(owner)</c>）：
-/// 拥有系统标题栏、可拖动到屏幕任意位置、不受主窗口尺寸限制，
-/// 策略编辑器这类大窗口也能保持它自己的 960×740。
+/// 拥有与主窗口同一套自绘标题栏、可拖动到屏幕任意位置、不受主窗口尺寸限制，
+/// 策略编辑器这类大窗口也能保持它自己的客户区尺寸。
 /// </summary>
 public sealed class WindowPresenter : IModalPresenter
 {
@@ -109,8 +110,6 @@ internal sealed class ModalWindow : Window
 
     public ModalWindow(ModalContent content)
     {
-        Content = content;
-
         var contentWidth = content.Width;
         var contentHeight = content.Height;
         var fixedHeight = !double.IsNaN(contentHeight);
@@ -121,22 +120,35 @@ internal sealed class ModalWindow : Window
         {
             content.Width = double.NaN;
             content.Height = double.NaN;
-            content.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
-            content.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+            content.HorizontalAlignment = HorizontalAlignment.Stretch;
+            content.VerticalAlignment = VerticalAlignment.Stretch;
         }
         else
         {
-            content.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
-            content.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            content.HorizontalAlignment = HorizontalAlignment.Center;
+            content.VerticalAlignment = VerticalAlignment.Center;
         }
 
         var shell = Shells.TryGetValue(content.GetType(), out var known) ? known : ShellSpec.Unknown;
         Title = shell.Title;
         CanResize = shell.Resizable;
+        CanMinimize = false;
         if (shell.MinWidth > 0)
             MinWidth = shell.MinWidth;
         if (shell.MinHeight > 0)
-            MinHeight = shell.MinHeight;
+            MinHeight = shell.MinHeight + ThemedTitleBar.BarHeight;
+
+        var titleBar = new ThemedTitleBar
+        {
+            ShowMinimize = false,
+            ShowMaximize = shell.Resizable
+        };
+        var host = new DockPanel();
+        DockPanel.SetDock(titleBar, Dock.Top);
+        host.Children.Add(titleBar);
+        host.Children.Add(content);
+        Content = host;
+        ThemedWindowChrome.Apply(this);
 
         // 与改造前一致：居中于宿主、不占任务栏。
         ShowInTaskbar = false;
@@ -150,7 +162,9 @@ internal sealed class ModalWindow : Window
             : content.MaxWidth is > 0 and < double.PositiveInfinity
                 ? content.MaxWidth
                 : double.NaN;
-        Height = contentHeight;
+        Height = !double.IsNaN(contentHeight)
+            ? contentHeight + ThemedTitleBar.BarHeight
+            : contentHeight;
         if (double.IsNaN(contentWidth) && double.IsNaN(contentHeight))
             SizeToContent = SizeToContent.WidthAndHeight;
         else if (double.IsNaN(contentHeight))

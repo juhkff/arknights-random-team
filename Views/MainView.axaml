@@ -29,10 +29,12 @@
         </Style>
         <Style Selector="Button.nav-item:pointerover">
             <Setter Property="Background" Value="{StaticResource AppSidebarHoverBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="Button.nav-item:pressed">
             <Setter Property="Background" Value="{StaticResource AppSidebarPressedBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
         </Style>
         <Style Selector="Button.nav-item.active">
@@ -42,9 +44,11 @@
         </Style>
         <Style Selector="Button.nav-item.active:pointerover">
             <Setter Property="Background" Value="{StaticResource AppSidebarActiveHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.nav-item.active:pressed">
             <Setter Property="Background" Value="{StaticResource AppSidebarActivePressedBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.nav-item Border.nav-indicator">
             <Setter Property="Background" Value="{StaticResource AppPrimaryBrush}" />
@@ -54,6 +58,11 @@
             <Setter Property="Opacity" Value="1" />
         </Style>
         <Style Selector="Button.nav-item Path.nav-icon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Stretch" Value="None" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Stroke" Value="{StaticResource AppSidebarMutedBrush}" />
             <Setter Property="StrokeThickness" Value="1.6" />
             <Setter Property="StrokeLineCap" Value="Round" />
@@ -61,6 +70,12 @@
             <Setter Property="Fill" Value="Transparent" />
         </Style>
         <Style Selector="Button.nav-item.active Path.nav-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
+        <Style Selector="Button.nav-item:pointerover Path.nav-icon">
+            <Setter Property="Stroke" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="Button.nav-item.active:pointerover Path.nav-icon">
             <Setter Property="Stroke" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
         <Style Selector="Button.nav-item TextBlock.nav-label">
@@ -71,12 +86,20 @@
         <Style Selector="Button.nav-item.active TextBlock.nav-label">
             <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
         </Style>
+        <Style Selector="Button.nav-item:pointerover TextBlock.nav-label">
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="Button.nav-item.active:pointerover TextBlock.nav-label">
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+        </Style>
         <Style Selector="Button.nav-item.compact TextBlock.nav-label">
             <Setter Property="IsVisible" Value="False" />
         </Style>
         <Style Selector="Button.nav-item.compact">
             <Setter Property="MinHeight" Value="44" />
             <Setter Property="Height" Value="44" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
     </UserControl.Styles>
 
@@ -98,13 +121,19 @@
                                         Classes="icon"
                                         Width="40"
                                         Height="40"
+                                        Padding="0"
                                         Margin="0,0,12,0"
                                         VerticalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"
                                         IsVisible="False"
                                         AutomationProperties.Name="打开导航"
                                         Click="MenuButton_Click">
-                                    <Path Width="16" Height="16" Stretch="Uniform"
-                                          Stroke="{StaticResource AppTextBrush}" StrokeThickness="1.6"
+                                    <Path Width="16" Height="16"
+                                          Stretch="None"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          StrokeThickness="1.6"
                                           StrokeLineCap="Round"
                                           Data="M 2,4 H 14 M 2,8 H 14 M 2,12 H 14" />
                                 </Button>

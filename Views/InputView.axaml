@@ -35,6 +35,11 @@
             <Setter Property="BorderBrush" Value="{StaticResource AppSignalBrush}" />
             <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
         </Style>
+        <Style Selector="ToggleButton.star-choice:checked:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppSignalBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppSignalBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+        </Style>
         <Style Selector="Border.sync-status.success">
             <Setter Property="Background" Value="{StaticResource AppAccentSoftBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource AppAccentBrush}" />
@@ -84,14 +89,11 @@
                         <Grid Grid.Column="2" RowDefinitions="Auto,Auto" ColumnDefinitions="*,10,*">
                             <StackPanel Grid.Row="0" Grid.Column="0" Spacing="8">
                                 <TextBlock Classes="field-label" Text="精英阶段" />
-                                <TextBox Name="EliteTextBox"
-                                         Classes="form-control dense"
-                                         HorizontalAlignment="Stretch"
-                                         Text="2"
-                                         PlaceholderText="0–2"
-                                         InputMethod.IsInputMethodEnabled="False"
-                                         TextChanged="EliteTextBox_TextChanged"
-                                         LostFocus="EliteTextBox_LostFocus" />
+                                <ComboBox Name="EliteCombo"
+                                          Classes="form-control dense"
+                                          HorizontalAlignment="Stretch"
+                                          PlaceholderText="选择精英"
+                                          SelectionChanged="EliteCombo_SelectionChanged" />
                             </StackPanel>
                             <StackPanel Grid.Row="0" Grid.Column="2" Spacing="8">
                                 <TextBlock Classes="field-label" Text="当前等级" />
@@ -99,9 +101,12 @@
                                          Classes="form-control dense"
                                          HorizontalAlignment="Stretch"
                                          Text="1"
+                                         MaxLength="2"
                                          PlaceholderText="1–90"
                                          InputMethod.IsInputMethodEnabled="False"
                                          TextChanged="RankTextBox_TextChanged"
+                                         KeyDown="RankTextBox_KeyDown"
+                                         TextInput="RankTextBox_TextInput"
                                          LostFocus="RankTextBox_LostFocus" />
                             </StackPanel>
                             <TextBlock Name="LevelError"

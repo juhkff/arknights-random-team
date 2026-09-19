@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 
 namespace arknights_random_team.Views;
 
@@ -53,6 +54,7 @@ public sealed class ArtBitmap : Control
             _ => (Bounds.Height - size.Height) / 2
         };
         var destination = new Rect(new Point((Bounds.Width - size.Width) / 2, y), size);
+        using (context.PushRenderOptions(new RenderOptions { BitmapInterpolationMode = BitmapInterpolationMode.HighQuality }))
         using (context.PushClip(new Rect(Bounds.Size)))
             context.DrawImage(source, new Rect(source.Size), destination);
     }

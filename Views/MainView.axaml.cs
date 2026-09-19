@@ -21,7 +21,7 @@ public partial class MainView : UserControl
     private readonly InputView _input = new();
     private readonly StaffListView _list = new();
     private readonly RandomStrategyView _randomStrategy = new();
-    private readonly ArtPrefetcher _artPrefetcher = new();
+    private readonly ArtPrefetcher _artPrefetcher = ArtPrefetcher.Shared;
     private bool _drawerOpen;
 
     public MainView()

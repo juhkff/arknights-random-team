@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Media;
 using arknights_random_team;
 
 namespace arknights_random_team.Desktop;
@@ -44,5 +45,16 @@ internal static class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
+            .With(new FontManagerOptions
+            {
+                DefaultFamilyName = AppFonts.EmbeddedCjkFamily,
+                FontFallbacks =
+                [
+                    new FontFallback { FontFamily = new FontFamily("Inter") },
+                    new FontFallback { FontFamily = new FontFamily("Microsoft YaHei UI") },
+                    new FontFallback { FontFamily = new FontFamily("Microsoft YaHei") },
+                    new FontFallback { FontFamily = new FontFamily("PingFang SC") }
+                ]
+            })
             .LogToTrace();
 }
