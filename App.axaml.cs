@@ -19,7 +19,9 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         // Decode roster art while the window and first page are still being constructed.
-        ArtPrefetcher.Shared.Attach();
+        // 浏览器端不预热整份名单：WASM 内存有限，只按可见区域加载。
+        if (!OperatingSystem.IsBrowser())
+            ArtPrefetcher.Shared.Attach();
 
         switch (ApplicationLifetime)
         {

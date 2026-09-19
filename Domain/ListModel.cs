@@ -566,7 +566,7 @@ public class ListModel : AutomaticNotify
     /// <summary>卡片模式现在固定使用半身像；旧头像/立绘偏好只负责迁移到这里。</summary>
     public bool IsHalfBodyView => _isCardView;
 
-    /// <summary>全名单预热进度，例如「图片就绪 120/668 · 准备中」。</summary>
+    /// <summary>全名单预热进度；浏览器不预热，显示按需加载说明。</summary>
     public string ArtPreloadText => Views.ArtImage.PreloadSummary;
 
     /// <summary>解码缓存占用，例如「内存图片 12 张 · 4.5 / 256 MiB」。</summary>

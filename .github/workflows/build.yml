@@ -2,10 +2,7 @@ name: Build and Publish
 
 on:
   push:
-    branches: ["master"]
     tags: ["v*"]
-  pull_request:
-    branches: ["master"]
   workflow_dispatch:
 
 permissions:
@@ -123,11 +120,72 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - name: Download published artifacts
         uses: actions/download-artifact@v4
         with:
           path: release-assets
           merge-multiple: true
+
+      # 提交分类说明写在前面；--generate-notes 仍会把已合并 PR 和 Full Changelog 接在后面。
+      - name: Generate commit notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          prev="$(git tag --list 'v*' --sort=-version:refname | awk -v t="$TAG" '$0 != t { print; exit }')"
+          if [ -n "$prev" ]; then
+            range="$prev..$TAG"
+          else
+            range="$TAG"
+          fi
+
+          {
+            echo "## 更新说明"
+            echo
+
+            commits="$(git log --no-merges --pretty=tformat:'%s' "$range")"
+            if [ -z "$commits" ]; then
+              echo "此版本没有新的提交。"
+            else
+              write_section() {
+                local title="$1"
+                local pattern="$2"
+                local items
+                items="$(printf '%s\n' "$commits" | grep -E "$pattern" || true)"
+                if [ -n "$items" ]; then
+                  echo "### $title"
+                  echo
+                  printf '%s\n' "$items" | sed -E 's/^[a-z]+(\([^)]+\))?(!)?:[[:space:]]*//' | sed 's/^/- /'
+                  echo
+                fi
+              }
+
+              write_section "新功能" '^feat(\(|:|!)'
+              write_section "问题修复" '^fix(\(|:|!)'
+              write_section "性能" '^perf(\(|:|!)'
+              write_section "重构" '^refactor(\(|:|!)'
+              write_section "界面样式" '^style(\(|:|!)'
+              write_section "文档" '^docs(\(|:|!)'
+              write_section "测试" '^test(\(|:|!)'
+              write_section "构建与 CI" '^(build|ci|chore)(\(|:|!)'
+
+              others="$(printf '%s\n' "$commits" | grep -Ev '^(feat|fix|perf|refactor|style|docs|test|build|ci|chore)(\(|:|!)' || true)"
+              if [ -n "$others" ]; then
+                echo "### 其他"
+                echo
+                printf '%s\n' "$others" | sed 's/^/- /'
+                echo
+              fi
+            fi
+          } > RELEASE_NOTES.md
+
+          cat RELEASE_NOTES.md
 
       - name: Create release and upload assets
         env:
@@ -137,5 +195,6 @@ jobs:
           release-assets/*
           --repo "${{ github.repository }}"
           --title "${{ github.ref_name }}"
+          --notes-file RELEASE_NOTES.md
           --generate-notes
           --verify-tag

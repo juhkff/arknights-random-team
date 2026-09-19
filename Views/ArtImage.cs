@@ -16,14 +16,15 @@ namespace arknights_random_team.Views;
 /// </summary>
 public static class ArtImage
 {
-    /// <summary>同时进行的下载数上限。</summary>
-    private const int MaxConcurrent = 6;
+    /// <summary>同时进行的下载数上限。浏览器并发更保守，避免 WASM 解码把内存顶满。</summary>
+    private static readonly int MaxConcurrent = OperatingSystem.IsBrowser() ? 3 : 6;
 
     // A 180x360 portrait plus a 180x180 avatar costs about 380 KiB per operator.
     // Desktop can retain a full roster without creating offscreen card controls.
-    private static readonly int DefaultMaxCachedBitmaps = OperatingSystem.IsBrowser() ? 1024 : 2048;
+    // Browser only keeps what the viewport recently used; full-roster warmup is disabled.
+    private static readonly int DefaultMaxCachedBitmaps = OperatingSystem.IsBrowser() ? 256 : 2048;
     private static readonly long DefaultMaxCachedBytes =
-        (OperatingSystem.IsBrowser() ? 128L : 256L) * 1024 * 1024;
+        (OperatingSystem.IsBrowser() ? 48L : 256L) * 1024 * 1024;
 
     /// <summary>
     /// 邻近预取范围（逻辑像素）。可见区外再往前一屏左右就开始下载，
@@ -49,7 +50,8 @@ public static class ArtImage
     private static readonly SemaphoreSlim Gate = new(MaxConcurrent, MaxConcurrent);
     // Visible controls only. Background warming uses PrefetchGate so it cannot exhaust
     // the slots that the operator list needs when it first appears.
-    private static readonly SemaphoreSlim ForegroundGate = new(4, 4);
+    private static readonly int ForegroundSlots = OperatingSystem.IsBrowser() ? 2 : 4;
+    private static readonly SemaphoreSlim ForegroundGate = new(ForegroundSlots, ForegroundSlots);
     private static readonly SemaphoreSlim PrefetchGate = new(1, 1);
     private static readonly ConcurrentDictionary<Uri, LoadEntry<byte[]>> Downloads = new();
     private static int _foregroundLoads;
@@ -80,6 +82,8 @@ public static class ArtImage
         get
         {
             var groups = Volatile.Read(ref _preloadGroups);
+            if (groups.Length == 0)
+                return OperatingSystem.IsBrowser() ? "可见区域按需加载" : "图片就绪 0/0";
             var ready = groups.Count(IsPrepared);
             var suffix = ready == groups.Length ? "" : PreloadCapacityReached ? " · 已达缓存预算" :
                 Volatile.Read(ref _preloadFinished) == 0 ? " · 准备中" : $" · {groups.Length - ready} 张待加载或重试";

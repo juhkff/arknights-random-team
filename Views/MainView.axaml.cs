@@ -28,6 +28,13 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
 
+        if (OperatingSystem.IsBrowser())
+        {
+            ShellTitleBar.IsVisible = true;
+            ShellTitleBar.ChromeTitle = "明日方舟随机阵容";
+            ShellTitleBar.ShowCaptionButtons = false;
+        }
+
         if (AppHost.Presenter?.Overlay is { } overlay)
             DialogHost.Content = overlay;
 
@@ -74,12 +81,14 @@ public partial class MainView : UserControl
         {
             AppNavigation.Requested -= OnNavigationRequested;
             AppNavigation.Requested += OnNavigationRequested;
-            _artPrefetcher.Attach();
+            if (!OperatingSystem.IsBrowser())
+                _artPrefetcher.Attach();
         };
         DetachedFromVisualTree += (_, _) =>
         {
             AppNavigation.Requested -= OnNavigationRequested;
-            _artPrefetcher.Detach();
+            if (!OperatingSystem.IsBrowser())
+                _artPrefetcher.Detach();
         };
         PropertyChanged += OnViewPropertyChanged;
         KeyDown += OnShellKeyDown;

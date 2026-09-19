@@ -91,21 +91,6 @@ public sealed class WindowPresenter : IModalPresenter
 /// </summary>
 internal sealed class ModalWindow : Window
 {
-    /// <summary>
-    /// 与改造前各对话框 <c>Title</c>、<c>CanResize</c> 一致；顺带保留各窗口原来的最小尺寸。
-    /// 内容上的 MinWidth/MinHeight 是为网页端留的宽松值（窄屏不能被撑破），
-    /// 桌面窗口则还原成改造前的原值。
-    /// </summary>
-    private static readonly Dictionary<Type, ShellSpec> Shells = new()
-    {
-        [typeof(AlertDialog)] = new("提示", Resizable: false, MinWidth: 0, MinHeight: 0),
-        [typeof(ConfirmDialog)] = new("确认操作", Resizable: false, MinWidth: 0, MinHeight: 0),
-        [typeof(StaffPickDialog)] = new("选择干员", Resizable: false, MinWidth: 420, MinHeight: 460),
-        [typeof(StaffDetailDialog)] = new("干员详情", Resizable: false, MinWidth: 0, MinHeight: 0),
-        [typeof(OperatorSyncDialog)] = new("同步干员", Resizable: false, MinWidth: 0, MinHeight: 0),
-        [typeof(StrategyEditorDialog)] = new("编辑随机策略", Resizable: true, MinWidth: 760, MinHeight: 600)
-    };
-
     private readonly TaskCompletionSource _closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public ModalWindow(ModalContent content)
@@ -129,7 +114,7 @@ internal sealed class ModalWindow : Window
             content.VerticalAlignment = VerticalAlignment.Center;
         }
 
-        var shell = Shells.TryGetValue(content.GetType(), out var known) ? known : ShellSpec.Unknown;
+        var shell = DialogShell.For(content.GetType());
         Title = shell.Title;
         CanResize = shell.Resizable;
         CanMinimize = false;
@@ -140,6 +125,7 @@ internal sealed class ModalWindow : Window
 
         var titleBar = new ThemedTitleBar
         {
+            ChromeTitle = shell.Title,
             ShowMinimize = false,
             ShowMaximize = shell.Resizable
         };
@@ -223,12 +209,5 @@ internal sealed class ModalWindow : Window
 
         e.Handled = true;
         CloseWith(EscapeResult);
-    }
-
-    /// <summary>一个对话框外壳的规格：窗口标题、是否可缩放，以及改造前的最小尺寸。</summary>
-    private readonly record struct ShellSpec(string Title, bool Resizable, double MinWidth, double MinHeight)
-    {
-        /// <summary>未登记的对话框：不改标题，也不额外限制。</summary>
-        public static ShellSpec Unknown { get; } = new("对话框", Resizable: false, MinWidth: 0, MinHeight: 0);
     }
 }

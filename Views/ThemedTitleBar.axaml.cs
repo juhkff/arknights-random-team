@@ -7,9 +7,8 @@ using Avalonia.VisualTree;
 namespace arknights_random_team.Views;
 
 /// <summary>
-/// 画在窗口客户区里的标题栏。必须放在 <see cref="Window"/> 的内容树中，
-/// Win32 才能把 <c>ElementRole=TitleBar</c> 命中成拖动区域。
-/// 三个窗控按钮用 <c>ElementRole=User</c>，避免被当成系统最大化热区弹出贴靠布局。
+/// 作战终端顶栏。桌面窗口里负责拖动和窗控；浏览器与叠加层只显示同一套视觉，不创建系统窗口。
+/// 窗控按钮用 <c>ElementRole=User</c>，避免被当成系统最大化热区弹出贴靠布局。
 /// </summary>
 public partial class ThemedTitleBar : UserControl
 {
@@ -19,9 +18,19 @@ public partial class ThemedTitleBar : UserControl
 
     public ThemedTitleBar() => InitializeComponent();
 
+    /// <summary>覆盖窗口标题。浏览器和叠加层没有 <see cref="Window.Title"/> 时用这个。</summary>
+    public string? ChromeTitle { get; set; }
+
+    public bool ShowCaptionButtons { get; set; } = true;
+
     public bool ShowMinimize { get; set; } = true;
 
     public bool ShowMaximize { get; set; } = true;
+
+    public bool ShowClose { get; set; } = true;
+
+    /// <summary>没有宿主窗口时，关闭按钮走这条事件（浏览器叠加层）。</summary>
+    public event EventHandler? CloseClicked;
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
@@ -30,14 +39,9 @@ public partial class ThemedTitleBar : UserControl
         base.OnAttachedToVisualTree(e);
         DetachWindow();
         _window = TopLevel.GetTopLevel(this) as Window;
-        if (_window is null)
-            return;
-
-        MinButton.IsVisible = ShowMinimize && _window.CanMinimize;
-        MaxButton.IsVisible = ShowMaximize && _window.CanResize;
-        TitleText.Text = _window.Title;
-        _window.PropertyChanged += OnWindowPropertyChanged;
-        UpdateMaximizeGlyph();
+        if (_window is not null)
+            _window.PropertyChanged += OnWindowPropertyChanged;
+        ApplyChrome();
     }
 
     protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
@@ -54,18 +58,33 @@ public partial class ThemedTitleBar : UserControl
         _window = null;
     }
 
+    private void ApplyChrome()
+    {
+        TitleText.Text = !string.IsNullOrWhiteSpace(ChromeTitle)
+            ? ChromeTitle
+            : _window?.Title ?? "明日方舟随机阵容";
+
+        var captions = ShowCaptionButtons;
+        CaptionButtons.IsVisible = captions;
+        MinButton.IsVisible = captions && ShowMinimize && (_window?.CanMinimize ?? false);
+        MaxButton.IsVisible = captions && ShowMaximize && (_window?.CanResize ?? ShowMaximize);
+        CloseButton.IsVisible = captions && ShowClose;
+        UpdateMaximizeGlyph();
+    }
+
     private void OnWindowPropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
     {
         if (_window is null)
             return;
-        if (e.Property == Window.TitleProperty)
+        if (e.Property == Window.TitleProperty && string.IsNullOrWhiteSpace(ChromeTitle))
             TitleText.Text = _window.Title;
         else if (e.Property == Window.WindowStateProperty)
             UpdateMaximizeGlyph();
-        else if (e.Property == Window.CanMinimizeProperty)
-            MinButton.IsVisible = ShowMinimize && _window.CanMinimize;
-        else if (e.Property == Window.CanResizeProperty || e.Property == Window.CanMaximizeProperty)
-            MaxButton.IsVisible = ShowMaximize && _window.CanResize;
+        else if (e.Property is not null &&
+                 (e.Property == Window.CanMinimizeProperty ||
+                  e.Property == Window.CanResizeProperty ||
+                  e.Property == Window.CanMaximizeProperty))
+            ApplyChrome();
     }
 
     private void UpdateMaximizeGlyph()
@@ -101,7 +120,16 @@ public partial class ThemedTitleBar : UserControl
 
     private void Maximize_Click(object? sender, RoutedEventArgs e) => ToggleMaximize();
 
-    private void Close_Click(object? sender, RoutedEventArgs e) => _window?.Close();
+    private void Close_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_window is not null)
+        {
+            _window.Close();
+            return;
+        }
+
+        CloseClicked?.Invoke(this, EventArgs.Empty);
+    }
 
     private void ToggleMaximize()
     {

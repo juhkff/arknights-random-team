@@ -93,17 +93,44 @@ public sealed class OverlayPresenter : IModalPresenter
             dialog.VerticalAlignment = VerticalAlignment.Center;
         }
 
+        var spec = DialogShell.For(dialog.GetType());
+        var chrome = ThemedTitleBar.BarHeight;
+        if (!double.IsNaN(contentHeight))
+            contentHeight += chrome;
+        var requestedHeight = !double.IsNaN(contentHeight)
+            ? contentHeight
+            : dialog.MinHeight > 0 ? dialog.MinHeight + chrome : 0;
+
         // 小屏全屏：复杂编辑面板在 <600 档铺满可用空间，不再留一圈居中卡片。
         // 另外「高度不够」时也要全屏：844×390 这类横屏短屏宽度上不属于手机档，
         // 但把 960×440 的编辑器塞进 358 高的居中卡片只会把底部按钮挤出可视区。
         // 这里只做首次判定；宿主尺寸变化后会由 UpdateSizing 重新判定。
         var hostHeight = Overlay.Bounds.Height;
-        var requestedHeight = !double.IsNaN(contentHeight) ? contentHeight : dialog.MinHeight;
         var fullScreenOnPhone = ShouldFillHost(dialog, requestedHeight, hostHeight);
+
+        var titleBar = new ThemedTitleBar
+        {
+            ChromeTitle = spec.Title,
+            ShowCaptionButtons = true,
+            ShowMinimize = false,
+            ShowMaximize = false,
+            ShowClose = true
+        };
+        titleBar.CloseClicked += (_, _) =>
+        {
+            var match = _stack.FindLast(entry => ReferenceEquals(entry.Dialog, dialog));
+            if (match is not null)
+                Dismiss(match);
+        };
+
+        var host = new DockPanel();
+        DockPanel.SetDock(titleBar, Dock.Top);
+        host.Children.Add(titleBar);
+        host.Children.Add(dialog);
 
         var card = new Border
         {
-            Child = dialog,
+            Child = host,
             Background = CardBackground(dialog.Background),
             BorderBrush = CardBorderBrush,
             BorderThickness = fullScreenOnPhone ? new Thickness(0) : new Thickness(1),

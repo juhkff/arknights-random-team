@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:Material.Styles.Controls;assembly=Material.Styles"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
              d:DesignWidth="1240"
              d:DesignHeight="820"
@@ -103,7 +104,11 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid>
+    <DockPanel>
+        <views:ThemedTitleBar Name="ShellTitleBar"
+                              DockPanel.Dock="Top"
+                              IsVisible="False" />
+        <Grid>
         <controls:SnackbarHost HostName="MainSnackbar"
                                SnackbarHorizontalAlignment="Center"
                                SnackbarVerticalAlignment="Bottom">
@@ -290,4 +295,5 @@
                         HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Stretch" />
     </Grid>
+    </DockPanel>
 </UserControl>
