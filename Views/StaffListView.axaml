@@ -184,6 +184,8 @@
             <Setter Property="Padding" Value="8,4" />
         </Style>
         <Style Selector="DataGrid#StaffGrid DataGridCell TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
             <Setter Property="TextWrapping" Value="NoWrap" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
@@ -750,7 +752,9 @@
                             </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <Grid ColumnDefinitions="Auto,*"
+                                    <!-- 名字必须占 * 列：横排 StackPanel 在 WASM 上常把剩余宽度算成 0，
+                                         CharacterEllipsis 就会把整段名字画没。 -->
+                                    <Grid ColumnDefinitions="Auto,Auto,*"
                                           Margin="-4,0,0,0"
                                           HorizontalAlignment="Stretch"
                                           VerticalAlignment="Stretch"
@@ -768,55 +772,58 @@
                                                 </LinearGradientBrush>
                                             </Border.Background>
                                         </Border>
-                                        <StackPanel Grid.Column="1"
-                                                    Orientation="Horizontal"
-                                                    HorizontalAlignment="Left"
-                                                    VerticalAlignment="Center"
-                                                    Spacing="10"
-                                                    Margin="10,0,8,0">
-                                            <Panel Width="40" Height="40">
-                                                <Border Width="40"
-                                                        Height="40"
-                                                        CornerRadius="{StaticResource AppRadiusControl}"
-                                                        ClipToBounds="True"
-                                                        Background="{StaticResource AppWellBrush}"
-                                                        BorderBrush="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.PoolRing}}"
-                                                        BorderThickness="1">
-                                                    <views:StaffThumb Sources="{Binding AvatarUris}"
-                                                                      PlaceholderSources="{Binding CareerIconUris}"
-                                                                      PlaceholderSize="18"
-                                                                      PlaceholderOpacity="0.75" />
-                                                </Border>
-                                                <Border Width="15"
-                                                        Height="15"
-                                                        Margin="0,0,-3,-3"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Bottom"
-                                                        Background="#E609251F"
-                                                        BorderBrush="{StaticResource AppPrimaryBrush}"
-                                                        BorderThickness="1"
-                                                        CornerRadius="{StaticResource AppRadiusPill}"
-                                                        IsHitTestVisible="False"
-                                                        Opacity="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.PoolOpacity}}">
-                                                    <Path Width="8"
-                                                          Height="8"
-                                                          Stretch="Uniform"
-                                                          Stroke="{StaticResource AppPrimaryBrush}"
-                                                          StrokeThickness="1.6"
-                                                          StrokeLineCap="Round"
-                                                          StrokeJoin="Round"
-                                                          Fill="Transparent"
-                                                          Data="M 1,5 L 3.4,7.4 L 8,2" />
-                                                </Border>
-                                            </Panel>
-                                            <TextBlock FontWeight="SemiBold"
-                                                       FontSize="14"
-                                                       VerticalAlignment="Center"
-                                                       TextAlignment="Left"
-                                                       TextWrapping="NoWrap"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Text="{Binding Name}" />
-                                        </StackPanel>
+                                        <Panel Grid.Column="1"
+                                               Width="40"
+                                               Height="40"
+                                               Margin="10,0,10,0"
+                                               VerticalAlignment="Center">
+                                            <Border Width="40"
+                                                    Height="40"
+                                                    CornerRadius="{StaticResource AppRadiusControl}"
+                                                    ClipToBounds="True"
+                                                    Background="{StaticResource AppWellBrush}"
+                                                    BorderBrush="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.PoolRing}}"
+                                                    BorderThickness="1">
+                                                <views:StaffThumb Sources="{Binding AvatarUris}"
+                                                                  PlaceholderSources="{Binding CareerIconUris}"
+                                                                  PlaceholderSize="18"
+                                                                  PlaceholderOpacity="0.75" />
+                                            </Border>
+                                            <Border Width="15"
+                                                    Height="15"
+                                                    Margin="0,0,-3,-3"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Bottom"
+                                                    Background="#E609251F"
+                                                    BorderBrush="{StaticResource AppPrimaryBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="{StaticResource AppRadiusPill}"
+                                                    IsHitTestVisible="False"
+                                                    Opacity="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.PoolOpacity}}">
+                                                <Path Width="8"
+                                                      Height="8"
+                                                      Stretch="Uniform"
+                                                      Stroke="{StaticResource AppPrimaryBrush}"
+                                                      StrokeThickness="1.6"
+                                                      StrokeLineCap="Round"
+                                                      StrokeJoin="Round"
+                                                      Fill="Transparent"
+                                                      Data="M 1,5 L 3.4,7.4 L 8,2" />
+                                            </Border>
+                                        </Panel>
+                                        <TextBlock Grid.Column="2"
+                                                   Margin="0,0,8,0"
+                                                   FontFamily="{StaticResource AppFont}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource AppTextBrush}"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Stretch"
+                                                   TextAlignment="Left"
+                                                   TextWrapping="NoWrap"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Text="{Binding Name}"
+                                                   ToolTip.Tip="{Binding Name}" />
                                     </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -882,8 +889,10 @@
                                                    Stretch="Uniform"
                                                    views:ArtImage.Sources="{Binding CareerIconUris}" />
                                             <TextBlock VerticalAlignment="Center"
+                                                       FontFamily="{StaticResource AppFont}"
                                                        FontSize="12"
                                                        FontWeight="SemiBold"
+                                                       Foreground="{StaticResource AppTextBrush}"
                                                        TextAlignment="Center"
                                                        TextWrapping="NoWrap"
                                                        Text="{Binding CareerName}" />
@@ -918,8 +927,10 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
                                                     Spacing="6">
-                                            <TextBlock FontSize="12"
+                                            <TextBlock FontFamily="{StaticResource AppFont}"
+                                                       FontSize="12"
                                                        FontWeight="SemiBold"
+                                                       Foreground="{StaticResource AppTextBrush}"
                                                        VerticalAlignment="Center"
                                                        Text="{Binding EliteLabel}" />
                                             <TextBlock FontSize="12"
