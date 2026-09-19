@@ -95,10 +95,10 @@
 
                                     <Expander Grid.Row="2"
                                               Classes="rules"
-                                              IsExpanded="{Binding Rules, Mode=OneTime, Converter={x:Static views:RulesVisual.DefaultExpanded}}">
+                                              IsExpanded="{Binding Rules.Count, Mode=OneTime, Converter={x:Static views:RulesVisual.DefaultExpanded}}">
                                         <Expander.Header>
                                             <TextBlock VerticalAlignment="Center"
-                                                       Text="{Binding Rules, Converter={x:Static views:RulesVisual.Header}}" />
+                                                       Text="{Binding Rules.Count, Converter={x:Static views:RulesVisual.Header}}" />
                                         </Expander.Header>
                                         <ItemsControl ItemsSource="{Binding Rules}">
                                             <ItemsControl.ItemTemplate>

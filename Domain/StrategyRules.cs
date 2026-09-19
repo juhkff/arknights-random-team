@@ -24,7 +24,7 @@ public static class StrategyRules
             return false;
 
         var max = AppOptions.MaxTeamSize;
-        if (merged.RarityExact.Values.Sum() > max)
+        if (merged.RarityExact.Values.Sum(value => (long)value) > max)
         {
             error = $"策略中各稀有度固定人数之和超过了随机数量上限（{max}）。";
             return false;
@@ -58,12 +58,22 @@ public static class StrategyRules
         merged = new Merged();
         error = "";
 
+        var max = AppOptions.MaxTeamSize;
         foreach (var r in rules)
         {
+            if (r is null)
+            {
+                error = "策略中包含空规则。";
+                return false;
+            }
+
             if (r.Kind == StrategyRuleKind.Rarity)
             {
-                if (r.Star is < 1 or > 6 || r.Count <= 0)
-                    continue;
+                if (r.Star is < FieldLimits.MinStar or > FieldLimits.MaxStar || r.Count <= 0 || r.Count > max)
+                {
+                    error = "稀有度规则的星级或人数超出合法范围。";
+                    return false;
+                }
                 if (rarityExact.TryGetValue(r.Star, out var prev) && prev != r.Count)
                 {
                     error = $"策略中对 {r.Star} 星同时要求了 {prev} 人和 {r.Count} 人，互相冲突。";
@@ -74,16 +84,19 @@ public static class StrategyRules
             }
             else if (r.Kind == StrategyRuleKind.Career)
             {
-                if (r.Count <= 0)
-                    continue;
+                if (!Enum.IsDefined(r.Career) || r.Count <= 0 || r.Count > max)
+                {
+                    error = "职业规则的职业或人数超出合法范围。";
+                    return false;
+                }
                 if (!TryApplyCareerExact(careerExact, careerRange, r.Career, r.Count, out error))
                     return false;
             }
             else if (r.Kind == StrategyRuleKind.CareerRange)
             {
-                if (r.Count > r.CountMax || r.Count < 0)
+                if (!Enum.IsDefined(r.Career) || r.Count > r.CountMax || r.Count < 0 || r.CountMax > max)
                 {
-                    error = $"策略中「{r.Career}」的数量范围下限大于上限，或下限为负数。";
+                    error = $"策略中「{r.Career}」的职业无效，或数量范围超出合法范围。";
                     return false;
                 }
 
@@ -93,8 +106,11 @@ public static class StrategyRules
             else if (r.Kind == StrategyRuleKind.StaffSubsetExact)
             {
                 var names = NormalizeStaffNames(r.StaffNames);
-                if (names.Count == 0 || r.Count < 0)
-                    continue;
+                if (names.Count == 0 || r.Count < 0 || r.Count > max)
+                {
+                    error = "「某些干员总数」的名单为空，或固定人数超出合法范围。";
+                    return false;
+                }
                 if (r.Count > names.Count)
                 {
                     error = "「某些干员总数」的固定人数大于名单中的干员种类数。";
@@ -108,10 +124,13 @@ public static class StrategyRules
             {
                 var names = NormalizeStaffNames(r.StaffNames);
                 if (names.Count == 0)
-                    continue;
-                if (r.Count > r.CountMax || r.Count < 0)
                 {
-                    error = "「某些干员总数」的数量范围下限大于上限，或下限为负数。";
+                    error = "「某些干员总数」的名单不能为空。";
+                    return false;
+                }
+                if (r.Count > r.CountMax || r.Count < 0 || r.CountMax > max)
+                {
+                    error = "「某些干员总数」的数量范围超出合法范围。";
                     return false;
                 }
 
@@ -123,6 +142,11 @@ public static class StrategyRules
 
                 if (!TryApplyStaffSubset(staffSubsets, names, isExact: false, lo: r.Count, hi: r.CountMax, out error))
                     return false;
+            }
+            else
+            {
+                error = "策略中包含未知规则类型。";
+                return false;
             }
         }
 
@@ -136,11 +160,11 @@ public static class StrategyRules
         return true;
     }
 
-    public static int MinCareerSlots(
+    public static long MinCareerSlots(
         IReadOnlyDictionary<Career, int> careerExact,
         IReadOnlyDictionary<Career, (int lo, int hi)> careerRange)
     {
-        var sum = 0;
+        long sum = 0;
         foreach (Career c in Enum.GetValues<Career>())
         {
             if (careerExact.TryGetValue(c, out var ex))

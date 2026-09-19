@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Data.Converters;
-using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 
@@ -12,25 +11,44 @@ namespace arknights_random_team.Views;
 /// </summary>
 public static class StaffCardVisual
 {
-    public const double MinCardWidth = 156;
-    public const double MaxCardWidth = 196;
-    public const double CardSpacing = 12;
-    public const double NameplateHeight = 68;
+    public const double MinCardWidth = 128;
+    public const double MaxCardWidth = 168;
+    public const double CardSpacing = 10;
+    public const double CardToolbarHeight = 36;
 
-    public static readonly IValueConverter ArtStretch =
-        new FuncValueConverter<bool, Stretch>(portrait =>
-            portrait ? Stretch.Uniform : Stretch.UniformToFill);
+    /// <summary>半身像主体的高宽比；SquadPortrait 自身按同一比例排布。</summary>
+    public const double HalfBodyRatio = 1.85d;
 
-    public static readonly IValueConverter ArtAlignment =
-        new FuncValueConverter<bool, VerticalAlignment>(portrait =>
-            portrait ? VerticalAlignment.Center : VerticalAlignment.Top);
+    /// <summary>
+    /// 按可用宽度算列数与实际单元宽度。
+    ///
+    /// 先定列数，再把单元宽度夹在 [<see cref="MinCardWidth"/>, <see cref="MaxCardWidth"/>] 之间，
+    /// 配合 <c>ItemsStretch="None"</c> 让半身像卡片保持稳定比例。
+    /// </summary>
+    public static (int Columns, double ItemWidth) FitColumns(double available, double spacing = CardSpacing)
+    {
+        if (available <= 0)
+            return (1, MinCardWidth);
+
+        // ItemsRepeater 12.0 UniformGridLayout estimates its extent/anchors using
+        // floor(available / (itemWidth + spacing)), including trailing spacing.
+        // Actual wrapping omits that trailing gap. Reserve it here too so both paths
+        // agree on the column count; whole DIPs also avoid floating-point boundaries.
+        var columns = Math.Max(1, (int)Math.Floor(available / (MinCardWidth + spacing)));
+        var width = Math.Floor(available / columns - spacing);
+        return (columns, Math.Clamp(width, 1, MaxCardWidth));
+    }
+
+    /// <summary>卡片高度由半身像主体与下方 36px 工具条推出。</summary>
+    public static double CardHeight(double itemWidth) =>
+        itemWidth * HalfBodyRatio + CardToolbarHeight;
 
     public static readonly IValueConverter PoolBorder =
         new FuncValueConverter<bool, IBrush>(selected =>
             Brush(selected ? "AppPrimaryBrush" : "AppBorderBrush"));
 
-    public static readonly IValueConverter IsArtPlaceholder =
-        new FuncValueConverter<ArtLoadState, bool>(state => state != ArtLoadState.Loaded);
+    public static readonly IValueConverter IsArtLoaded =
+        new FuncValueConverter<ArtLoadState, bool>(state => state == ArtLoadState.Loaded);
 
     /// <summary>星级标签：全站统一显示成「6★」，避免下拉框里只显示裸数字。</summary>
     public static readonly IValueConverter StarLabel =

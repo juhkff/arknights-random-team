@@ -7,8 +7,6 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Avalonia.Threading;
-using Avalonia.VisualTree;
 using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
@@ -50,7 +48,7 @@ public partial class StrategyEditorDialog : ModalContent
                 RestoreBackup();
         };
         UpdateRulesState();
-        StarCombo.SelectedItem = 6;
+        StarCombo.SelectedItem = FieldLimits.MaxStar;
         CareerCombo.SelectedItem = Career.先锋;
         CareerConstraintModeCombo.SelectionChanged += CareerConstraintModeCombo_SelectionChanged;
         StaffSubsetModeCombo.SelectionChanged += StaffSubsetModeCombo_SelectionChanged;
@@ -59,11 +57,9 @@ public partial class StrategyEditorDialog : ModalContent
         RefreshStaffSubsetTagPanel();
         UpdateSubmitButtonLabels();
 
-        // 窄屏重排：600–899 与 <600 都按单栏处理（方案 §5.1）。叠加层已经把对话框限制在
-        // host−32 之内，单栏之后窄屏只剩一列，等同于全屏编辑。
         ApplyEditorLayout();
-        AppLayout.Changed += ApplyEditorLayout;
-        DetachedFromVisualTree += (_, _) => AppLayout.Changed -= ApplyEditorLayout;
+        SizeChanged += (_, _) => ApplyEditorLayout();
+        Loaded += (_, _) => ApplyEditorLayout();
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
@@ -77,16 +73,22 @@ public partial class StrategyEditorDialog : ModalContent
         if (EditorBody is null || EditorSidebar is null || EditorForm is null)
             return;
 
-        var narrow = AppLayout.IsNarrow;
+        var width = Bounds.Width > 0
+            ? Bounds.Width
+            : !double.IsNaN(Width)
+                ? Width
+                : 960;
+        var narrow = width < 900;
         if (narrow)
         {
             EditorBody.ColumnDefinitions = new ColumnDefinitions("*");
             EditorBody.RowDefinitions = new RowDefinitions("Auto,16,*");
-            EditorBody.Margin = new Thickness(AppLayout.IsPhone ? 16 : 20);
+            EditorBody.Margin = new Thickness(width < 600 ? 16 : 20);
 
             Grid.SetColumn(EditorSidebar, 0);
             Grid.SetRow(EditorSidebar, 0);
             EditorSidebar.MaxHeight = 280;
+            EditorSidebar.ClipToBounds = true;
 
             Grid.SetColumn(EditorForm, 0);
             Grid.SetRow(EditorForm, 2);
@@ -100,6 +102,7 @@ public partial class StrategyEditorDialog : ModalContent
         Grid.SetColumn(EditorSidebar, 0);
         Grid.SetRow(EditorSidebar, 0);
         EditorSidebar.MaxHeight = double.PositiveInfinity;
+        EditorSidebar.ClipToBounds = false;
 
         Grid.SetColumn(EditorForm, 2);
         Grid.SetRow(EditorForm, 0);
@@ -141,7 +144,7 @@ public partial class StrategyEditorDialog : ModalContent
 
     private void ClearStrategyEntryFieldsInner()
     {
-        StarCombo.SelectedItem = 6;
+        StarCombo.SelectedItem = FieldLimits.MaxStar;
         RarityCountBox.Text = "";
         CareerCombo.SelectedItem = Career.先锋;
         CareerConstraintModeCombo.SelectedIndex = 0;
@@ -228,22 +231,6 @@ public partial class StrategyEditorDialog : ModalContent
         SetSectionEditing(CareerSection, _editingRule?.Kind is StrategyRuleKind.Career or StrategyRuleKind.CareerRange);
         SetSectionEditing(StaffSection,
             _editingRule?.Kind is StrategyRuleKind.StaffSubsetExact or StrategyRuleKind.StaffSubsetRange);
-        Dispatcher.UIThread.Post(SyncCancelEditButtons, DispatcherPriority.Loaded);
-    }
-
-    private void SyncCancelEditButtons()
-    {
-        var selected = RulesList.SelectedIndex;
-        for (var i = 0; i < RulesList.ItemCount; i++)
-        {
-            if (RulesList.ContainerFromIndex(i) is not Control container)
-                continue;
-            foreach (var button in container.GetVisualDescendants().OfType<Button>())
-            {
-                if (button.Classes.Contains("cancel-edit"))
-                    button.IsVisible = i == selected;
-            }
-        }
     }
 
     private static void SetSectionEditing(Border section, bool on) => section.Classes.Set("editing", on);
@@ -253,8 +240,7 @@ public partial class StrategyEditorDialog : ModalContent
         var idx = _target.Rules.IndexOf(oldRule);
         if (idx < 0)
             return;
-        _target.Rules.RemoveAt(idx);
-        _target.Rules.Insert(idx, newRule);
+        _target.Rules[idx] = newRule;
         ClearSelectionAndEdit();
     }
 

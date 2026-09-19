@@ -55,14 +55,17 @@ public sealed class FilterChip
 public class ListModel : AutomaticNotify
 {
     private readonly List<StaffSort> _sorts = [];
+    private readonly HashSet<Staff> _subscribedStaff = [];
     private string _searchText = "";
     private PoolFilterKind _poolFilter = PoolFilterKind.All;
     private int _sortIndex;
     private bool _isCardView;
-    private bool _usePortrait;
     private bool _isCompactTable;
     private bool _refreshing;
     private bool _editing;
+    private bool _active;
+
+    private bool IsPaused => AppState.IsBulkUpdating;
 
     public ObservableCollection<Staff> StaffList { get; }
 
@@ -77,8 +80,6 @@ public class ListModel : AutomaticNotify
     public int StaffCount => StaffList.Count;
 
     public int SelectedStaffCount => StaffList.Count(staff => staff.IsSelected);
-
-    public int UnselectedStaffCount => StaffCount - SelectedStaffCount;
 
     public int VisibleCount => VisibleStaff.Count;
 
@@ -112,11 +113,12 @@ public class ListModel : AutomaticNotify
     {
         StaffList = AppState.StaffList;
 
-        // 恢复上次的视图选择：方案要求「已有用户的选择应优先」，新用户仍是默认表格。
+        // Restore the persisted list view preference.
         var saved = AppState.UiPreferences;
+        // Avatar/Portrait are legacy persisted values; every non-table value now opens half-body cards.
         _isCardView = saved.ViewMode != StaffViewMode.Table;
-        _usePortrait = saved.ViewMode == StaffViewMode.Portrait;
         _isCompactTable = saved.IsCompactTable;
+        PersistViewMode();
 
         CareerFilters = Enum.GetValues<Career>()
             .Select(career => new FilterOption<Career>(career, career.ToString()) { Changed = RefreshVisible })
@@ -125,20 +127,31 @@ public class ListModel : AutomaticNotify
             .Select(star => new FilterOption<int>(star, $"{star}★") { Changed = RefreshVisible })
             .ToList();
 
-        StaffList.CollectionChanged += OnCollectionChanged;
-        Views.ArtImage.StatsChanged += (_, _) =>
-        {
-            OnPropertyChanged(nameof(ArtLoadInfo));
-            OnPropertyChanged(nameof(HasArtLoadFailures));
-        };
-
-        foreach (var staff in StaffList)
-        {
-            staff.PropertyChanged += OnStaffPropertyChanged;
-            staff.UsePortrait = _usePortrait;
-        }
-
         RefreshVisible();
+    }
+
+    public void Activate()
+    {
+        if (_active)
+            return;
+
+        _active = true;
+        StaffList.CollectionChanged += OnCollectionChanged;
+        foreach (var staff in StaffList)
+            Subscribe(staff);
+        RefreshVisible();
+    }
+
+    public void Deactivate()
+    {
+        if (!_active)
+            return;
+
+        _active = false;
+        StaffList.CollectionChanged -= OnCollectionChanged;
+        foreach (var staff in _subscribedStaff)
+            staff.PropertyChanged -= OnStaffPropertyChanged;
+        _subscribedStaff.Clear();
     }
 
     public string SearchText
@@ -297,18 +310,11 @@ public class ListModel : AutomaticNotify
     public void ApplyBatchPool(bool selected)
     {
         var targets = VisibleStaff.ToList();
-        _refreshing = true;
-        try
-        {
-            foreach (var staff in targets)
-                staff.IsSelected = selected;
-        }
-        finally
-        {
-            _refreshing = false;
-        }
 
-        RefreshVisible();
+        // Publish projection and count changes once for the whole batch.
+        using var scope = AppState.BeginBulkUpdate();
+        foreach (var staff in targets)
+            staff.IsSelected = selected;
     }
 
     public void BeginEdit() => _editing = true;
@@ -339,7 +345,13 @@ public class ListModel : AutomaticNotify
             _sorts.RemoveAt(index);
         }
 
-        SetProperty(ref _sortIndex, _sorts.Count == 1 ? IndexOfPath(_sorts[0].Path) : 0, nameof(SortIndex));
+        var selectorIndex = _sorts.Count switch
+        {
+            0 => 0,
+            1 => IndexOfPath(_sorts[0].Path),
+            _ => -1
+        };
+        SetProperty(ref _sortIndex, selectorIndex, nameof(SortIndex));
         NotifySorts();
         RefreshVisible();
     }
@@ -351,32 +363,66 @@ public class ListModel : AutomaticNotify
         return match is null ? null : match.Direction;
     }
 
+    /// <summary>Refreshes image diagnostics while the view is attached.</summary>
+    public void OnArtStatsChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(ArtLoadInfo));
+        OnPropertyChanged(nameof(HasArtLoadFailures));
+    }
+
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.OldItems != null)
+        if (e.Action == NotifyCollectionChangedAction.Reset)
         {
-            foreach (Staff staff in e.OldItems)
+            foreach (var staff in _subscribedStaff)
                 staff.PropertyChanged -= OnStaffPropertyChanged;
+            _subscribedStaff.Clear();
+            foreach (var staff in StaffList)
+                Subscribe(staff);
         }
-
-        if (e.NewItems != null)
+        else
         {
-            foreach (Staff staff in e.NewItems)
+            if (e.OldItems is not null)
             {
-                staff.PropertyChanged += OnStaffPropertyChanged;
-                staff.UsePortrait = _usePortrait;
+                foreach (Staff staff in e.OldItems)
+                    Unsubscribe(staff);
+            }
+
+            if (e.NewItems is not null)
+            {
+                foreach (Staff staff in e.NewItems)
+                    Subscribe(staff);
             }
         }
 
-        RefreshVisible();
+        if (!IsPaused)
+            RefreshVisible();
+    }
+
+    private void Subscribe(Staff staff)
+    {
+        if (!_subscribedStaff.Add(staff))
+            return;
+
+        staff.PropertyChanged += OnStaffPropertyChanged;
+    }
+
+    private void Unsubscribe(Staff staff)
+    {
+        if (_subscribedStaff.Remove(staff))
+            staff.PropertyChanged -= OnStaffPropertyChanged;
     }
 
     private void OnStaffPropertyChanged(object? sender, PropertyChangedEventArgs args)
     {
         if (args.PropertyName == nameof(Staff.IsSelected))
         {
-            NotifyCounts();
-            if (_poolFilter != PoolFilterKind.All)
+            if (IsPaused)
+                return;
+
+            if (_poolFilter == PoolFilterKind.All)
+                NotifyCounts();
+            else
                 RefreshVisible();
             return;
         }
@@ -384,7 +430,10 @@ public class ListModel : AutomaticNotify
         if (_editing)
             return;
 
-        if (AffectsProjection(args.PropertyName))
+        if (!AffectsProjection(args.PropertyName))
+            return;
+
+        if (!IsPaused)
             RefreshVisible();
     }
 
@@ -393,8 +442,7 @@ public class ListModel : AutomaticNotify
         nameof(Staff.Name) => !string.IsNullOrWhiteSpace(_searchText) || HasSort("Name"),
         nameof(Staff.Career) => CareerFilters.Any(item => item.IsChecked) || HasSort("Career"),
         nameof(Staff.Star) => RarityFilters.Any(item => item.IsChecked) || HasSort("Star"),
-        nameof(Staff.Level) or nameof(Staff.LevelDigits) or nameof(Staff.EliteLabel) or nameof(Staff.LevelLine)
-            => HasSort("Level"),
+        nameof(Staff.LevelLine) => HasSort("Level"),
         _ => false
     };
 
@@ -402,7 +450,7 @@ public class ListModel : AutomaticNotify
 
     public void RefreshVisible()
     {
-        if (_refreshing || _editing)
+        if (_editing || IsPaused || _refreshing)
             return;
 
         _refreshing = true;
@@ -435,6 +483,9 @@ public class ListModel : AutomaticNotify
             _refreshing = false;
         }
     }
+
+    /// <summary>批量更新结束后统一重建一次投影与汇总。</summary>
+    public void OnBulkUpdateCompleted() => RefreshVisible();
 
     /// <summary>
     /// 把当前筛选条件固化成一份可复用的投影条件。
@@ -511,7 +562,6 @@ public class ListModel : AutomaticNotify
         OnPropertyChanged(nameof(IsAllStaffSelected));
         OnPropertyChanged(nameof(StaffCount));
         OnPropertyChanged(nameof(SelectedStaffCount));
-        OnPropertyChanged(nameof(UnselectedStaffCount));
         OnPropertyChanged(nameof(VisibleCount));
         OnPropertyChanged(nameof(SummaryText));
         OnPropertyChanged(nameof(VisibleSummaryText));
@@ -541,44 +591,36 @@ public class ListModel : AutomaticNotify
 
     public bool IsGridView => !_isCardView;
 
-    public bool IsAvatarView => _isCardView && !_usePortrait;
+    /// <summary>卡片模式现在固定使用半身像；旧头像/立绘偏好只负责迁移到这里。</summary>
+    public bool IsHalfBodyView => _isCardView;
 
-    public bool IsPortraitView => _isCardView && _usePortrait;
-
-    public string ArtLoadInfo =>
-        Views.ArtImage.NetworkLoads == 0 && Views.ArtImage.DiskHits == 0
-            ? "立绘：尚未加载"
-            : $"立绘：网络 {Views.ArtImage.NetworkLoads} 张 · 内存命中 {Views.ArtImage.CacheHits} · 本地缓存 {Views.ArtImage.DiskHits}";
-
-    public bool HasArtLoadFailures => Views.ArtImage.FailedLoads > 0;
-
-    public bool UsePortrait
+    public string ArtLoadInfo
     {
-        get => _usePortrait;
-        set
+        get
         {
-            if (!SetProperty(ref _usePortrait, value))
-                return;
-
-            foreach (var staff in StaffList)
-                staff.UsePortrait = value;
-
-            PersistViewMode();
-            NotifyViewMode();
+            var image = Views.ArtImage.NetworkLoads == 0 && Views.ArtImage.DiskHits == 0
+                ? "图片：尚未加载"
+                : $"图片：网络 {Views.ArtImage.NetworkLoads} 张 · 内存命中 {Views.ArtImage.CacheHits} · 本地缓存 {Views.ArtImage.DiskHits}";
+            var result = $"{Views.ArtImage.PreloadSummary}\n{Views.ArtImage.CacheSummary}\n{image}";
+            return Views.ArtImage.CurrentFailedLoads > 0
+                ? $"{result}\n当前失败 {Views.ArtImage.CurrentFailedLoads} 张"
+                : result;
         }
     }
 
-    /// <summary>把当前视图选择写回偏好；桌面端退出时随其它数据一起落盘。</summary>
+    /// <summary>Whether any currently attached image exhausted all candidate sources.</summary>
+    public bool HasArtLoadFailures => Views.ArtImage.CurrentFailedLoads > 0;
+
+    /// <summary>把当前视图选择写回偏好；旧头像/立绘值不会再继续写出。</summary>
     private void PersistViewMode() =>
         AppState.UiPreferences.ViewMode = IsCardView
-            ? (UsePortrait ? StaffViewMode.Portrait : StaffViewMode.Avatar)
+            ? StaffViewMode.HalfBody
             : StaffViewMode.Table;
 
     private void NotifyViewMode()
     {
         OnPropertyChanged(nameof(IsGridView));
-        OnPropertyChanged(nameof(IsAvatarView));
-        OnPropertyChanged(nameof(IsPortraitView));
+        OnPropertyChanged(nameof(IsHalfBodyView));
         OnPropertyChanged(nameof(ShowGrid));
         OnPropertyChanged(nameof(ShowCards));
     }

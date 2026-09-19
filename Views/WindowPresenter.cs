@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 
 namespace arknights_random_team.Views;
 
@@ -33,22 +34,29 @@ public sealed class WindowPresenter : IModalPresenter
             EscapeResult = typeof(T) == typeof(bool) ? false : null
         };
 
-        // 有宿主窗口就模态显示（Owner 由 ShowDialog 内部设置）；
-        // 理论上不会没有，真没有时退化成普通窗口，避免整段对话框逻辑失效。
+        CancellationTokenRegistration registration = default;
+        if (cancellationToken.CanBeCanceled)
+        {
+            EventHandler? onClosed = null;
+            onClosed = (_, _) =>
+            {
+                window.Closed -= onClosed;
+                registration.Dispose();
+            };
+            window.Closed += onClosed;
+            registration = cancellationToken.Register(() =>
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (window.IsVisible)
+                        window.Close();
+                }));
+        }
+
+        // Use an owned modal window when possible, otherwise fall back to a regular window.
         if (owner is not null)
             window.ShowDialog(owner);
         else
             window.Show();
-
-        if (cancellationToken.CanBeCanceled)
-        {
-            var registration = cancellationToken.Register(() =>
-            {
-                if (window.IsVisible)
-                    window.Close();
-            });
-            window.Closed += (_, _) => registration.Dispose();
-        }
 
         return ReadResult<T>(window);
     }

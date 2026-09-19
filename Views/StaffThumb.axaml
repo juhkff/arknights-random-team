@@ -15,6 +15,11 @@
         <Style Selector="StackPanel.thumb-state.loading">
             <Setter Property="Opacity" Value="0.3" />
         </Style>
+        <!-- Keep the placeholder's measured size when the bitmap arrives. -->
+        <Style Selector="StackPanel.thumb-state.loaded">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+        </Style>
         <Style Selector="Button.thumb-retry">
             <Setter Property="FontSize" Value="11" />
             <Setter Property="MinHeight" Value="22" />
@@ -23,23 +28,22 @@
     </UserControl.Styles>
 
     <Panel>
-        <Image Name="ThumbArt"
-               Stretch="{Binding #Root.Stretch}"
-               HorizontalAlignment="Center"
-               VerticalAlignment="{Binding #Root.VerticalArtAlignment}" />
+        <views:ArtBitmap Name="ThumbArt"
+                         Stretch="{Binding #Root.Stretch}"
+                         ArtAlignment="{Binding #Root.VerticalArtAlignment}" />
         <StackPanel Classes="thumb-state"
                     Classes.queued="{Binding (views:ArtImage.LoadState), ElementName=ThumbArt, Converter={x:Static views:StaffCardVisual.IsArtQueued}}"
                     Classes.loading="{Binding (views:ArtImage.LoadState), ElementName=ThumbArt, Converter={x:Static views:StaffCardVisual.IsArtLoading}}"
+                    Classes.loaded="{Binding (views:ArtImage.LoadState), ElementName=ThumbArt, Converter={x:Static views:StaffCardVisual.IsArtLoaded}}"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Spacing="4">
-            <Image Name="ThumbPlaceholder"
-                   Width="{Binding #Root.PlaceholderSize}"
-                   Height="{Binding #Root.PlaceholderSize}"
-                   Opacity="{Binding #Root.PlaceholderOpacity}"
-                   Stretch="Uniform"
-                   HorizontalAlignment="Center"
-                   IsVisible="{Binding (views:ArtImage.LoadState), ElementName=ThumbArt, Converter={x:Static views:StaffCardVisual.IsArtPlaceholder}}" />
+            <views:ArtBitmap Name="ThumbPlaceholder"
+                             Width="{Binding #Root.PlaceholderSize}"
+                             Height="{Binding #Root.PlaceholderSize}"
+                             Opacity="{Binding #Root.PlaceholderOpacity}"
+                             Stretch="Uniform"
+                             HorizontalAlignment="Center" />
             <!-- 只有「候选地址都失败」才给重试；没有图源（手动录入）重试没有意义。 -->
             <Button Name="ThumbRetry"
                     Classes="text compact thumb-retry"

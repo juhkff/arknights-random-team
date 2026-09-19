@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:models="clr-namespace:arknights_random_team.Models"
+
              xmlns:views="clr-namespace:arknights_random_team.Views"
              mc:Ignorable="d"
              x:Class="arknights_random_team.Views.OperatorSyncDialog"
@@ -201,8 +201,11 @@
             </Border>
         </Grid>
 
-        <!-- 稀有度选择 -->
-        <StackPanel Grid.Row="2" Margin="28,22,28,22" Spacing="14">
+        <!-- 稀有度选择：短屏（横屏/软键盘弹出）时正文可以滚动，底部操作始终可达 -->
+        <ScrollViewer Grid.Row="2"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28,22,28,22" Spacing="14">
             <Grid ColumnDefinitions="*,Auto,Auto">
                 <TextBlock Classes="field-label" VerticalAlignment="Center" Text="选择同步的稀有度" />
                 <Button Grid.Column="1"
@@ -225,9 +228,6 @@
             </Grid>
 
             <ItemsControl Name="StarItems">
-                <ItemsControl.ItemsSource>
-                    <x:Static Member="models:AppOptions.Stars" />
-                </ItemsControl.ItemsSource>
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="2" Rows="3" Margin="0,0,-12,-12" />
@@ -284,23 +284,27 @@
                            Text="已选 0 / 6" />
             </Grid>
         </StackPanel>
+        </ScrollViewer>
 
         <!-- 页脚 -->
-        <Border Grid.Row="3"
+        <Border Name="FooterBar"
+                Grid.Row="3"
                 Padding="28,0"
                 Height="88"
                 Background="{StaticResource AppSurfaceBrush}"
                 BorderBrush="{StaticResource AppBorderBrush}"
                 BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                <TextBlock Classes="caption"
+                <TextBlock Name="FooterHint"
+                           Classes="caption"
                            VerticalAlignment="Center"
                            Text="同步不会覆盖已有干员" />
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"
                             VerticalAlignment="Center"
                             Spacing="10">
-                    <Button Classes="dialog-cancel"
+                    <Button Name="CancelButton"
+                            Classes="dialog-cancel"
                             Height="46"
                             MinWidth="92"
                             Content="取消"

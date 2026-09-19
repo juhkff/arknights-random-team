@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -19,6 +20,9 @@ public partial class StaffListView : UserControl
 {
     private bool _suppressRowSelection;
     private DispatcherTimer? _searchDebounce;
+    private Staff? _nameEditStaff;
+    private string? _nameEditOriginal;
+    private bool _cardLayoutUpdateQueued;
 
     public StaffListView()
     {
@@ -26,34 +30,19 @@ public partial class StaffListView : UserControl
         InitializeComponent();
         AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel);
 
-        // 拖动判定必须监听「已被处理」的事件：
-        // 卡片本身是 Button，它会把 PointerPressed/Moved 标记为已处理（ScrollViewer 也一样），
-        // 于是挂在卡片 XAML 上的这三个处理器根本不会被调用——拖动判定形同虚设。
-        // 实测复现：拖动 30px 后抬起，随机池被切换（方案 §3.6 明确禁止）。
-        // 这里在视图层用 handledEventsToo 接管，按下时按来源限定到卡片。
-        AddHandler(
-            PointerPressedEvent,
-            OnCardPointerPressedForDrag,
-            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
-            handledEventsToo: true);
-        AddHandler(
-            PointerMovedEvent,
-            (_, args) => TrackPressMove(args),
-            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
-            handledEventsToo: true);
+        // DataGrid、Button 与 ScrollViewer 会处理指针事件，因此在根控件统一监听，
+        // 避免 XAML 元素各挂一套重复且经常收不到事件的手势处理器。
+        AddHandler(PointerPressedEvent, OnInteractivePointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerMovedEvent, OnInteractivePointerMoved, RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerReleasedEvent, OnInteractivePointerReleased, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(ScrollViewer.ScrollChangedEvent, OnScrollChanged, RoutingStrategies.Bubble, handledEventsToo: true);
+        // DataGrid owns ScrollBars directly instead of using a ScrollViewer.
+        StaffGrid.AddHandler(RangeBase.ValueChangedEvent, (_, e) =>
+        {
+            if (e.Source is ScrollBar)
+                ArtImage.NotifyInteraction();
+        }, RoutingStrategies.Bubble, handledEventsToo: true);
 
-        // 表格同理：DataGrid 会把指针事件标记为已处理，挂在单元格 XAML 上的处理器收不到，
-        // 结果是「点入池列没反应」（实测复现）。这里按 .cell-hit 容器在视图层接管。
-        AddHandler(
-            PointerPressedEvent,
-            OnCellHitPointerPressed,
-            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
-            handledEventsToo: true);
-        AddHandler(
-            PointerReleasedEvent,
-            OnCellHitPointerReleased,
-            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
-            handledEventsToo: true);
         Loaded += (_, _) =>
         {
             ClearGridSelection();
@@ -61,9 +50,52 @@ public partial class StaffListView : UserControl
             ApplyListLayout();
             SyncViewButtons();
         };
-        AppLayout.Changed += ApplyListLayout;
-        // 宽高变化是全局静态事件，视图离开可视树时必须退订，否则被回收的实例仍会收到通知。
-        DetachedFromVisualTree += (_, _) => AppLayout.Changed -= ApplyListLayout;
+
+        // Recompute after the repeater has a real arranged width. Updating the layout from
+        // ScrollViewer.Viewport while it is arranging creates a measure/arrange feedback loop,
+        // so resize/viewport notifications are coalesced onto the next UI pass.
+        StaffCards.SizeChanged += (_, _) => QueueCardLayoutUpdate();
+        StaffCardsScroll.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == ScrollViewer.ViewportProperty)
+                QueueCardLayoutUpdate();
+        };
+
+        // 视图自身尺寸变化后重算：ApplyListLayout 里有依赖 Bounds 的窄屏宽度计算，
+        // 只在断点变化时触发会漏掉「同一断点内的尺寸变化」。
+        SizeChanged += (_, _) => ApplyListLayout();
+
+        // Global subscriptions follow the visual-tree lifetime because the shell reuses this view.
+        AttachedToVisualTree += (_, _) =>
+        {
+            AppLayout.Changed -= ApplyListLayout;
+            AppLayout.Changed += ApplyListLayout;
+            if (Model is { } model)
+            {
+                model.Activate();
+                AppState.BulkUpdateCompleted -= model.OnBulkUpdateCompleted;
+                AppState.BulkUpdateCompleted += model.OnBulkUpdateCompleted;
+                ArtImage.StatsChanged -= model.OnArtStatsChanged;
+                ArtImage.StatsChanged += model.OnArtStatsChanged;
+            }
+
+            ApplyListLayout();
+        };
+
+        DetachedFromVisualTree += (_, _) =>
+        {
+            ResetPress();
+            AppLayout.Changed -= ApplyListLayout;
+            if (Model is { } model)
+            {
+                AppState.BulkUpdateCompleted -= model.OnBulkUpdateCompleted;
+                ArtImage.StatsChanged -= model.OnArtStatsChanged;
+                model.Deactivate();
+            }
+
+            FlushPendingSearch();
+        };
+
         if (DataContext is ListModel model)
             model.PropertyChanged += OnModelPropertyChanged;
     }
@@ -74,8 +106,11 @@ public partial class StaffListView : UserControl
 
     private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(ListModel.UsePortrait) or nameof(ListModel.IsCardView))
-            UpdateCardPanel();
+        if (e.PropertyName is nameof(ListModel.IsCardView))
+        {
+            QueueCardLayoutUpdate();
+            ApplyListLayout();
+        }
         if (e.PropertyName is nameof(ListModel.ShowBatchBar) or nameof(ListModel.HasActiveFilters))
             ApplyListLayout();
     }
@@ -87,26 +122,14 @@ public partial class StaffListView : UserControl
         Dispatcher.UIThread.Post(SyncViewButtons);
     }
 
-    private void AvatarMode_Click(object? sender, RoutedEventArgs e) => ShowCardView(portrait: false);
-
-    private void PortraitMode_Click(object? sender, RoutedEventArgs e) => ShowCardView(portrait: true);
-
-    private void ShowCardView(bool portrait)
+    private void HalfBodyMode_Click(object? sender, RoutedEventArgs e)
     {
         if (Model is not { } model)
             return;
 
-        var enteringCards = !model.IsCardView;
-        model.UsePortrait = portrait;
         model.IsCardView = true;
         UpdateCardPanel();
         Dispatcher.UIThread.Post(SyncViewButtons);
-
-        if (!enteringCards)
-            return;
-
-        foreach (var staff in model.StaffList)
-            staff.RaiseArtChanged();
     }
 
     private void SyncViewButtons()
@@ -115,23 +138,42 @@ public partial class StaffListView : UserControl
             return;
 
         GridViewButton.IsChecked = model.IsGridView;
-        AvatarModeButton.IsChecked = model.IsAvatarView;
-        PortraitModeButton.IsChecked = model.IsPortraitView;
+        HalfBodyModeButton.IsChecked = model.IsHalfBodyView;
+    }
+
+    private void QueueCardLayoutUpdate()
+    {
+        if (_cardLayoutUpdateQueued)
+            return;
+
+        _cardLayoutUpdateQueued = true;
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                _cardLayoutUpdateQueued = false;
+                UpdateCardPanel();
+            },
+            DispatcherPriority.Loaded);
     }
 
     private void UpdateCardPanel()
     {
-        if (Model is not { } model)
+        if (StaffCards.Layout is not UniformGridLayout layout)
             return;
 
-        // 卡片高度随视图切换：头像卡为「宽 + 名牌」，立绘卡按 5:3 再加名牌。
-        // 虚拟化布局要求固定单元高度，所以这里必须显式给出，而不是按内容量算。
-        if (StaffCards.Layout is UniformGridLayout layout)
-            layout.MinItemHeight = CardHeight(model.UsePortrait);
-    }
+        var available = StaffCardsScroll.Viewport.Width - StaffCards.Margin.Left - StaffCards.Margin.Right;
+        if (available <= 0)
+            return;
 
-    private static double CardHeight(bool portrait) =>
-        StaffCardVisual.MinCardWidth * (portrait ? 5d / 3d : 1d) + StaffCardVisual.NameplateHeight;
+        var (_, itemWidth) = StaffCardVisual.FitColumns(available);
+        var itemHeight = StaffCardVisual.CardHeight(itemWidth);
+        if (Math.Abs(layout.MinItemWidth - itemWidth) < 0.5 &&
+            Math.Abs(layout.MinItemHeight - itemHeight) < 0.5)
+            return;
+
+        layout.MinItemWidth = itemWidth;
+        layout.MinItemHeight = itemHeight;
+    }
 
     private void ApplyListLayout()
     {
@@ -143,7 +185,48 @@ public partial class StaffListView : UserControl
         BatchRow.IsVisible = model.ShowBatchBar;
         BatchBar.IsVisible = model.ShowBatchBar && !narrow;
         BatchMenuButton.IsVisible = model.ShowBatchBar && narrow;
+
+        // Keep both view segments visible on narrow layouts; only sorting and row density move to a menu.
+        var phone = AppLayout.IsPhone;
+        WideToolsPanel.IsVisible = !phone;
+        PhoneToolsButton.IsVisible = phone;
+        FilterChipsList.IsVisible = !phone;
+        SelectAllScopeLabel.IsVisible = !phone && model.HasActiveFilters;
+
+        Grid.SetColumnSpan(SummaryPanel, phone ? 3 : 1);
+        Grid.SetRow(ViewModeSwitch, phone ? 1 : 0);
+        Grid.SetColumn(ViewModeSwitch, phone ? 0 : 1);
+        Grid.SetRow(TopMoreButton, phone ? 1 : 0);
+        ViewModeSwitch.HorizontalAlignment = phone ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+        ViewModeSwitch.Margin = phone ? new Thickness(0, 8, 8, 0) : new Thickness(8, 0);
+        TopMoreButton.Margin = phone ? new Thickness(0, 8, 0, 0) : default;
+
+        if (phone && Bounds.Width > 0)
+        {
+            // Bounds already excludes page margins; leave room for the WrapPanel margin.
+            SearchBox.Width = Math.Max(120, Bounds.Width - 8);
+        }
+        else
+        {
+            // Keep search/filter/sort on one row without forcing the flexible search field too narrow.
+            var reserved = model.IsGridView ? 332 : 268;
+            SearchBox.Width = Bounds.Width > 0
+                ? Math.Clamp(Bounds.Width - reserved, 200, 360)
+                : 240;
+        }
+
         SyncViewButtons();
+    }
+
+    /// <summary>窄屏菜单里的排序：与宽屏下拉走同一份 SortIndex。</summary>
+    private void PhoneSort_Click(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { Tag: string tag } &&
+            int.TryParse(tag, out var index) &&
+            Model is { } model)
+        {
+            model.SortIndex = index;
+        }
     }
 
     private void SearchBox_TextChanged(object? sender, TextChangedEventArgs e)
@@ -160,6 +243,20 @@ public partial class StaffListView : UserControl
         _searchDebounce?.Stop();
         if (Model is { } model)
             model.SearchText = SearchBox.Text ?? "";
+    }
+
+    /// <summary>
+    /// 离开页面时把还没到点的搜索立即结算，然后停表。
+    /// 只停表会把「刚打完字就切页」的输入丢掉；只结算不停止则让离屏页继续跑计时器。
+    /// </summary>
+    private void FlushPendingSearch()
+    {
+        if (_searchDebounce is { IsEnabled: true } timer)
+        {
+            timer.Stop();
+            if (Model is { } model)
+                model.SearchText = SearchBox.Text ?? "";
+        }
     }
 
     private void PoolAll_Click(object? sender, RoutedEventArgs e) => Model?.SetPoolFilter(PoolFilterKind.All);
@@ -191,7 +288,6 @@ public partial class StaffListView : UserControl
         var result = await OperatorSyncFlow.RunAsync();
         if (!result.Ran)
             return;
-        Model?.RefreshVisible();
         PostSnack(result.Message);
     }
 
@@ -201,15 +297,29 @@ public partial class StaffListView : UserControl
 
     private async void ClearAll_Click(object? sender, RoutedEventArgs e)
     {
-        var count = AppState.StaffList.Count;
-        if (count == 0)
+        var snapshot = AppState.StaffList.ToList();
+        if (snapshot.Count == 0)
             return;
 
-        if (!await AppHost.ConfirmAsync($"确定清空全部 {count} 名干员？此操作无法撤销，且不受当前筛选限制。"))
+        if (!await AppHost.ConfirmAsync($"确定清空全部 {snapshot.Count} 名干员？此操作无法撤销，且不受当前筛选限制。"))
             return;
 
         AppState.StaffList.Clear();
-        AppState.SaveOperatorData();
+        if (!AppState.SaveOperatorData())
+        {
+            // 磁盘仍保留旧列表，因此内存也恢复到清空前的状态。
+            using (AppState.BeginBulkUpdate())
+            {
+                foreach (var staff in snapshot)
+                    AppState.StaffList.Add(staff);
+            }
+
+            await AppHost.AlertAsync(
+                $"{AppState.LastSaveError ?? "保存失败。"}已撤销本次清空。",
+                "清空失败");
+            return;
+        }
+
         ClearGridSelection();
     }
 
@@ -222,6 +332,9 @@ public partial class StaffListView : UserControl
     private void OperatorCard_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is not Button { DataContext: Staff staff })
+            return;
+
+        if (_pressTracking && !ReferenceEquals(_pressTarget, sender))
             return;
 
         // 刚发生过拖动（滚动列表）时，抬起不应被当成「切换随机池」。
@@ -237,7 +350,7 @@ public partial class StaffListView : UserControl
                 return;
             if (visual.FindAncestorOfType<Button>(true) is { } inner && inner != sender)
                 return;
-            if (visual.FindAncestorOfType<MenuItem>() is not null)
+            if (visual.FindAncestorOfType<MenuItem>(true) is not null)
                 return;
         }
 
@@ -257,21 +370,58 @@ public partial class StaffListView : UserControl
     private Point _pressOrigin;
     private bool _pressTracking;
     private bool _pressSuppressed;
+    private IPointer? _pressPointer;
+    private Visual? _pressTarget;
+    private InputElement? _pressCapture;
 
-    private void BeginPress(PointerPressedEventArgs e)
+    /// <summary>
+    /// 记录一次「有效按下」：鼠标只认左键，触摸与笔都算。
+    /// 同时记下指针与目标控件——抬起时要用它们判断这次抬起是否属于同一次按下。
+    /// </summary>
+    private void BeginPress(PointerPressedEventArgs e, Visual? target = null)
     {
         var point = e.GetCurrentPoint(this);
         if (e.Pointer.Type == PointerType.Mouse && !point.Properties.IsLeftButtonPressed)
+        {
+            // 右键/中键按下不是有效手势：连跟踪都不开始，抬起时自然不会提交。
+            ResetPress();
             return;
+        }
 
+        ResetPress();
         _pressOrigin = point.Position;
         _pressTracking = true;
         _pressSuppressed = false;
+        _pressPointer = e.Pointer;
+        _pressTarget = target;
+
+        var pointer = e.Pointer;
+        Dispatcher.UIThread.Post(() => AttachPressCapture(pointer), DispatcherPriority.Input);
+    }
+
+    private void AttachPressCapture(IPointer pointer)
+    {
+        if (!_pressTracking || !ReferenceEquals(_pressPointer, pointer))
+            return;
+
+        if (pointer.Captured is null && _pressTarget is InputElement target)
+            pointer.Capture(target);
+
+        if (pointer.Captured is not InputElement captured || ReferenceEquals(_pressCapture, captured))
+            return;
+
+        _pressCapture?.RemoveHandler(PointerCaptureLostEvent, OnPointerCaptureLost);
+        _pressCapture = captured;
+        captured.AddHandler(
+            PointerCaptureLostEvent,
+            OnPointerCaptureLost,
+            RoutingStrategies.Direct,
+            handledEventsToo: true);
     }
 
     private void TrackPressMove(PointerEventArgs e)
     {
-        if (!_pressTracking)
+        if (!_pressTracking || !ReferenceEquals(e.Pointer, _pressPointer))
             return;
 
         var current = e.GetPosition(this);
@@ -280,44 +430,124 @@ public partial class StaffListView : UserControl
             _pressSuppressed = true;
     }
 
-    /// <summary>抬起时判断这是一次「轻点」还是「拖动/移出目标」。</summary>
-    private bool ReleaseIsTap(object? sender, PointerReleasedEventArgs e)
+    private bool ReleaseIsTap(Visual target, PointerReleasedEventArgs e)
     {
-        var suppressed = _pressSuppressed;
+        var isTap = _pressTracking &&
+                    !_pressSuppressed &&
+                    ReferenceEquals(_pressPointer, e.Pointer) &&
+                    ReferenceEquals(_pressTarget, target) &&
+                    (e.Pointer.Type != PointerType.Mouse || e.InitialPressMouseButton == MouseButton.Left) &&
+                    new Rect(target.Bounds.Size).Contains(e.GetPosition(target));
         ResetPress();
-        if (suppressed)
-            return false;
-
-        return sender is not Visual visual || new Rect(visual.Bounds.Size).Contains(e.GetPosition(visual));
+        return isTap;
     }
 
     private void ResetPress()
     {
+        var pointer = _pressPointer;
+        var capture = _pressCapture;
+        capture?.RemoveHandler(PointerCaptureLostEvent, OnPointerCaptureLost);
+        _pressCapture = null;
         _pressTracking = false;
         _pressSuppressed = false;
+        _pressPointer = null;
+        _pressTarget = null;
+
+        if (capture is not null && ReferenceEquals(pointer?.Captured, capture))
+            pointer.Capture(null);
     }
 
-    /// <summary>只对「卡片上的按下」开始跟踪拖动，其它控件的按下不参与。</summary>
-    private void OnCardPointerPressedForDrag(object? sender, PointerPressedEventArgs e)
+    private void OnInteractivePointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (e.Source is Visual source &&
-            source.FindAncestorOfType<Button>(true) is { } button &&
-            button.Classes.Contains("operator-card"))
+        if (_pressTracking && !ReferenceEquals(_pressPointer, e.Pointer))
         {
-            BeginPress(e);
+            e.Handled = true;
+            return;
         }
+
+        if (e.Source is not Visual source)
+        {
+            ResetPress();
+            return;
+        }
+
+        var button = source.FindAncestorOfType<Button>(true);
+        if (button?.Classes.Contains("operator-card") == true)
+        {
+            BeginPress(e, button);
+            return;
+        }
+
+        if (!IsFromCheckBox(source) && CellHitTarget(source) is { } cell)
+        {
+            BeginPress(e, cell);
+            return;
+        }
+
+        ResetPress();
     }
 
-    private void OperatorCard_PointerPressed(object? sender, PointerPressedEventArgs e) => BeginPress(e);
+    private void OnInteractivePointerMoved(object? sender, PointerEventArgs e)
+    {
+        TrackPressMove(e);
+        AttachPressCapture(e.Pointer);
+    }
 
-    private void OperatorCard_PointerMoved(object? sender, PointerEventArgs e) => TrackPressMove(e);
+    private static void OnScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        // A viewport/extent relayout is not user activity. Only real offset movement should
+        // keep image prefetch responsive while scrolling by wheel, touch inertia, keyboard,
+        // scrollbar thumb, or programmatic navigation.
+        if (!e.OffsetDelta.NearlyEquals(default))
+            ArtImage.NotifyInteraction();
+    }
 
-    /// <summary>
-    /// 延后清理一次：Click 与本事件在同一轮输入处理里先后触发，
-    /// 立即清理会让被拖动的那次抬起反而提交选池。
-    /// </summary>
-    private void OperatorCard_PointerReleased(object? sender, PointerReleasedEventArgs e) =>
+    private void OnInteractivePointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_pressTracking && !ReferenceEquals(_pressPointer, e.Pointer))
+        {
+            e.Handled = true;
+            return;
+        }
+
+        if (_pressTarget is Border { } cell && cell.Classes.Contains("cell-hit"))
+        {
+            if (ReferenceEquals(CellHitTarget(e.Source), cell) &&
+                !IsFromCheckBox(e.Source) &&
+                ReleaseIsTap(cell, e))
+            {
+                if (cell.DataContext is Staff staff)
+                    staff.IsSelected = !staff.IsSelected;
+                else
+                    Model?.ToggleSelectAll();
+            }
+            else
+            {
+                ResetPress();
+            }
+
+            return;
+        }
+
+        // Button raises Click while handling PointerReleased; clear after that handler has read drag state.
         Dispatcher.UIThread.Post(ResetPress, DispatcherPriority.Input);
+    }
+
+    private void OnPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        if (!_pressTracking || !ReferenceEquals(_pressPointer, e.Pointer))
+            return;
+
+        // Button may release capture immediately before raising Click. Defer cleanup so the Click handler
+        // can still see whether this gesture crossed the drag threshold.
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                if (_pressTracking && ReferenceEquals(_pressPointer, e.Pointer))
+                    ResetPress();
+            },
+            DispatcherPriority.Input);
+    }
 
     /// <summary>键盘激活不参与拖动判定，先清掉可能残留的指针状态。</summary>
     private void OperatorCard_KeyDown(object? sender, KeyEventArgs e)
@@ -334,6 +564,13 @@ public partial class StaffListView : UserControl
         if (visual.FindAncestorOfType<DataGridColumnHeader>(true) is not null)
         {
             _suppressRowSelection = true;
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    if (_suppressRowSelection)
+                        ClearGridSelection();
+                },
+                DispatcherPriority.Background);
             return;
         }
 
@@ -363,57 +600,6 @@ public partial class StaffListView : UserControl
             ? border
             : null;
 
-    private void OnCellHitPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (CellHitTarget(e.Source) is not null && !IsFromCheckBox(e.Source))
-            BeginPress(e);
-    }
-
-    private void OnCellHitPointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (IsFromCheckBox(e.Source) || CellHitTarget(e.Source) is not { } border || !ReleaseIsTap(border, e))
-            return;
-
-        if (border.DataContext is Staff staff)
-            staff.IsSelected = !staff.IsSelected;
-        else
-            Model?.ToggleSelectAll();
-    }
-
-    private void SelectAllHeader_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (IsFromCheckBox(e.Source))
-            return;
-        BeginPress(e);
-    }
-
-    private void SelectAllHeader_PointerMoved(object? sender, PointerEventArgs e) => TrackPressMove(e);
-
-    private void SelectAllHeader_PointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (IsFromCheckBox(e.Source) || !ReleaseIsTap(sender, e))
-            return;
-        Model?.ToggleSelectAll();
-    }
-
-    private void SelectCell_PointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (IsFromCheckBox(e.Source))
-            return;
-        BeginPress(e);
-    }
-
-    private void SelectCell_PointerMoved(object? sender, PointerEventArgs e) => TrackPressMove(e);
-
-    private void SelectCell_PointerReleased(object? sender, PointerReleasedEventArgs e)
-    {
-        if (IsFromCheckBox(e.Source))
-            return;
-        if (sender is not Border { DataContext: Staff staff } || !ReleaseIsTap(sender, e))
-            return;
-        staff.IsSelected = !staff.IsSelected;
-    }
-
     private void StaffGrid_PreparingCellForEdit(object? sender, DataGridPreparingCellForEditEventArgs e)
     {
         Model?.BeginEdit();
@@ -428,6 +614,14 @@ public partial class StaffListView : UserControl
             inner.HorizontalAlignment = HorizontalAlignment.Stretch;
         }
 
+        // 名称是生成阵容时的分组键：留一份原值，编辑结束若校验不通过就还原，
+        // 否则表格可以直接把名称写成空或与别人重名（方案 §4 U5）。
+        if (e.Column.SortMemberPath == NameSortPath && e.Row.DataContext is Staff nameStaff)
+        {
+            _nameEditStaff = nameStaff;
+            _nameEditOriginal = nameStaff.Name;
+        }
+
         // 等级是唯一「自由文本 + 解析」的列：模型解析失败会静默丢掉这次输入，
         // 编辑期间就地标红并给出格式提示，不让用户以为已经改成功。
         if (e.Column.SortMemberPath == LevelSortPath && editor is TextBox levelBox)
@@ -437,6 +631,8 @@ public partial class StaffListView : UserControl
             ValidateLevelEditor(levelBox);
         }
     }
+
+    private const string NameSortPath = "Name";
 
     private const string LevelSortPath = "Level";
 
@@ -456,6 +652,25 @@ public partial class StaffListView : UserControl
     private void StaffGrid_CellEditEnded(object? sender, DataGridCellEditEndedEventArgs e)
     {
         ClearRowHighlight(e.Row);
+
+        if (e.Column.SortMemberPath == NameSortPath && _nameEditStaff is { } staff)
+        {
+            var original = _nameEditOriginal ?? "";
+            _nameEditStaff = null;
+            _nameEditOriginal = null;
+
+            var normalized = staff.Name.Trim();
+            if (StaffValidator.ValidateName(normalized, AppState.StaffList, staff) is { } error)
+            {
+                staff.Name = original;
+                PostSnack($"{error}已还原为「{original}」。");
+            }
+            else
+            {
+                AppState.RenameStaff(staff, original, normalized);
+            }
+        }
+
         Model?.EndEdit();
     }
 
@@ -489,6 +704,7 @@ public partial class StaffListView : UserControl
         Dispatcher.UIThread.Post(
             () =>
             {
+                ClearGridSelection();
                 if (TopLevel.GetTopLevel(header) is not null)
                     header.Focus();
             },

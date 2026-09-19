@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
 namespace arknights_random_team.Views;
@@ -52,21 +53,26 @@ public partial class StaffDetailDialog : ModalContent
 
     private void Save_Click(object? sender, RoutedEventArgs e)
     {
+        // 每次提交先清掉上一次的错误，并把错误文案统一走 StaffValidator，
+        // 与录入页、表格内联编辑保持同一套规则与措辞。
+        ClearError(NameError);
+        ClearError(LevelError);
+
         var name = NameBox.Text?.Trim() ?? "";
-        if (name.Length == 0)
+        if (StaffValidator.ValidateName(name, AppState.StaffList, _staff) is { } nameError)
         {
-            ShowError(NameError, "名称不能为空。");
+            ShowError(NameError, nameError, NameBox);
             return;
         }
 
         var levelText = LevelBox.Text?.Trim() ?? "";
-        if (!Level.TryParse(levelText, out _, out _))
+        if (StaffValidator.ValidateLevel(levelText) is { } levelError)
         {
-            ShowError(LevelError, "等级格式应为「精二90级」这类写法。");
+            ShowError(LevelError, levelError, LevelBox);
             return;
         }
 
-        _staff.Name = name;
+        AppState.RenameStaff(_staff, _staff.Name, name);
         if (CareerBox.SelectedItem is Career career)
             _staff.Career = career;
         if (StarBox.SelectedItem is int star)
@@ -79,9 +85,17 @@ public partial class StaffDetailDialog : ModalContent
 
     private void Cancel_Click(object? sender, RoutedEventArgs e) => RequestClose(false);
 
-    private static void ShowError(TextBlock target, string message)
+    private static void ClearError(TextBlock target)
+    {
+        target.Text = "";
+        target.IsVisible = false;
+    }
+
+    /// <summary>显示错误并聚焦到出错的字段：触摸与键盘用户都不该靠「找红字」发现问题。</summary>
+    private static void ShowError(TextBlock target, string message, Control? focusTarget = null)
     {
         target.Text = message;
         target.IsVisible = true;
+        focusTarget?.Focus();
     }
 }

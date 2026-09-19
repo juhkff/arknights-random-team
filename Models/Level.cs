@@ -14,10 +14,13 @@ public class Level : AutomaticNotify
     public int EliteLevel
     {
         get => _eliteLevel;
+        // 夹取到合法区间：越界值会让 Format 抛异常，而调用方（存档解析、表格编辑）
+        // 都不处理异常。夹取后最坏情况是「按合法值显示」，而不是崩溃。
         set
         {
-            if (SetProperty(ref _eliteLevel, value))
-                SetProperty(ref _description, Format(value, Rank), nameof(Description));
+            var clamped = FieldLimits.ClampElite(value);
+            if (SetProperty(ref _eliteLevel, clamped))
+                SetProperty(ref _description, Format(clamped, Rank), nameof(Description));
         }
     }
 
@@ -26,8 +29,9 @@ public class Level : AutomaticNotify
         get => _rank;
         set
         {
-            if (SetProperty(ref _rank, value))
-                SetProperty(ref _description, Format(EliteLevel, value), nameof(Description));
+            var clamped = FieldLimits.ClampRank(value);
+            if (SetProperty(ref _rank, clamped))
+                SetProperty(ref _description, Format(EliteLevel, clamped), nameof(Description));
         }
     }
 
@@ -39,19 +43,23 @@ public class Level : AutomaticNotify
             if (!TryParse(value, out var elite, out var rank))
                 return;
 
+            var eliteChanged = _eliteLevel != elite;
+            var rankChanged = _rank != rank;
             _eliteLevel = elite;
             _rank = rank;
             SetProperty(ref _description, Format(elite, rank));
-            OnPropertyChanged(nameof(EliteLevel));
-            OnPropertyChanged(nameof(Rank));
+            if (eliteChanged)
+                OnPropertyChanged(nameof(EliteLevel));
+            if (rankChanged)
+                OnPropertyChanged(nameof(Rank));
         }
     }
 
     public Level(int eliteLevel, int rank)
     {
-        _eliteLevel = eliteLevel;
-        _rank = rank;
-        _description = Format(eliteLevel, rank);
+        _eliteLevel = FieldLimits.ClampElite(eliteLevel);
+        _rank = FieldLimits.ClampRank(rank);
+        _description = Format(_eliteLevel, _rank);
     }
 
     public static Level GenerateDefaultLevel() => new(2, 1);
@@ -87,7 +95,8 @@ public class Level : AutomaticNotify
         if (eliteLevel < 0)
             return false;
 
-        if (!int.TryParse(match.Groups[2].Value, out rank) || rank is < 1 or > 90)
+        if (!int.TryParse(match.Groups[2].Value, out rank) ||
+            rank < FieldLimits.MinRank || rank > FieldLimits.MaxRank)
             return false;
 
         return true;

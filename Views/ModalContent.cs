@@ -18,7 +18,7 @@ public abstract class ModalContent : UserControl
     /// </summary>
     public virtual bool PreferFullScreenOnPhone => false;
 
-    /// <summary>请求关闭当前对话框；<paramref name="result"/> 会作为宿主 <c>ShowModalAsync</c> 的返回值。</summary>
+    /// <summary>请求关闭当前对话框；<paramref name="result"/> 会作为宿主 <c>IModalPresenter.ShowAsync</c> 的返回值。</summary>
     public event EventHandler<ModalCloseRequestedEventArgs>? CloseRequested;
 
     protected void RequestClose(object? result) =>

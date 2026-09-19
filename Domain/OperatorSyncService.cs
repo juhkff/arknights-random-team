@@ -28,14 +28,29 @@ public sealed class OperatorSyncService
             ["SPECIAL"] = Career.特种
         };
 
+    /// <summary>
+    /// 进程内共享的 HTTP 客户端。
+    /// 原来每次同步都 <c>new OperatorSyncService()</c>、各自建一份 HttpClient：
+    /// 每次都要重建连接池，反复同步（或两个入口先后触发）时会持续 churn。
+    /// 服务本身不持有可释放资源，共享客户端不会互相干扰。
+    /// </summary>
+    private static readonly HttpClient SharedHttpClient = CreateHttpClient();
+
     private readonly HttpClient _httpClient;
     private readonly IReadOnlyList<Uri> _sources;
+    private readonly Action<Staff, string, string> _renameStaff;
 
-    public OperatorSyncService(HttpClient? httpClient = null, IReadOnlyList<Uri>? sources = null)
+    public OperatorSyncService(
+        HttpClient? httpClient = null,
+        IReadOnlyList<Uri>? sources = null,
+        Action<Staff, string, string>? renameStaff = null)
     {
-        _httpClient = httpClient ?? CreateHttpClient();
+        _httpClient = httpClient ?? SharedHttpClient;
         _sources = sources ?? DefaultSources;
+        _renameStaff = renameStaff ?? AssignName;
     }
+
+    private static void AssignName(Staff staff, string _, string name) => staff.Name = name;
 
     public async Task<OperatorSyncResult> SyncAsync(
         ObservableCollection<Staff> localStaff,
@@ -64,7 +79,10 @@ public sealed class OperatorSyncService
                 if (remoteOperators.Count == 0)
                     throw new InvalidDataException("数据源中没有找到符合所选稀有度的正式干员");
 
-                var result = Merge(localStaff, remoteOperators, source.AbsoluteUri);
+                // 合并是一次批量写入：包进更新事务，让列表在结束后统一刷新一次，
+                // 而不是每新增一名干员就重算一遍筛选与排序。
+                using var bulkUpdate = AppState.BeginBulkUpdate();
+                var result = Merge(localStaff, remoteOperators);
                 settings.LastSuccessfulSync = DateTimeOffset.UtcNow;
                 return result;
             }
@@ -119,10 +137,9 @@ public sealed class OperatorSyncService
             .ToList();
     }
 
-    public static OperatorSyncResult Merge(
+    private OperatorSyncResult Merge(
         ObservableCollection<Staff> localStaff,
-        IReadOnlyList<RemoteOperator> remoteOperators,
-        string sourceUrl)
+        IReadOnlyList<RemoteOperator> remoteOperators)
     {
         var bySourceId = localStaff
             .Where(item => !string.IsNullOrWhiteSpace(item.SourceId))
@@ -158,18 +175,32 @@ public sealed class OperatorSyncService
             }
 
             var previousName = local.Name;
-            var changed = local.SourceId != remote.SourceId ||
-                          previousName != remote.Name ||
+            var previousSourceId = local.SourceId;
+            var synchronizedName = byName.TryGetValue(remote.Name, out var nameOwner) &&
+                                   !ReferenceEquals(nameOwner, local)
+                ? previousName
+                : remote.Name;
+            var changed = previousSourceId != remote.SourceId ||
+                          previousName != synchronizedName ||
                           local.Star != remote.Star ||
                           local.Career != remote.Career;
+
+            if (!string.IsNullOrWhiteSpace(previousSourceId) &&
+                previousSourceId != remote.SourceId &&
+                bySourceId.TryGetValue(previousSourceId, out var sourceOwner) &&
+                ReferenceEquals(sourceOwner, local))
+            {
+                bySourceId.Remove(previousSourceId);
+            }
+
             local.SourceId = remote.SourceId;
-            local.Name = remote.Name;
+            _renameStaff(local, previousName, synchronizedName);
             local.Star = remote.Star;
             local.Career = remote.Career;
             bySourceId[remote.SourceId] = local;
-            if (previousName != remote.Name)
+            if (previousName != synchronizedName)
                 byName.Remove(previousName);
-            byName[remote.Name] = local;
+            byName[synchronizedName] = local;
 
             if (changed)
                 updated++;
@@ -177,12 +208,7 @@ public sealed class OperatorSyncService
                 unchanged++;
         }
 
-        return new OperatorSyncResult(
-            RemoteCount: remoteOperators.Count,
-            Added: added,
-            Updated: updated,
-            Unchanged: unchanged,
-            SourceUrl: sourceUrl);
+        return new OperatorSyncResult(added, updated, unchanged);
     }
 
     private static HttpClient CreateHttpClient()
@@ -218,15 +244,10 @@ public sealed class OperatorSyncService
         star = 0;
         return rarity.StartsWith(prefix, StringComparison.Ordinal) &&
                int.TryParse(rarity.AsSpan(prefix.Length), out star) &&
-               star is >= 1 and <= 6;
+               star is >= FieldLimits.MinStar and <= FieldLimits.MaxStar;
     }
 }
 
 public sealed record RemoteOperator(string SourceId, string Name, int Star, Career Career);
 
-public sealed record OperatorSyncResult(
-    int RemoteCount,
-    int Added,
-    int Updated,
-    int Unchanged,
-    string SourceUrl);
+public sealed record OperatorSyncResult(int Added, int Updated, int Unchanged);

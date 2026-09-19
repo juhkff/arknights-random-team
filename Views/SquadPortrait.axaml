@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:models="clr-namespace:arknights_random_team.Models"
+             xmlns:views="clr-namespace:arknights_random_team.Views"
+             mc:Ignorable="d"
+             d:DesignWidth="180"
+             d:DesignHeight="332"
+             x:Class="arknights_random_team.Views.SquadPortrait"
+             x:DataType="models:Staff"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch"
+             ClipToBounds="True">
+    <Border Background="{StaticResource AppCardBrush}"
+            BorderBrush="{StaticResource AppBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource AppRadiusHairline}"
+            ClipToBounds="True">
+        <Grid RowDefinitions="*,54">
+            <!-- Portrait sources fill the frame; StaffThumb keeps the career fallback and retry affordance. -->
+            <Border Grid.Row="0"
+                    Background="#D5DADF"
+                    ClipToBounds="True">
+                <Panel>
+                    <views:StaffThumb Sources="{Binding PortraitUris}"
+                                      PlaceholderSources="{Binding CareerIconUris}"
+                                      PlaceholderSize="40"
+                                      PlaceholderOpacity="0.55"
+                                      Stretch="UniformToFill"
+                                      VerticalArtAlignment="Top" />
+                    <Border Height="30"
+                            VerticalAlignment="Top"
+                            IsHitTestVisible="False">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#7A101418" Offset="0" />
+                                <GradientStop Color="#00101418" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <Border Width="28"
+                            Height="28"
+                            Margin="8"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#CC101418"
+                            BorderBrush="#665E6972"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource AppRadiusHairline}"
+                            IsHitTestVisible="False">
+                        <Image Width="18"
+                               Height="18"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Stretch="Uniform"
+                               views:ArtImage.Sources="{Binding CareerIconUris}" />
+                    </Border>
+                </Panel>
+            </Border>
+
+            <!-- Compact dark nameplate: all text has a stable row and the name trims with a tooltip. -->
+            <Border Grid.Row="1"
+                    Background="#12171D"
+                    ClipToBounds="True">
+                <Grid RowDefinitions="3,Auto,*" Margin="0">
+                    <Border Grid.Row="0" Background="{Binding RarityBrush}" />
+                    <TextBlock Grid.Row="1"
+                               Margin="9,6,8,0"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource AppTextBrush}"
+                               Text="{Binding Name}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding Name}" />
+                    <Grid Grid.Row="2"
+                          Margin="9,0,8,5"
+                          ColumnDefinitions="Auto,*"
+                          VerticalAlignment="Center">
+                        <TextBlock FontSize="11"
+                                   Foreground="{Binding RarityBrush}"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding RarityMark}"
+                                   ToolTip.Tip="{Binding StarGlyphs}" />
+                        <TextBlock Grid.Column="1"
+                                   Margin="6,0,0,0"
+                                   FontSize="11"
+                                   Foreground="{StaticResource AppMutedTextBrush}"
+                                   VerticalAlignment="Center"
+                                   Text="{Binding LevelLine}"
+                                   TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

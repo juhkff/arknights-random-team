@@ -12,8 +12,15 @@ public partial class RandomStrategyView : UserControl
     {
         InitializeComponent();
         StrategyItems.ItemsSource = AppState.Strategies;
-        AppState.Strategies.CollectionChanged += Strategies_CollectionChanged;
         UpdateStrategyState();
+        AttachedToVisualTree += (_, _) =>
+        {
+            AppState.Strategies.CollectionChanged -= Strategies_CollectionChanged;
+            AppState.Strategies.CollectionChanged += Strategies_CollectionChanged;
+            UpdateStrategyState();
+        };
+        DetachedFromVisualTree += (_, _) =>
+            AppState.Strategies.CollectionChanged -= Strategies_CollectionChanged;
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
@@ -41,7 +48,6 @@ public partial class RandomStrategyView : UserControl
             return;
 
         await AppHost.ShowAsync<bool>(new StrategyEditorDialog(def));
-        RefreshList();
     }
 
     private async void DeleteStrategy_Click(object? sender, RoutedEventArgs e)
@@ -64,9 +70,4 @@ public partial class RandomStrategyView : UserControl
         return control.DataContext as RandomStrategyDefinition;
     }
 
-    private void RefreshList()
-    {
-        StrategyItems.ItemsSource = null;
-        StrategyItems.ItemsSource = AppState.Strategies;
-    }
 }

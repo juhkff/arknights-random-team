@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Material.Styles.Controls;
 using Material.Styles.Models;
+using arknights_random_team.Domain;
 using arknights_random_team.Models;
 
 namespace arknights_random_team.Views;
@@ -25,7 +26,15 @@ public partial class InputView : UserControl
         SetStar(1);
         CareerCombo.SelectedIndex = -1;
         UpdateSyncStatus();
-        AppLayout.Changed += ApplyInputLayout;
+        // 订阅与退订成对：外壳复用同一实例，只在构造里订阅会在切走时留下回调。
+        AttachedToVisualTree += (_, _) =>
+        {
+            AppLayout.Changed -= ApplyInputLayout;
+            AppLayout.Changed += ApplyInputLayout;
+            UpdateSyncStatus();
+            ApplyInputLayout();
+        };
+        DetachedFromVisualTree += (_, _) => AppLayout.Changed -= ApplyInputLayout;
         Loaded += (_, _) => ApplyInputLayout();
     }
 
@@ -105,10 +114,12 @@ public partial class InputView : UserControl
         LevelError.IsVisible = false;
 
         var name = NameTextBox.Text?.Trim() ?? "";
-        if (name.Length <= 0)
+        // 名称规则（空名 / 重名）与详情面板、表格内联编辑共用一份 StaffValidator。
+        if (StaffValidator.ValidateName(name, AppState.StaffList) is { } nameError)
         {
-            NameError.Text = "请输入干员名称";
+            NameError.Text = nameError;
             NameError.IsVisible = true;
+            NameTextBox.Focus();
             return;
         }
 
@@ -116,6 +127,7 @@ public partial class InputView : UserControl
         {
             CareerError.Text = "请选择职阶";
             CareerError.IsVisible = true;
+            CareerCombo.Focus();
             return;
         }
 
@@ -123,13 +135,7 @@ public partial class InputView : UserControl
         {
             LevelError.Text = "请填写精英阶段与当前等级";
             LevelError.IsVisible = true;
-            return;
-        }
-
-        if (AppState.GetNameSet().Contains(name))
-        {
-            NameError.Text = "列表中已有该干员";
-            NameError.IsVisible = true;
+            EliteTextBox.Focus();
             return;
         }
 
@@ -205,7 +211,10 @@ public partial class InputView : UserControl
         if (_updatingLevelText)
             return;
 
-        var filtered = new string((EliteTextBox.Text ?? "").Where(ch => ch is >= '0' and <= '2').Take(1).ToArray());
+        var filtered = new string((EliteTextBox.Text ?? "")
+            .Where(ch => ch >= '0' + FieldLimits.MinElite && ch <= '0' + FieldLimits.MaxElite)
+            .Take(1)
+            .ToArray());
         SetLevelText(EliteTextBox, filtered);
     }
 
@@ -214,13 +223,14 @@ public partial class InputView : UserControl
         if (_updatingLevelText)
             return;
 
-        var digits = new string((RankTextBox.Text ?? "").Where(char.IsDigit).Take(2).ToArray());
+        var maxDigits = FieldLimits.MaxRank.ToString().Length;
+        var digits = new string((RankTextBox.Text ?? "").Where(char.IsDigit).Take(maxDigits).ToArray());
         if (digits.Length > 0 && int.TryParse(digits, out var value))
         {
-            if (value == 0)
+            if (value < FieldLimits.MinRank)
                 digits = "";
-            else if (value > 90)
-                digits = "90";
+            else if (value > FieldLimits.MaxRank)
+                digits = FieldLimits.MaxRank.ToString();
         }
 
         SetLevelText(RankTextBox, digits);
@@ -248,8 +258,14 @@ public partial class InputView : UserControl
     }
 
     private static int ParseElite(string? text) =>
-        int.TryParse(text, out var elite) && elite is >= 0 and <= 2 ? elite : 2;
+        int.TryParse(text, out var elite) &&
+        elite is >= FieldLimits.MinElite and <= FieldLimits.MaxElite
+            ? elite
+            : FieldLimits.MaxElite;
 
     private static int ParseRank(string? text) =>
-        int.TryParse(text, out var rank) && rank is >= 1 and <= 90 ? rank : 1;
+        int.TryParse(text, out var rank) &&
+        rank is >= FieldLimits.MinRank and <= FieldLimits.MaxRank
+            ? rank
+            : FieldLimits.MinRank;
 }

@@ -4,7 +4,10 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Threading;
+using Material.Styles.Controls;
+using Material.Styles.Models;
 
 namespace arknights_random_team.Views;
 
@@ -18,6 +21,7 @@ public partial class MainView : UserControl
     private readonly InputView _input = new();
     private readonly StaffListView _list = new();
     private readonly RandomStrategyView _randomStrategy = new();
+    private readonly ArtPrefetcher _artPrefetcher = new();
     private bool _drawerOpen;
 
     public MainView()
@@ -40,19 +44,63 @@ public partial class MainView : UserControl
             ToolTip.SetTip(StoragePanel, "网页端仅保存在内存中，刷新或关闭页面后数据会重置。");
         }
 
-        AppNavigation.Requested += OnNavigationRequested;
-        // 静态事件必须在离开可视树时退订：否则视图被重建时旧实例仍会收到导航请求。
-        DetachedFromVisualTree += (_, _) => AppNavigation.Requested -= OnNavigationRequested;
+        // Read-only mode and unstable files must remain visible after the startup snackbar expires.
+        if (AppState.WriteBlockedFiles is { Count: > 0 } blockedFiles)
+        {
+            StorageTitle.Text = "未写回";
+            StorageDetail.Text = $"{blockedFiles.Count} 个文件未保存";
+
+            // These controls have local brush values, so set the warning colors directly.
+            if (Application.Current?.TryGetResource("AppDangerBrush", ActualThemeVariant, out var danger) == true &&
+                danger is IBrush dangerBrush)
+            {
+                StorageTitle.Foreground = dangerBrush;
+                StorageDot.Background = dangerBrush;
+                StoragePanel.BorderBrush = dangerBrush;
+
+                if (Application.Current.TryGetResource("AppDangerSoftBrush", ActualThemeVariant, out var soft) == true &&
+                    soft is IBrush softBrush)
+                {
+                    StoragePanel.Background = softBrush;
+                }
+            }
+
+            ToolTip.SetTip(
+                StoragePanel,
+                $"当前会话无法安全写入：{string.Join("、", blockedFiles)}。磁盘内容不会被覆盖；请解除目录占用或写权限问题后重新启动。");
+        }
+
+        AttachedToVisualTree += (_, _) =>
+        {
+            AppNavigation.Requested -= OnNavigationRequested;
+            AppNavigation.Requested += OnNavigationRequested;
+            _artPrefetcher.Attach();
+        };
+        DetachedFromVisualTree += (_, _) =>
+        {
+            AppNavigation.Requested -= OnNavigationRequested;
+            _artPrefetcher.Detach();
+        };
         PropertyChanged += OnViewPropertyChanged;
+        KeyDown += OnShellKeyDown;
+        AddHandler(KeyDownEvent, (_, _) => ArtImage.NotifyInteraction(),
+            RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerWheelChangedEvent, (_, _) => ArtImage.NotifyInteraction(),
+            RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerPressedEvent, (_, _) => ArtImage.NotifyInteraction(),
+            RoutingStrategies.Tunnel, handledEventsToo: true);
+        AddHandler(PointerMovedEvent, (_, e) =>
+        {
+            var point = e.GetCurrentPoint(this);
+            if (point.Properties.IsLeftButtonPressed || point.Properties.IsMiddleButtonPressed ||
+                point.Properties.IsRightButtonPressed)
+                ArtImage.NotifyInteraction();
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
         Loaded += (_, _) =>
         {
             ApplyShellLayout();
-
-            // 抽屉打开时的 Esc 关闭：挂在根上冒泡处理，避免只对某个按钮生效。
-            KeyDown += OnShellKeyDown;
-
-            // 外壳已经加载完成：网页端撤掉首屏遮罩的真实信号（桌面端只是无人订阅的事件）。
             AppHost.NotifyShellReady();
+            ReportLoadErrors();
         };
 
         SwitchPage(
@@ -63,6 +111,39 @@ public partial class MainView : UserControl
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    /// <summary>
+    /// 启动时如果有数据文件读不出来（损坏文件已改名留证），用 Snackbar 明确告知。
+    /// 静默降级会让用户以为「干员自己没了」，比报错更糟。
+    /// </summary>
+    private static void ReportLoadErrors()
+    {
+        var messages = AppState.StartupNotices
+            .Where(message => !string.IsNullOrWhiteSpace(message))
+            .Distinct()
+            .ToArray();
+        if (messages.Length == 0)
+            return;
+
+        // Keep multi-file diagnostics within the narrow-screen snackbar.
+        var summary = messages.Length <= 2
+            ? string.Join("\n", messages)
+            : $"{messages[0]}\n（另有 {messages.Length - 1} 条提示，详见日志）";
+
+        var text = new TextBlock
+        {
+            Text = summary,
+            FontSize = 14,
+            MaxWidth = 560,
+            MaxHeight = 240,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = Brushes.White,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        SnackbarHost.Post(new SnackbarModel(text, TimeSpan.FromSeconds(8)), "MainSnackbar", DispatcherPriority.Normal);
+    }
 
     private void ChangeToGenerate(object? sender, RoutedEventArgs e) =>
         SwitchPage(_generate, "阵容生成", "从已启用的干员中生成一支阵容", GenerateNavButton);

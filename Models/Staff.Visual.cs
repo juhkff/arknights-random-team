@@ -35,13 +35,6 @@ public partial class Staff
     private static readonly IBrush Rarity2 = BrushOf("#7DCF8A");
     private static readonly IBrush Rarity1 = BrushOf("#8A9AAB");
 
-    private static readonly IBrush Rarity6Soft = BrushOf("#3D2A12");
-    private static readonly IBrush Rarity5Soft = BrushOf("#3A2F17");
-    private static readonly IBrush Rarity4Soft = BrushOf("#2E1F3A");
-    private static readonly IBrush Rarity3Soft = BrushOf("#163044");
-    private static readonly IBrush Rarity2Soft = BrushOf("#163226");
-    private static readonly IBrush Rarity1Soft = BrushOf("#1C2730");
-
     /// <summary>职业配色：用于结果卡片的左侧导轨与徽章。</summary>
     public IBrush CareerBrush => Career switch
     {
@@ -81,22 +74,8 @@ public partial class Staff
         _ => Rarity1
     };
 
-    /// <summary>稀有度软底，用于名牌与表格徽标。</summary>
-    public IBrush RaritySoftBrush => Star switch
-    {
-        6 => Rarity6Soft,
-        5 => Rarity5Soft,
-        4 => Rarity4Soft,
-        3 => Rarity3Soft,
-        2 => Rarity2Soft,
-        _ => Rarity1Soft
-    };
-
     /// <summary>稀有度符号，例如 6 星显示为 ★★★★★★。</summary>
-    public string StarGlyphs => new string('★', Math.Clamp(Star, 0, 6));
-
-    /// <summary>精英阶段与等级的数字读数，例如 2-80。表格编辑仍走 <see cref="Level.Description"/>。</summary>
-    public string LevelDigits => $"{Level.EliteLevel}-{Level.Rank:00}";
+    public string StarGlyphs => new('★', Star);
 
     /// <summary>精英阶段短标签，用于卡片角标。</summary>
     public string EliteLabel => Level.EliteLevel switch
@@ -110,10 +89,7 @@ public partial class Staff
     public string LevelLine => $"{EliteLabel} · Lv.{Level.Rank}";
 
     /// <summary>稀有度短标记，例如 6★。</summary>
-    public string RarityMark => $"{Math.Clamp(Star, 0, 6)}★";
-
-    /// <summary>是否编入随机池的短状态。</summary>
-    public string RosterStatus => IsSelected ? "入池" : "待命";
+    public string RarityMark => $"{Star}★";
 
     /// <summary>卡片勾选旁的固定文案，入池状态不只靠颜色区分。</summary>
     public string PoolCheckLabel => "入池";
@@ -127,31 +103,13 @@ public partial class Staff
 
     // ---- 卡片视图用的立绘 ----
 
-    private bool _usePortrait;
     private IReadOnlyList<Uri>? _avatarUris;
     private bool _avatarUrisElite2;
     private IReadOnlyList<Uri>? _portraitUris;
     private bool _portraitUrisElite2;
 
-    /// <summary>精英二才换精二立绘；与卡片「头像 / 半身像」选用哪张图无关。</summary>
-    private bool UseElite2Art => Level.EliteLevel >= 2;
-
-    /// <summary>
-    /// 卡片是否按半身像模式显示。为真时用全身立绘缩小后装入加高卡片；
-    /// 否则用 <see cref="AvatarUris"/> 方形头像。
-    /// </summary>
-    public bool UsePortrait
-    {
-        get => _usePortrait;
-        set
-        {
-            if (!SetProperty(ref _usePortrait, value))
-                return;
-
-            OnPropertyChanged(nameof(DisplayArtUris));
-            OnPropertyChanged(nameof(AlternateArtUris));
-        }
-    }
+    /// <summary>精英二才换精二图片，表格头像与半身像共用阶段选择。</summary>
+    private bool UseElite2Art => Level.EliteLevel >= FieldLimits.MaxElite;
 
     /// <summary>
     /// 头像小图（表格、编队名牌）。精二优先 <c>_2</c>。
@@ -172,7 +130,7 @@ public partial class Staff
     }
 
     /// <summary>
-    /// 半身像模式图源：优先全身立绘，缺失时回退抽卡半身像。
+    /// 游戏编队半身像图源，与干员列表和生成页共用。
     /// </summary>
     public IReadOnlyList<Uri> PortraitUris
     {
@@ -182,17 +140,11 @@ public partial class Staff
             if (_portraitUris is { } cached && _portraitUrisElite2 == elite2)
                 return cached;
 
-            _portraitUris = Domain.OperatorArt.Illustration(SourceId, elite2);
+            _portraitUris = Domain.OperatorArt.Portrait(SourceId, elite2);
             _portraitUrisElite2 = elite2;
             return _portraitUris;
         }
     }
-
-    /// <summary>卡片图源：半身像用立绘，头像用方形头像图。</summary>
-    public IReadOnlyList<Uri> DisplayArtUris => UsePortrait ? PortraitUris : AvatarUris;
-
-    /// <summary>另一规格，切「头像 / 半身像」时预载，避免切换时整表重下。</summary>
-    public IReadOnlyList<Uri> AlternateArtUris => UsePortrait ? AvatarUris : PortraitUris;
 
     /// <summary>清掉已缓存的候选列表（SourceId 变更后地址会变）。</summary>
     private void InvalidateArtCache()
@@ -204,15 +156,13 @@ public partial class Staff
     /// <summary>通知界面重新取图源（SourceId 或精英阶段变化时用）。</summary>
     public void RaiseArtChanged()
     {
-        OnPropertyChanged(nameof(DisplayArtUris));
-        OnPropertyChanged(nameof(AlternateArtUris));
         OnPropertyChanged(nameof(HasArt));
         OnPropertyChanged(nameof(AvatarUris));
         OnPropertyChanged(nameof(PortraitUris));
     }
 
     /// <summary>是否有立绘可显示。</summary>
-    public bool HasArt => DisplayArtUris.Count > 0;
+    public bool HasArt => AvatarUris.Count > 0;
 
     /// <summary>职业名，用于卡片与表格上的文字标识。</summary>
     public string CareerName => Career switch

@@ -14,5 +14,5 @@ internal class StrategyRuleDto
     public string? Career { get; set; }
     public int Count { get; set; }
     public int CountMax { get; set; }
-    public List<string>? StaffNames { get; set; }
+    public List<string?>? StaffNames { get; set; }
 }

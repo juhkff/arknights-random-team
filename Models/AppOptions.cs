@@ -7,5 +7,6 @@ public static class AppOptions
 
     public static IReadOnlyList<Career> Careers { get; } = Enum.GetValues<Career>();
 
-    public static IReadOnlyList<int> Stars { get; } = [1, 2, 3, 4, 5, 6];
+    public static IReadOnlyList<int> Stars { get; } =
+        Enumerable.Range(FieldLimits.MinStar, FieldLimits.MaxStar - FieldLimits.MinStar + 1).ToArray();
 }

@@ -52,7 +52,7 @@ public static class OperatorArt
     }
 
     /// <summary>
-    /// 抽卡半身像（约 180×360）。全身立绘缺失时作为「立绘」模式的回退。
+    /// 游戏编队用的竖版半身像（180×360），缺失时回退基础阶段。
     /// </summary>
     public static IReadOnlyList<Uri> Portrait(string? sourceId, bool elite2 = false) =>
         elite2

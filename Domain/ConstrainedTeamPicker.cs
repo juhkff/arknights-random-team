@@ -11,6 +11,7 @@ namespace arknights_random_team.Domain;
 public static class ConstrainedTeamPicker
 {
     private const int CareerN = 8;
+    private const int StarBucketCount = FieldLimits.MaxStar + 1;
     private const int MaxRestarts = 32;
     private const int MaxNodesPerRestart = 4_000;
     private static readonly Dictionary<Career, (int lo, int hi)> NoCareerRange = new();
@@ -36,7 +37,7 @@ public static class ConstrainedTeamPicker
 
         foreach (var kv in rarityReq)
         {
-            if (kv.Value < 0 || kv.Key is < 1 or > 6)
+            if (kv.Value < 0 || kv.Key is < FieldLimits.MinStar or > FieldLimits.MaxStar)
                 return false;
         }
 
@@ -290,10 +291,10 @@ public static class ConstrainedTeamPicker
 
         private readonly IReadOnlyList<Staff> _pool;
         private readonly int _k;
-        private readonly int[] _starLo = new int[7];
-        private readonly int[] _starHi = new int[7];
-        private readonly int[] _starCnt = new int[7];
-        private readonly int[] _unusedStar = new int[7];
+        private readonly int[] _starLo = new int[StarBucketCount];
+        private readonly int[] _starHi = new int[StarBucketCount];
+        private readonly int[] _starCnt = new int[StarBucketCount];
+        private readonly int[] _unusedStar = new int[StarBucketCount];
         private readonly int[] _careerLo = new int[CareerN];
         private readonly int[] _careerHi = new int[CareerN];
         private readonly int[] _careerCnt = new int[CareerN];
@@ -308,7 +309,7 @@ public static class ConstrainedTeamPicker
         private readonly List<int> _legalBuf;
         private readonly List<int> _tightQuotaIds;
         private readonly bool[] _mustSub;
-        private readonly int[] _starSupply = new int[7];
+        private readonly int[] _starSupply = new int[StarBucketCount];
         private readonly int[] _careerSupply = new int[CareerN];
         private readonly int[] _subSupply;
         private readonly Random _rng;
@@ -330,7 +331,7 @@ public static class ConstrainedTeamPicker
             _legalBuf = new List<int>(pool.Count);
             _tightQuotaIds = new List<int>(6 + CareerN + staffSubsets.Count);
 
-            for (var s = 1; s <= 6; s++)
+            for (var s = FieldLimits.MinStar; s <= FieldLimits.MaxStar; s++)
             {
                 if (rarityReq.TryGetValue(s, out var need))
                 {
@@ -457,7 +458,7 @@ public static class ConstrainedTeamPicker
             var remaining = _k - Picked.Count;
 
             var mustStar = -1;
-            for (var s = 1; s <= 6; s++)
+            for (var s = FieldLimits.MinStar; s <= FieldLimits.MaxStar; s++)
             {
                 var def = _starLo[s] - _starCnt[s];
                 if (def > 0 && def == remaining)
@@ -552,7 +553,7 @@ public static class ConstrainedTeamPicker
             }
 
             var anyOpen = false;
-            for (var s = 1; s <= 6; s++)
+            for (var s = FieldLimits.MinStar; s <= FieldLimits.MaxStar; s++)
             {
                 if (_starLo[s] <= _starCnt[s])
                     continue;
@@ -645,7 +646,7 @@ public static class ConstrainedTeamPicker
             }
 
             var starDefSum = 0;
-            for (var s = 1; s <= 6; s++)
+            for (var s = FieldLimits.MinStar; s <= FieldLimits.MaxStar; s++)
             {
                 var have = _starCnt[s] + (s == star ? 1 : 0);
                 var unused = _unusedStar[s] - (s == star ? 1 : 0);
@@ -713,7 +714,7 @@ public static class ConstrainedTeamPicker
                 }
             }
 
-            for (var s = 1; s <= 6; s++)
+            for (var s = FieldLimits.MinStar; s <= FieldLimits.MaxStar; s++)
             {
                 var have = _starCnt[s] + (s == addedStar ? 1 : 0);
                 if (_starLo[s] - have > _starSupply[s])

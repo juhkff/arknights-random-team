@@ -12,6 +12,7 @@
              x:Class="arknights_random_team.Views.StaffListView"
              x:Name="Root"
              x:DataType="domain:ListModel"
+             AutomationProperties.AutomationId="staff-list"
              FontFamily="{StaticResource AppFont}">
     <UserControl.Styles>
         <Style Selector="ToggleButton.view-switch">
@@ -101,10 +102,16 @@
         <Style Selector="Button.operator-card:pointerover">
             <Setter Property="Background" Value="{StaticResource AppCardHoverBrush}" />
         </Style>
-        <Style Selector="TextBlock.operator-card-name">
-            <Setter Property="FontSize" Value="15" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        <!--
+            卡片焦点环画在内部（外层那圈 Margin=-4，会被卡片的 ClipToBounds 裁掉）。
+            默认透明度必须用样式给：直接写在控件上的本地值优先级高于样式，
+            会让 :focus-visible 的样式永远生效不了（实测确认）。
+        -->
+        <Style Selector="Button.operator-card Border#CardFocusRing">
+            <Setter Property="Opacity" Value="0" />
+        </Style>
+        <Style Selector="Button.operator-card:focus-visible Border#CardFocusRing">
+            <Setter Property="Opacity" Value="1" />
         </Style>
         <Style Selector="DataGridRow">
             <Setter Property="MinHeight" Value="56" />
@@ -130,11 +137,12 @@
         </Style>
         <Style Selector="CheckBox.card-pool">
             <Setter Property="assists:SelectionControlAssist.Size" Value="16" />
-            <Setter Property="MinHeight" Value="44" />
-            <Setter Property="Margin" Value="0,-8" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="Margin" Value="0" />
             <Setter Property="Padding" Value="4,0" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
         <Style Selector="Border.cell-hit">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -188,37 +196,61 @@
 
     <Grid RowDefinitions="Auto,*">
         <StackPanel Spacing="12">
-            <Grid ColumnDefinitions="*,12,Auto">
-                <StackPanel VerticalAlignment="Center" Spacing="4">
+            <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto">
+                <StackPanel Name="SummaryPanel" VerticalAlignment="Center" Spacing="4">
                     <TextBlock FontSize="14"
                                Foreground="{StaticResource AppMutedTextBrush}"
+                               TextTrimming="CharacterEllipsis"
                                Text="{Binding SummaryText}" />
                     <TextBlock Classes="caption"
                                IsVisible="{Binding HasActiveFilters}"
                                Text="{Binding VisibleSummaryText}" />
                 </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                    <Button Classes="primary" Content="添加干员" AutomationProperties.Name="添加干员">
-                        <Button.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                <MenuItem Header="手动录入" Click="AddManual_Click" />
-                                <MenuItem Header="数据库同步" Click="AddSync_Click" />
-                            </MenuFlyout>
-                        </Button.Flyout>
-                    </Button>
-                    <Button Classes="icon"
-                            Content="⋯"
-                            AutomationProperties.Name="更多操作">
-                        <Button.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                <MenuItem Header="清空全部干员"
-                                          IsEnabled="{Binding ShowBatchBar}"
-                                          Click="ClearAll_Click" />
-                                <MenuItem Header="图片加载统计" Click="ArtStats_Click" />
-                            </MenuFlyout>
-                        </Button.Flyout>
-                    </Button>
-                </StackPanel>
+                <Border Name="ViewModeSwitch"
+                        Grid.Column="1"
+                        Margin="8,0"
+                        Padding="3"
+                        HorizontalAlignment="Right"
+                        Background="{StaticResource AppWellBrush}"
+                        BorderBrush="{StaticResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource AppRadiusSurface}">
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <ToggleButton Name="GridViewButton"
+                                      Classes="view-switch"
+                                      Content="表格"
+                                      AutomationProperties.Name="切换到表格视图"
+                                      AutomationProperties.AutomationId="staff-view-table"
+                                      IsChecked="{Binding IsGridView, Mode=OneWay}"
+                                      Click="GridView_Click" />
+                        <ToggleButton Name="HalfBodyModeButton"
+                                      Classes="view-switch"
+                                      Content="半身像"
+                                      AutomationProperties.Name="切换到半身像视图"
+                                      AutomationProperties.AutomationId="staff-view-half-body"
+                                      IsChecked="{Binding IsHalfBodyView, Mode=OneWay}"
+                                      Click="HalfBodyMode_Click" />
+                    </StackPanel>
+                </Border>
+                <Button Grid.Column="2"
+                        Name="TopMoreButton"
+                        Classes="icon"
+                        Content="⋯"
+                        ToolTip.Tip="更多操作"
+                        AutomationProperties.Name="更多操作"
+                        AutomationProperties.AutomationId="staff-more-actions">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <MenuItem Header="清空全部干员"
+                                      AutomationProperties.AutomationId="staff-clear-all"
+                                      IsEnabled="{Binding ShowBatchBar}"
+                                      Click="ClearAll_Click" />
+                            <MenuItem Header="图片加载统计"
+                                      AutomationProperties.AutomationId="staff-art-stats"
+                                      Click="ArtStats_Click" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
             </Grid>
 
             <WrapPanel>
@@ -227,8 +259,14 @@
                          Width="240"
                          Margin="0,0,8,8"
                          PlaceholderText="搜索干员名称……"
+                         AutomationProperties.Name="搜索干员"
+                         AutomationProperties.AutomationId="staff-search"
                          TextChanged="SearchBox_TextChanged" />
-                <Button Margin="0,0,8,8" Content="筛选" AutomationProperties.Name="筛选">
+                <Button Name="FilterButton"
+                        Margin="0,0,8,8"
+                        Content="筛选"
+                        AutomationProperties.Name="筛选"
+                        AutomationProperties.AutomationId="staff-filter">
                     <Button.Flyout>
                         <Flyout Placement="BottomEdgeAlignedLeft">
                             <StackPanel Width="280" Spacing="12">
@@ -281,66 +319,67 @@
                         </Flyout>
                     </Button.Flyout>
                 </Button>
-                <ComboBox Width="148"
-                          Margin="0,0,8,8"
-                          Classes="form-control"
-                          ToolTip.Tip="排序"
-                          AutomationProperties.Name="排序"
-                          SelectedIndex="{Binding SortIndex, Mode=TwoWay}">
-                    <ComboBoxItem Content="默认排序" />
-                    <ComboBoxItem Content="名称" />
-                    <ComboBoxItem Content="稀有度" />
-                    <ComboBoxItem Content="职业" />
-                    <ComboBoxItem Content="等级" />
-                </ComboBox>
-                <TextBlock Margin="0,0,8,8"
-                           VerticalAlignment="Center"
-                           Classes="caption"
-                           MaxWidth="220"
-                           TextTrimming="CharacterEllipsis"
-                           IsVisible="{Binding HasSorts}"
-                           Text="{Binding SortSummary}"
-                           ToolTip.Tip="点击表头可追加多列排序，左侧为第一优先级"
-                           AutomationProperties.Name="当前排序" />
-                <Border Margin="0,0,8,8"
-                        Padding="3"
-                        Background="{StaticResource AppWellBrush}"
-                        BorderBrush="{StaticResource AppBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="{StaticResource AppRadiusSurface}">
-                    <StackPanel Orientation="Horizontal" Spacing="3">
-                        <ToggleButton Name="GridViewButton"
-                                      Classes="view-switch"
-                                      Content="表格"
-                                      AutomationProperties.Name="切换到表格视图"
-                                      IsChecked="{Binding IsGridView, Mode=OneWay}"
-                                      Click="GridView_Click" />
-                        <ToggleButton Name="AvatarModeButton"
-                                      Classes="view-switch"
-                                      Content="头像"
-                                      AutomationProperties.Name="切换到头像视图"
-                                      IsChecked="{Binding IsAvatarView, Mode=OneWay}"
-                                      Click="AvatarMode_Click" />
-                        <ToggleButton Name="PortraitModeButton"
-                                      Classes="view-switch"
-                                      Content="立绘"
-                                      AutomationProperties.Name="切换到立绘视图"
-                                      IsChecked="{Binding IsPortraitView, Mode=OneWay}"
-                                      Click="PortraitMode_Click" />
-                    </StackPanel>
-                </Border>
-                <ToggleButton Name="CompactToggle"
+                <StackPanel Name="WideToolsPanel" Orientation="Horizontal">
+                    <ComboBox Name="SortComboBox"
+                              Width="148"
                               Margin="0,0,8,8"
-                              Classes="view-switch"
-                              Content="紧凑"
-                              IsVisible="{Binding IsGridView}"
-                              AutomationProperties.Name="切换表格紧凑行高"
-                              ToolTip.Tip="紧凑行高 44；关闭为 56"
-                              IsChecked="{Binding IsCompactTable, Mode=TwoWay}" />
+                              Classes="form-control"
+                              ToolTip.Tip="排序"
+                              AutomationProperties.Name="排序"
+                              AutomationProperties.AutomationId="staff-sort"
+                              SelectedIndex="{Binding SortIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="默认排序" />
+                        <ComboBoxItem Content="名称" />
+                        <ComboBoxItem Content="稀有度" />
+                        <ComboBoxItem Content="职业" />
+                        <ComboBoxItem Content="等级" />
+                    </ComboBox>
+                    <ToggleButton Name="CompactTableButton"
+                                  Margin="0,0,8,8"
+                                  Classes="view-switch"
+                                  Content="紧凑"
+                                  IsVisible="{Binding IsGridView}"
+                                  AutomationProperties.Name="切换表格紧凑行高"
+                                  AutomationProperties.AutomationId="staff-table-compact"
+                                  ToolTip.Tip="紧凑行高 44；关闭为 56"
+                                  IsChecked="{Binding IsCompactTable, Mode=TwoWay}" />
+                </StackPanel>
+
+                <!--
+                    窄屏：排序与表格密度收进一个菜单；视图分段始终保留在摘要行，确保窄屏也能切换。
+                -->
+                <Button Name="PhoneToolsButton"
+                        Margin="0,0,8,8"
+                        IsVisible="False"
+                        Content="排序与行高"
+                        AutomationProperties.Name="排序与行高"
+                        AutomationProperties.AutomationId="staff-sort-tools">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                            <MenuItem Header="紧凑行高"
+                                      ToggleType="CheckBox"
+                                      IsVisible="{Binding IsGridView}"
+                                      IsChecked="{Binding IsCompactTable, Mode=TwoWay}" />
+                            <MenuItem Header="排序：默认" Tag="0" Click="PhoneSort_Click" />
+                            <MenuItem Header="排序：名称" Tag="1" Click="PhoneSort_Click" />
+                            <MenuItem Header="排序：稀有度" Tag="2" Click="PhoneSort_Click" />
+                            <MenuItem Header="排序：职业" Tag="3" Click="PhoneSort_Click" />
+                            <MenuItem Header="排序：等级" Tag="4" Click="PhoneSort_Click" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
             </WrapPanel>
 
+            <TextBlock Classes="caption"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding HasSorts}"
+                       Text="{Binding SortSummary}"
+                       ToolTip.Tip="点击表头可追加多列排序，左侧为第一优先级"
+                       AutomationProperties.Name="当前排序"
+                       AutomationProperties.AutomationId="staff-sort-summary" />
+
             <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasActiveFilters}">
-                <ItemsControl ItemsSource="{Binding ActiveFilters}">
+                <ItemsControl Name="FilterChipsList" ItemsSource="{Binding ActiveFilters}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel />
@@ -366,7 +405,8 @@
                         Click="ClearFilters_Click" />
             </Grid>
 
-            <TextBlock Classes="caption"
+            <TextBlock Name="SelectAllScopeLabel"
+                       Classes="caption"
                        IsVisible="{Binding HasActiveFilters}"
                        Text="{Binding SelectAllScopeText}" />
 
@@ -390,14 +430,17 @@
                         Spacing="8">
                 <Button Classes="secondary"
                         Content="将当前筛选结果加入随机池"
+                        AutomationProperties.AutomationId="staff-batch-add"
                         IsEnabled="{Binding CanBatch}"
                         Click="BatchAdd_Click" />
                 <Button Content="将当前筛选结果移出随机池"
+                        AutomationProperties.AutomationId="staff-batch-remove"
                         IsEnabled="{Binding CanBatch}"
                         Click="BatchRemove_Click" />
             </StackPanel>
             <Button Name="BatchMenuButton"
                     HorizontalAlignment="Left"
+                    AutomationProperties.AutomationId="staff-batch-menu"
                     IsVisible="False"
                     Content="{Binding BatchMenuText}">
                 <Button.Flyout>
@@ -417,6 +460,8 @@
         <Border Classes="surface data-frame" Padding="0" ClipToBounds="True">
             <Grid>
                 <DataGrid Name="StaffGrid"
+                          AutomationProperties.Name="干员表格"
+                          AutomationProperties.AutomationId="staff-table"
                           Classes.compact="{Binding IsCompactTable}"
                           IsVisible="{Binding ShowGrid}"
                           AutoGenerateColumns="False"
@@ -437,10 +482,10 @@
                                                 CanUserResize="False"
                                                 CanUserSort="False">
                             <DataGridTemplateColumn.Header>
-                                <Border Classes="cell-hit" PointerPressed="SelectAllHeader_PointerPressed"
-                                        PointerMoved="SelectAllHeader_PointerMoved"
-                                        PointerReleased="SelectAllHeader_PointerReleased">
+                                <Border Classes="cell-hit">
                                     <CheckBox Classes="staff-select"
+                                              AutomationProperties.Name="全选当前筛选的干员"
+                                              AutomationProperties.AutomationId="staff-select-all"
                                               IsThreeState="True"
                                               ToolTip.Tip="{Binding #Root.((domain:ListModel)DataContext).SelectAllScopeText}"
                                               IsChecked="{Binding #Root.((domain:ListModel)DataContext).IsAllStaffSelected, Mode=OneWay}"
@@ -449,11 +494,10 @@
                             </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="models:Staff">
-                                    <Border Classes="cell-hit" PointerPressed="SelectCell_PointerPressed"
-                                            PointerMoved="SelectCell_PointerMoved"
-                                            PointerReleased="SelectCell_PointerReleased">
+                                    <Border Classes="cell-hit">
                                         <CheckBox Classes="staff-select"
                                                   AutomationProperties.Name="{Binding PoolAutomationName}"
+                                                  AutomationProperties.AutomationId="staff-table-pool"
                                                   IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                                     </Border>
                                 </DataTemplate>
@@ -507,6 +551,8 @@
                             <DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate x:DataType="models:Staff">
                                     <TextBox Classes="staff-editor"
+                                             AutomationProperties.Name="干员名称"
+                                             AutomationProperties.AutomationId="staff-table-name-editor"
                                              Text="{Binding Name, Mode=TwoWay}" />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
@@ -543,6 +589,8 @@
                             <DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate x:DataType="models:Staff">
                                     <ComboBox Classes="staff-choice dense"
+                                              AutomationProperties.Name="稀有度"
+                                              AutomationProperties.AutomationId="staff-table-rarity-editor"
                                               ItemsSource="{x:Static models:AppOptions.Stars}"
                                               SelectedItem="{Binding Star, Mode=TwoWay}" />
                                 </DataTemplate>
@@ -584,6 +632,8 @@
                             <DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate x:DataType="models:Staff">
                                     <ComboBox Classes="staff-choice dense"
+                                              AutomationProperties.Name="职业"
+                                              AutomationProperties.AutomationId="staff-table-career-editor"
                                               ItemsSource="{x:Static models:AppOptions.Careers}"
                                               SelectedItem="{Binding Career, Mode=TwoWay}" />
                                 </DataTemplate>
@@ -619,6 +669,8 @@
                             <DataGridTemplateColumn.CellEditingTemplate>
                                 <DataTemplate x:DataType="models:Staff">
                                     <TextBox Classes="staff-editor"
+                                             AutomationProperties.Name="精英阶段与等级"
+                                             AutomationProperties.AutomationId="staff-table-level-editor"
                                              Text="{Binding Level.Description, Mode=TwoWay}" />
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellEditingTemplate>
@@ -640,7 +692,9 @@
                                             HorizontalAlignment="Center"
                                             Content="⋯"
                                             Tag="{Binding}"
-                                            AutomationProperties.Name="更多">
+                                            ToolTip.Tip="更多"
+                                            AutomationProperties.Name="更多"
+                                            AutomationProperties.AutomationId="staff-table-more">
                                         <Button.Flyout>
                                             <MenuFlyout Placement="BottomEdgeAlignedRight">
                                                 <MenuItem Header="详情 / 编辑"
@@ -658,20 +712,26 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <ScrollViewer IsVisible="{Binding ShowCards}"
+                <ScrollViewer Name="StaffCardsScroll"
+                              IsVisible="{Binding ShowCards}"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto">
                     <ItemsRepeater Name="StaffCards"
                                    Margin="16"
+                                   AutomationProperties.Name="干员半身像列表"
+                                   AutomationProperties.AutomationId="staff-half-body-list"
                                    ItemsSource="{Binding VisibleStaff}">
                         <ItemsRepeater.Layout>
                             <!-- 虚拟化网格：只实例化可见区及其邻近的卡片，几百名干员时
-                                 不再一次性创建全部卡片控件（方案 §5.3）。 -->
-                            <UniformGridLayout MinItemWidth="156"
-                                               MinItemHeight="224"
-                                               MinRowSpacing="12"
-                                               MinColumnSpacing="12"
-                                               ItemsStretch="Fill" />
+                                 不再一次性创建全部卡片控件。
+                                 ItemsStretch=None：单元尺寸由代码按可用宽度算出并夹在
+                                 128–168 之间；主体高宽比约 1.85，下方工具条 36px。 -->
+                            <UniformGridLayout MinItemWidth="128"
+                                               MinItemHeight="273"
+                                               MinRowSpacing="10"
+                                               MinColumnSpacing="10"
+                                               ItemsStretch="None"
+                                               ItemsJustification="Center" />
                         </ItemsRepeater.Layout>
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="models:Staff">
@@ -679,67 +739,48 @@
                                         BorderBrush="{Binding IsSelected, Converter={x:Static views:StaffCardVisual.PoolBorder}}"
                                         ToolTip.Tip="{Binding Name}"
                                         AutomationProperties.Name="{Binding PoolAutomationName}"
-                                        AutomationProperties.HelpText="按空格或回车切换随机池状态；按 Tab 可聚焦卡片内的入池勾选框；⋯ 菜单可查看详情或删除"
-                                        PointerPressed="OperatorCard_PointerPressed"
-                                        PointerMoved="OperatorCard_PointerMoved"
-                                        PointerReleased="OperatorCard_PointerReleased"
+                                        AutomationProperties.AutomationId="staff-card"
+                                        AutomationProperties.HelpText="按空格或回车切换随机池状态；按 Tab 可聚焦入池勾选框；更多菜单可查看详情或删除"
                                         KeyDown="OperatorCard_KeyDown"
                                         Click="OperatorCard_Click">
-                                    <Grid RowDefinitions="*,68">
-                                        <Panel ClipToBounds="True">
-                                            <views:StaffThumb Sources="{Binding DisplayArtUris}"
-                                                              PlaceholderSources="{Binding CareerIconUris}"
-                                                              PlaceholderSize="48"
-                                                              PlaceholderOpacity="0.45"
-                                                              Stretch="{Binding UsePortrait, Converter={x:Static views:StaffCardVisual.ArtStretch}}"
-                                                              VerticalArtAlignment="{Binding UsePortrait, Converter={x:Static views:StaffCardVisual.ArtAlignment}}" />
-                                            <Border Height="40"
-                                                    VerticalAlignment="Top"
-                                                    IsHitTestVisible="False">
-                                                <Border.Background>
-                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                        <GradientStop Color="#D0101418" Offset="0" />
-                                                        <GradientStop Color="#00101418" Offset="1" />
-                                                    </LinearGradientBrush>
-                                                </Border.Background>
-                                            </Border>
-                                            <Grid Margin="8" ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Top">
-                                                <TextBlock FontSize="12"
-                                                           FontWeight="Bold"
-                                                           Foreground="{Binding RarityBrush}"
-                                                           Text="{Binding RarityMark}" />
-                                                <Border Grid.Column="2"
-                                                        Padding="6,2"
-                                                        CornerRadius="{StaticResource AppRadiusControl}"
-                                                        Background="#C0101418">
-                                                    <CheckBox Classes="card-pool"
-                                                              Content="{Binding PoolCheckLabel}"
-                                                              AutomationProperties.Name="{Binding PoolAutomationName}"
-                                                              IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                                              Click="CardPoolCheck_Click" />
-                                                </Border>
-                                            </Grid>
-                                        </Panel>
-                                        <Grid Grid.Row="1"
-                                              Margin="8,4,4,6"
-                                              ColumnDefinitions="*,Auto"
-                                              RowDefinitions="Auto,*">
-                                            <TextBlock Classes="operator-card-name"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Text="{Binding Name}" />
-                                            <!-- 命中区 44×44，但外面套一个 32×32 的格子固定布局占位：
-                                                 卡片名牌一行只有 68 高、宽度还要留给干员名，
-                                                 直接放大按钮会把名字挤成省略号（实测过）。 -->
-                                            <Grid Grid.Column="1"
-                                                  Width="32"
-                                                  Height="32"
-                                                  VerticalAlignment="Center"
-                                                  ClipToBounds="False">
-                                                <Button Classes="text compact more-button"
+                                    <!--
+                                        焦点环画在卡片内部：卡片自身 ClipToBounds=True（要裁艺术图），
+                                        而按钮主题里的焦点环是 Margin=-4 画在边界外的，
+                                        在外层会被整圈裁掉（实测确认，键盘用户看不到焦点）。
+                                    -->
+                                    <Grid>
+                                        <Border Name="CardFocusRing"
+                                                Margin="1"
+                                                ZIndex="1"
+                                                IsHitTestVisible="False"
+                                                BorderBrush="{StaticResource AppSignalBrush}"
+                                                BorderThickness="2"
+                                                CornerRadius="{StaticResource AppRadiusSurface}" />
+                                        <Grid RowDefinitions="*,36">
+                                            <views:SquadPortrait />
+                                            <Grid Grid.Row="1"
+                                                  Margin="8,0,4,0"
+                                                  ColumnDefinitions="*,Auto"
+                                                  Height="36">
+                                                <CheckBox Classes="card-pool"
+                                                          HorizontalAlignment="Left"
+                                                          Content="{Binding PoolCheckLabel}"
+                                                          AutomationProperties.Name="{Binding PoolAutomationName}"
+                                                          AutomationProperties.AutomationId="staff-card-pool"
+                                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          Click="CardPoolCheck_Click" />
+                                                <Button Grid.Column="1"
+                                                        Classes="text compact"
+                                                        Width="32"
+                                                        Height="36"
+                                                        MinWidth="32"
+                                                        MinHeight="36"
+                                                        Padding="0"
                                                         Content="⋯"
                                                         Tag="{Binding}"
-                                                        AutomationProperties.Name="更多">
+                                                        ToolTip.Tip="更多"
+                                                        AutomationProperties.Name="更多"
+                                                        AutomationProperties.AutomationId="staff-card-more">
                                                     <Button.Flyout>
                                                         <MenuFlyout Placement="BottomEdgeAlignedRight">
                                                             <MenuItem Header="详情 / 编辑"
@@ -752,23 +793,6 @@
                                                     </Button.Flyout>
                                                 </Button>
                                             </Grid>
-                                            <StackPanel Grid.Row="1"
-                                                        Grid.ColumnSpan="2"
-                                                        Orientation="Horizontal"
-                                                        Spacing="6">
-                                                <Image Width="14" Height="14"
-                                                       Stretch="Uniform"
-                                                       VerticalAlignment="Center"
-                                                       views:ArtImage.Sources="{Binding CareerIconUris}" />
-                                                <TextBlock FontSize="12"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                                           Text="{Binding CareerName}" />
-                                                <TextBlock FontSize="12"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{StaticResource AppMutedTextBrush}"
-                                                           Text="{Binding LevelLine}" />
-                                            </StackPanel>
                                         </Grid>
                                     </Grid>
                                 </Button>

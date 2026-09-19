@@ -10,7 +10,7 @@
              Background="{StaticResource AppSurfaceBrush}"
              FontFamily="{StaticResource AppFont}"
              FontSize="14">
-    <Grid RowDefinitions="Auto,Auto,80">
+    <Grid RowDefinitions="Auto,*,80">
         <Grid Margin="24,24,24,0" ColumnDefinitions="4,16,*">
             <Border Width="4"
                     Margin="0,2"
@@ -25,8 +25,14 @@
             </StackPanel>
         </Grid>
 
+        <!--
+            正文用 * 行吃掉剩余高度，而不是固定 260：
+            宿主很矮时（例如 390 高的横屏）固定高度会把标题+正文+页脚顶到卡片之外，
+            而卡片是 ClipToBounds 的，底部按钮会被裁掉看不见。
+            上限保留 420，避免超长正文在普通窗口上撑出过高的对话框。
+        -->
         <ScrollViewer Grid.Row="1"
-                      MaxHeight="260"
+                      MaxHeight="420"
                       Margin="44,18,24,24"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">

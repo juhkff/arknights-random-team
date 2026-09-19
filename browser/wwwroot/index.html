@@ -49,14 +49,59 @@
 
     <div id="out"></div>
 
-    <script type="module" src="main.js"></script>
+    <!--
+        启动兜底必须放在入口模块之前：
+        入口脚本本身或它的依赖（_framework/dotnet.js）下载/解析失败时，
+        模块内部的 try/catch 根本不会执行，只有这里的监听能给出错误出口。
+    -->
     <script>
-        // 遮罩何时撤掉由托管侧决定：主视图加载完成后经 main.js 的 arknightsAppReady 通知。
-        // 这里只负责错误态的重试按钮。
-        addEventListener("DOMContentLoaded", () => {
-            const retry = document.getElementById("app-loading-retry");
-            retry?.addEventListener("click", () => location.reload());
-        });
+        (() => {
+            const overlay = () => document.getElementById("app-loading");
+            const hint = () => document.getElementById("app-loading-hint");
+            let settled = false;
+
+            globalThis.arknightsStartupError = (message) => {
+                settled = true;
+                if (!overlay() || !hint()) {
+                    console.error(message);
+                    return;
+                }
+                overlay().classList.remove("hidden");
+                overlay().classList.add("error");
+                hint().textContent = message;
+            };
+
+            globalThis.arknightsStartupReady = () => {
+                settled = true;
+                clearTimeout(timer);
+                requestAnimationFrame(() => overlay()?.classList.add("hidden"));
+            };
+
+            // 不猜进度，只说明「比预期久」；应用随后就绪时遮罩照样会被撤掉。
+            const timer = setTimeout(() => {
+                if (!settled)
+                    globalThis.arknightsStartupError("启动时间超出预期。可以继续等待，或点「重试」重新加载。");
+            }, 45000);
+
+            // 资源加载失败（含入口模块与运行时脚本）不会走进模块内的 catch。
+            addEventListener("error", (event) => {
+                if (settled)
+                    return;
+
+                const target = event.target;
+                if (target && target.tagName === "SCRIPT")
+                    globalThis.arknightsStartupError("启动脚本加载失败，请检查网络后点「重试」。");
+            }, true);
+
+            addEventListener("unhandledrejection", () => {
+                if (!settled)
+                    globalThis.arknightsStartupError("启动过程中出现未处理的错误，请点「重试」重新加载。");
+            });
+
+            document.getElementById("app-loading-retry")?.addEventListener("click", () => location.reload());
+        })();
     </script>
+
+    <script type="module" src="main.js"></script>
 </body>
 </html>

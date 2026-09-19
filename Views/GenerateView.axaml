@@ -79,6 +79,44 @@
         </Style>
 
 
+        <!-- 名单 / 编队切换：两种结果视图共用同一份 ResultList。 -->
+        <Style Selector="Border.roster-switch">
+            <Setter Property="Background" Value="{StaticResource AppSurfaceSubtleBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
+            <Setter Property="Padding" Value="2" />
+        </Style>
+        <Style Selector="ToggleButton.roster-switch">
+            <Setter Property="Theme" Value="{StaticResource AppActionButtonTheme}" />
+            <Setter Property="MinWidth" Value="52" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource AppRadiusControl}" />
+            <Setter Property="Foreground" Value="{StaticResource AppMutedTextBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ToggleButton.roster-switch:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppSecondaryHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.roster-switch:checked">
+            <Setter Property="Background" Value="{StaticResource AppPrimarySoftBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppPrimaryBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="ToggleButton.roster-switch:checked:pointerover">
+            <Setter Property="Background" Value="{StaticResource AppPrimaryHoverBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppOnPrimaryBrush}" />
+        </Style>
+
         <!-- 编队卡片 -->
         <Style Selector="TextBlock.roster-name">
             <Setter Property="FontSize" Value="17" />
@@ -181,7 +219,17 @@
 
     <Grid RowDefinitions="Auto,16,*">
         <Border Grid.Row="0" Classes="surface" Padding="20,16">
+            <!--
+                配置区在短屏（横屏手机、软键盘弹出）会被限高并内部滚动：
+                原来它在 Auto 行里可以无限长，把下方「出战名单」的 * 行压成 0，
+                用户看不到结果（方案 §4 U3 的剩余项）。MaxHeight 由代码按可用高度设置。
+                「生成阵容」按钮刻意留在滚动区之外：限高后主操作必须始终可见。
+            -->
             <Grid RowDefinitions="Auto,16,Auto">
+                <ScrollViewer Name="ConfigScroll"
+                              Grid.Row="0"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
                 <Grid Name="ConfigGrid" ColumnDefinitions="*,16,*">
                     <Grid Name="StrategyConfig" RowDefinitions="28,6,40,6,Auto">
                         <TextBlock Classes="field-label" Text="作战策略" />
@@ -246,6 +294,7 @@
                         </Grid>
                     </Grid>
                 </Grid>
+                </ScrollViewer>
 
                 <Button Name="GenerateButton" Grid.Row="2" Classes="primary" Height="44"
                         HorizontalAlignment="Stretch"
@@ -258,18 +307,38 @@
         <Grid Grid.Row="2" RowDefinitions="Auto,12,*">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                 <TextBlock Classes="section-title" VerticalAlignment="Center" Text="出战名单" />
-                <Border Grid.Column="1" Classes="chip" VerticalAlignment="Center"
-                        Background="{StaticResource AppPrimarySoftBrush}"
-                        BorderBrush="{StaticResource AppSecondaryBorderBrush}">
-                    <TextBlock Name="ResultCountText" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{StaticResource AppPrimaryBrush}" Text="0 名干员" />
-                </Border>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Border Classes="roster-switch" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton Name="RosterListButton"
+                                          Classes="roster-switch"
+                                          Content="名单"
+                                          AutomationProperties.Name="名单视图"
+                                          AutomationProperties.AutomationId="GenerateRosterListView"
+                                          Click="RosterView_Click" />
+                            <ToggleButton Name="RosterFormationButton"
+                                          Classes="roster-switch"
+                                          Content="编队"
+                                          AutomationProperties.Name="编队视图"
+                                          AutomationProperties.AutomationId="GenerateRosterFormationView"
+                                          Click="RosterView_Click" />
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Classes="chip" VerticalAlignment="Center"
+                            Background="{StaticResource AppPrimarySoftBrush}"
+                            BorderBrush="{StaticResource AppSecondaryBorderBrush}">
+                        <TextBlock Name="ResultCountText" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{StaticResource AppPrimaryBrush}" Text="0 名干员" />
+                    </Border>
+                </StackPanel>
             </Grid>
 
             <Border Grid.Row="2" Classes="surface" Padding="0" ClipToBounds="True">
                 <Grid>
-                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                                      VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer Name="RosterScroll"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <Grid>
                             <ItemsControl Name="RosterItems" Margin="16,16,16,8" ItemsSource="{Binding ResultList}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -333,7 +402,35 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                        </ScrollViewer>
+
+                            <ItemsControl Name="FormationItems"
+                                          IsVisible="False"
+                                          Margin="16"
+                                          MaxWidth="950"
+                                          HorizontalAlignment="Center"
+                                          ItemsSource="{Binding ResultList}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <views:AdaptiveWrapPanel MinItemWidth="128"
+                                                                 MaxItemWidth="160"
+                                                                 Spacing="10"
+                                                                 FixedItemHeight="264" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerTheme>
+                                    <ControlTheme TargetType="ContentPresenter">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                                    </ControlTheme>
+                                </ItemsControl.ItemContainerTheme>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Staff">
+                                        <views:SquadPortrait />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </ScrollViewer>
 
                     <StackPanel Name="ResultEmptyState" Margin="16,48,16,0"
                                 HorizontalAlignment="Center" VerticalAlignment="Center"

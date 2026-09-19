@@ -5,7 +5,7 @@ namespace arknights_random_team.Models;
 public partial class Staff : AutomaticNotify
 {
     private string _name = "";
-    private int _star = 1;
+    private int _star = FieldLimits.MinStar;
     private Level _level = Level.GenerateDefaultLevel();
     private Career _career;
     private bool _isSelected;
@@ -31,15 +31,17 @@ public partial class Staff : AutomaticNotify
     public int Star
     {
         get => _star;
+        // 稀有度决定数组下标（约束求解器按星级建桶），越界会让生成阵容时下标越界，
+        // 因此在这里就夹取到 1–6：存档解析与界面编辑共用同一份区间。
         set
         {
-            if (!SetProperty(ref _star, value))
+            var clamped = FieldLimits.ClampStar(value);
+            if (!SetProperty(ref _star, clamped))
                 return;
 
             OnPropertyChanged(nameof(StarGlyphs));
             OnPropertyChanged(nameof(RarityMark));
             OnPropertyChanged(nameof(RarityBrush));
-            OnPropertyChanged(nameof(RaritySoftBrush));
         }
     }
 
@@ -64,10 +66,7 @@ public partial class Staff : AutomaticNotify
         set
         {
             if (SetProperty(ref _isSelected, value))
-            {
-                OnPropertyChanged(nameof(RosterStatus));
                 OnPropertyChanged(nameof(PoolAutomationName));
-            }
         }
     }
 
@@ -91,7 +90,6 @@ public partial class Staff : AutomaticNotify
 
             // 精英阶段决定用默认立绘还是精二立绘
             RaiseArtChanged();
-            OnPropertyChanged(nameof(LevelDigits));
             OnPropertyChanged(nameof(EliteLabel));
             OnPropertyChanged(nameof(LevelLine));
         }
@@ -103,11 +101,15 @@ public partial class Staff : AutomaticNotify
     /// </summary>
     private void Level_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        OnPropertyChanged(nameof(LevelDigits));
-        OnPropertyChanged(nameof(EliteLabel));
-        OnPropertyChanged(nameof(LevelLine));
         if (e.PropertyName == nameof(Models.Level.EliteLevel))
+        {
+            OnPropertyChanged(nameof(EliteLabel));
             RaiseArtChanged();
+        }
+        else if (e.PropertyName == nameof(Models.Level.Description))
+        {
+            OnPropertyChanged(nameof(LevelLine));
+        }
     }
 
     /// <summary>外部数据源中的稳定标识；手工录入的干员为空。</summary>

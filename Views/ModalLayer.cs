@@ -7,9 +7,10 @@ using Avalonia.Media;
 namespace arknights_random_team.Views;
 
 /// <summary>
-/// 浏览器端（单视图生命周期）的叠加层宿主：一层遮罩 + 一层居中的对话框。
+/// 浏览器端（单视图生命周期）的叠加层宿主。
 ///
-/// 这里只负责「画」，栈、焦点、Escape 都交给 <see cref="OverlayPresenter"/> 管理。
+/// 这里只提供根遮罩和对话框画布；嵌套栈、逐层遮罩、焦点与 Escape 都由
+/// <see cref="OverlayPresenter"/> 管理。
 /// 之所以不让对话框自己用 <c>Window</c>：单视图下 <c>TopLevel</c> 不是 <c>Window</c>，
 /// 没有窗口系统，<c>ShowDialog</c> 永远显示不出来。
 /// </summary>

@@ -2,7 +2,7 @@ using arknights_random_team.Models;
 
 namespace arknights_random_team.Domain;
 
-public class StrategyRule
+public class StrategyRule : AutomaticNotify
 {
     public StrategyRuleKind Kind { get; set; }
 
@@ -29,6 +29,20 @@ public class StrategyRule
             StrategyRuleKind.StaffSubsetRange => $"某些干员总数：从 {FormatStaffNames()} 中范围 {Count}–{CountMax} 个",
             _ => ""
         };
+
+    public void RenameStaff(string previousName, string newName)
+    {
+        var renamed = StaffNames
+            .Select(name => string.Equals(name, previousName, StringComparison.Ordinal) ? newName : name)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (renamed.SequenceEqual(StaffNames, StringComparer.Ordinal))
+            return;
+
+        StaffNames = renamed;
+        OnPropertyChanged(nameof(StaffNames));
+        OnPropertyChanged(nameof(SummaryLine));
+    }
 
     private string FormatStaffNames()
     {

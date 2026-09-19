@@ -3,112 +3,241 @@ using System.Text;
 
 namespace arknights_random_team.Views;
 
-/// <summary>
-/// 立绘的本地磁盘缓存，让图片在**重启程序后**也不必重新下载。
-///
-/// 与浏览器自带的 HTTP 缓存是两件事：这里是自己落盘，
-/// 因此清掉浏览器缓存、换网络环境、或 CDN 临时不可达时也仍然有图。
-///
-/// 浏览器端（WebAssembly）没有文件系统，一律不落盘，只靠内存缓存；
-/// 这是平台限制，不是开关。
-///
-/// 缓存的是下载到的**原始字节**：解码必须重新做（位图无法可靠序列化），
-/// 但省掉的是网络往返 —— 那才是耗时的大头。
-/// </summary>
+/// <summary>Best-effort disk cache for downloaded operator art. Browser builds use memory only.</summary>
 internal static class LocalImageStore
 {
+    // Encoded avatar + illustration files for a full roster need more room than visible-only caching.
+    private static readonly long DiskBudget =
+        long.TryParse(Environment.GetEnvironmentVariable("ARTIMAGE_DISK_BYTES"), out var budget) && budget > 0
+            ? budget : 2L * 1024 * 1024 * 1024;
+    private static readonly TimeSpan MaxAge = TimeSpan.FromDays(30);
+    private static readonly TimeSpan TrimInterval = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan TempMaxAge = TimeSpan.FromDays(1);
     private static readonly string? Folder = ResolveFolder();
-    private static readonly HashSet<string> Failed = [];
 
-    /// <summary>本地缓存是否可用（浏览器端为 false）。</summary>
+    private static int _hits;
+    private static int _trimming;
+    private static int _trimScheduled;
+    private static long _lastTrimTicks;
+
+    public static int Hits => Volatile.Read(ref _hits);
+
     public static bool IsEnabled => Folder is not null;
 
-    /// <summary>本次运行中从本地缓存读出的次数。</summary>
-    public static int Hits { get; private set; }
+    public static bool Contains(Uri uri)
+    {
+        if (Folder is null)
+            return false;
+        return TryInspect(PathFor(uri)) is { Size: > 0 } file &&
+               DateTime.UtcNow - file.LastWriteUtc <= MaxAge;
+    }
 
     private static string? ResolveFolder()
     {
-        if (OperatingSystem.IsBrowser())
+        if (OperatingSystem.IsBrowser() || AppState.IsStorageReadOnly ||
+            string.IsNullOrEmpty(AppState.DataDirectory))
             return null;
 
         try
         {
-            // 放在应用自己的数据目录下，和 StaffList.xml 等文件同级，便于用户清理
-            var root = AppState.DataDirectory;
-            if (string.IsNullOrEmpty(root))
-                return null;
-
-            var dir = Path.Combine(root, "ArtCache");
-            Directory.CreateDirectory(dir);
-            return dir;
+            var folder = Path.Combine(AppState.DataDirectory, "ArtCache");
+            Directory.CreateDirectory(folder);
+            return folder;
         }
         catch
         {
-            // 只读目录等情况：退化为纯内存缓存，不影响功能
             return null;
         }
     }
 
     private static string PathFor(Uri uri)
     {
-        // 用哈希作文件名：地址里可能带 # 等不适合做文件名的字符
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(uri.AbsoluteUri));
         return Path.Combine(Folder!, Convert.ToHexString(hash) + ".bin");
     }
 
-    /// <summary>尝试读本地缓存；没有就返回 null。</summary>
-    public static async Task<byte[]?> TryReadAsync(Uri uri)
+    public static async Task<byte[]?> TryReadAsync(Uri uri, CancellationToken cancellationToken = default)
     {
         if (Folder is null)
             return null;
 
-        var path = PathFor(uri);
-        if (Failed.Contains(path))
-            return null;
+        ScheduleTrim();
 
+        var path = PathFor(uri);
         try
         {
             if (!File.Exists(path))
                 return null;
 
-            var bytes = await File.ReadAllBytesAsync(path).ConfigureAwait(false);
+            var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
             if (bytes.Length == 0)
                 return null;
 
-            Hits++;
+            Interlocked.Increment(ref _hits);
+            TouchIfStale(path);
             return bytes;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch
         {
-            Failed.Add(path);
             return null;
         }
     }
 
-    /// <summary>写入本地缓存。失败只记录一次，不反复尝试。</summary>
     public static async Task WriteAsync(Uri uri, byte[] bytes)
     {
         if (Folder is null || bytes.Length == 0)
             return;
 
         var path = PathFor(uri);
-        if (Failed.Contains(path))
-            return;
-
+        var temp = $"{path}.{Guid.NewGuid():N}.tmp";
         try
         {
-            // 先写临时文件再替换，避免程序中途退出留下半截文件
-            var temp = path + ".tmp";
             await File.WriteAllBytesAsync(temp, bytes).ConfigureAwait(false);
-
-            if (File.Exists(path))
-                File.Delete(path);
-
-            File.Move(temp, path);
+            File.Move(temp, path, overwrite: true);
+            TrimIfNeeded();
         }
         catch
         {
-            Failed.Add(path);
+            // Caching is optional; network-loaded art remains usable.
+        }
+        finally
+        {
+            TryDelete(temp);
         }
     }
+
+    public static void Invalidate(Uri uri)
+    {
+        if (Folder is not null)
+            TryDelete(PathFor(uri));
+    }
+
+    private static void TouchIfStale(string path)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            if (DateTime.UtcNow - info.LastWriteTimeUtc > TimeSpan.FromDays(1))
+                info.LastWriteTimeUtc = DateTime.UtcNow;
+        }
+        catch
+        {
+            // Access-time bookkeeping must not turn a cache hit into a failure.
+        }
+    }
+
+    private static void ScheduleTrim()
+    {
+        if (DateTime.UtcNow.Ticks - Volatile.Read(ref _lastTrimTicks) < TrimInterval.Ticks ||
+            Interlocked.CompareExchange(ref _trimScheduled, 1, 0) != 0)
+        {
+            return;
+        }
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                TrimIfNeeded();
+            }
+            finally
+            {
+                Volatile.Write(ref _trimScheduled, 0);
+            }
+        });
+    }
+
+    private static void TrimIfNeeded()
+    {
+        if (Folder is null)
+            return;
+
+        var now = DateTime.UtcNow;
+        if (now.Ticks - Volatile.Read(ref _lastTrimTicks) < TrimInterval.Ticks ||
+            Interlocked.CompareExchange(ref _trimming, 1, 0) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            now = DateTime.UtcNow;
+            if (now.Ticks - Volatile.Read(ref _lastTrimTicks) < TrimInterval.Ticks)
+                return;
+
+            Volatile.Write(ref _lastTrimTicks, now.Ticks);
+            TrimCache(now);
+        }
+        finally
+        {
+            Volatile.Write(ref _trimming, 0);
+        }
+    }
+
+    private static void TrimCache(DateTime now)
+    {
+        try
+        {
+            foreach (var path in Directory.EnumerateFiles(Folder!, "*.tmp"))
+            {
+                if (TryInspect(path) is { } file && now - file.LastWriteUtc > TempMaxAge)
+                    TryDelete(path);
+            }
+
+            var files = Directory.EnumerateFiles(Folder!, "*.bin")
+                .Select(TryInspect)
+                .OfType<CacheFile>()
+                .OrderBy(file => file.LastWriteUtc)
+                .ToList();
+            var total = files.Sum(file => file.Size);
+
+            foreach (var file in files)
+            {
+                if (now - file.LastWriteUtc <= MaxAge && total <= DiskBudget)
+                    break;
+
+                if (TryDelete(file.Path))
+                    total -= file.Size;
+            }
+        }
+        catch
+        {
+            // A failed cleanup should never affect image loading.
+        }
+    }
+
+    private static CacheFile? TryInspect(string path)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            return new CacheFile(path, info.Length, info.LastWriteTimeUtc);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool TryDelete(string path)
+    {
+        try
+        {
+            if (!File.Exists(path))
+                return false;
+
+            File.Delete(path);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private readonly record struct CacheFile(string Path, long Size, DateTime LastWriteUtc);
 }

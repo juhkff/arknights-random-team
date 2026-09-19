@@ -8,6 +8,8 @@ namespace arknights_random_team;
 
 public partial class App : Application
 {
+    private bool _allowClose;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -22,8 +24,23 @@ public partial class App : Application
             // 对话框走原生窗口（与引入 Web 版之前一致），因此注册窗口展示方式。
             case IClassicDesktopStyleApplicationLifetime desktop:
                 AppHost.Presenter = new WindowPresenter();
-                desktop.MainWindow = new MainWindow { Icon = LoadAppIcon() };
-                desktop.Exit += (_, _) => AppState.Save();
+                var mainWindow = new MainWindow { Icon = LoadAppIcon() };
+                desktop.MainWindow = mainWindow;
+                mainWindow.Closing += async (_, e) =>
+                {
+                    if (_allowClose || AppState.Save())
+                        return;
+
+                    e.Cancel = true;
+                    var leave = await AppHost.ConfirmAsync(
+                        $"{AppState.LastSaveError ?? "本地数据保存失败。"}\n仍要退出吗？本次未保存的修改将丢失。",
+                        "保存失败");
+                    if (!leave)
+                        return;
+
+                    _allowClose = true;
+                    mainWindow.Close();
+                };
                 break;
 
             // 浏览器（WebAssembly）：单视图生命周期，没有窗口系统，

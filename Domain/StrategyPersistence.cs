@@ -12,43 +12,56 @@ internal static class StrategyPersistence
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public static void Load(string path, ObservableCollection<RandomStrategyDefinition> target)
+    /// <summary>Loads a complete snapshot; malformed structure leaves the current target unchanged.</summary>
+    public static bool Load(string path, ObservableCollection<RandomStrategyDefinition> target)
     {
-        target.Clear();
-        if (!File.Exists(path))
-            return;
-
         var json = File.ReadAllText(path);
-        var list = JsonSerializer.Deserialize<List<StrategyPersistenceDto>>(json, JsonOptions);
-        if (list == null)
-            return;
+        var source = JsonSerializer.Deserialize<List<StrategyPersistenceDto?>>(json, JsonOptions);
+        if (source is null)
+            return false;
 
-        foreach (var dto in list)
+        var loaded = new List<RandomStrategyDefinition>(source.Count);
+        foreach (var dto in source)
         {
-            var def = new RandomStrategyDefinition
+            if (dto is null || dto.Rules?.Any(rule => rule is null) == true)
+                return false;
+
+            var definition = new RandomStrategyDefinition
             {
                 Id = string.IsNullOrEmpty(dto.Id) ? Guid.NewGuid().ToString() : dto.Id,
                 Name = dto.Name ?? ""
             };
-            if (dto.Rules != null)
+            foreach (var ruleDto in dto.Rules ?? [])
             {
-                foreach (var r in dto.Rules)
-                {
-                    var rule = FromDto(r);
-                    if (rule != null)
-                        def.Rules.Add(rule);
-                }
+                var rule = FromDto(ruleDto!);
+                if (rule is null)
+                    return false;
+                definition.Rules.Add(rule);
             }
 
-            target.Add(def);
+            if (!StrategyRules.TryValidate(definition.Rules, out _))
+                return false;
+            loaded.Add(definition);
         }
+
+        target.Clear();
+        foreach (var definition in loaded)
+            target.Add(definition);
+        return true;
     }
 
-    public static void Save(string path, IEnumerable<RandomStrategyDefinition> strategies)
+    public static string Serialize(IEnumerable<RandomStrategyDefinition> strategies)
     {
-        var list = strategies.Select(ToDto).ToList();
-        var json = JsonSerializer.Serialize(list, JsonOptions);
-        File.WriteAllText(path, json);
+        var snapshot = strategies.ToList();
+        foreach (var definition in snapshot)
+        {
+            if (definition is null)
+                throw new InvalidDataException("策略列表中包含空项。");
+            if (!StrategyRules.TryValidate(definition.Rules, out var error))
+                throw new InvalidDataException(error);
+        }
+
+        return JsonSerializer.Serialize(snapshot.Select(ToDto).ToList(), JsonOptions);
     }
 
     private static StrategyPersistenceDto ToDto(RandomStrategyDefinition d) =>
@@ -65,7 +78,7 @@ internal static class StrategyPersistence
                     StrategyRuleKind.Career => "Career",
                     StrategyRuleKind.StaffSubsetExact => "StaffSubsetExact",
                     StrategyRuleKind.StaffSubsetRange => "StaffSubsetRange",
-                    _ => "Career"
+                    _ => throw new InvalidDataException("策略中包含未知规则类型。")
                 },
                 Star = r.Star,
                 Career = r.Kind is StrategyRuleKind.Career or StrategyRuleKind.CareerRange
@@ -83,9 +96,15 @@ internal static class StrategyPersistence
 
     private static StrategyRule? FromDto(StrategyRuleDto r)
     {
+        var max = AppOptions.MaxTeamSize;
+        if (r.Count < 0 || r.Count > max || r.CountMax < 0 || r.CountMax > max)
+        {
+            return null;
+        }
+
         if (string.Equals(r.Kind, "CareerRange", StringComparison.OrdinalIgnoreCase))
         {
-            if (!Enum.TryParse(r.Career, out Career career))
+            if (!Enum.TryParse(r.Career, out Career career) || !Enum.IsDefined(career))
                 return null;
             var lo = r.Count;
             var hi = r.CountMax;
@@ -134,14 +153,14 @@ internal static class StrategyPersistence
 
         if (string.Equals(r.Kind, "Rarity", StringComparison.OrdinalIgnoreCase))
         {
-            if (r.Star is < 1 or > 6)
+            if (r.Star is < FieldLimits.MinStar or > FieldLimits.MaxStar)
                 return null;
             return new StrategyRule { Kind = StrategyRuleKind.Rarity, Star = r.Star, Count = r.Count };
         }
 
         if (string.Equals(r.Kind, "Career", StringComparison.OrdinalIgnoreCase))
         {
-            if (!Enum.TryParse(r.Career, out Career career))
+            if (!Enum.TryParse(r.Career, out Career career) || !Enum.IsDefined(career))
                 return null;
             return new StrategyRule { Kind = StrategyRuleKind.Career, Career = career, Count = r.Count };
         }
@@ -149,7 +168,7 @@ internal static class StrategyPersistence
         return null;
     }
 
-    private static List<string> NormalizeStaffNamesDto(List<string>? raw)
+    private static List<string> NormalizeStaffNamesDto(List<string?>? raw)
     {
         var list = new List<string>();
         if (raw == null)

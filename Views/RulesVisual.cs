@@ -25,7 +25,12 @@ public static class RulesVisual
     public static readonly IValueConverter Header = new RuleCountConverter(
         count => count > CollapseThreshold ? $"{count} 条规则 · 点击展开或收起" : $"{count} 条规则");
 
-    private static int CountOf(object? rules) => rules is ICollection collection ? collection.Count : 0;
+    private static int CountOf(object? rules) => rules switch
+    {
+        int count => count,
+        ICollection collection => collection.Count,
+        _ => 0
+    };
 
     private sealed class RuleCountConverter : IValueConverter
     {
