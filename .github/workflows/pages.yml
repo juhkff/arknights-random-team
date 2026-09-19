@@ -1,9 +1,17 @@
 name: Deploy Web (GitHub Pages)
 
 on:
-  push:
-    tags: ["v*"]
+  # github-pages 环境禁止从标签部署。标签推送会先跑「Build and Publish」，
+  # 成功后再由这里以默认分支身份领取同一提交并发布，这样环境规则能通过。
+  workflow_run:
+    workflows: ["Build and Publish"]
+    types: [completed]
   workflow_dispatch:
+  # 仅在本工作流自身变更时部署一次，方便修好发布通道；日常提交不会走这里。
+  push:
+    branches: ["master"]
+    paths:
+      - ".github/workflows/pages.yml"
 
 permissions:
   contents: read
@@ -18,12 +26,15 @@ concurrency:
 jobs:
   build:
     name: Build WebAssembly
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5

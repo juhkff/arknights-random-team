@@ -313,6 +313,13 @@
             <Setter Property="ExtendClientAreaToDecorationsHint" Value="True" />
             <Setter Property="WindowDecorations" Value="BorderOnly" />
         </Style>
+        <!-- 浏览器是单视图 TopLevel，不是 Window；窗体装饰不能套过去，字体和底色要单独给。 -->
+        <Style Selector="TopLevel">
+            <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource AppTextBrush}" />
+        </Style>
         <Style Selector="ScrollBar">
             <Setter Property="Theme" Value="{StaticResource MaterialModernScrollBar}" />
         </Style>
