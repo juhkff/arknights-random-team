@@ -8,6 +8,7 @@ on:
     types: [completed]
   workflow_dispatch:
   # 仅在本工作流自身变更时部署一次，方便修好发布通道；日常提交不会走这里。
+  # 浏览器 WASM 必须保留 JSON 反射序列化，否则裁剪后无法启动。
   push:
     branches: ["master"]
     paths:

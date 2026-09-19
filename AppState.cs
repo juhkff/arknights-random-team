@@ -91,7 +91,8 @@ public static class AppState
         LoadStrategies();
         LoadOperatorSyncSettings();
         LoadUiPreferences();
-        CaptureSnapshots();
+        if (UseFileStorage)
+            CaptureSnapshots();
 
         if (_storageReadOnlyReason is { } reason)
         {

@@ -19,6 +19,9 @@
              Skia 就无法按 Unicode 区段匹配字体回退，中文会全部变成方块。 -->
         <PublishTrimmed>true</PublishTrimmed>
         <TrimMode>partial</TrimMode>
+        <!-- .NET 10 裁剪发布默认关闭 System.Text.Json 反射序列化。
+             策略与偏好仍走 JsonSerializer，关掉后 WASM 启动会直接失败。 -->
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     </PropertyGroup>
 
     <ItemGroup>
